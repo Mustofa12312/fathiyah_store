@@ -40,7 +40,7 @@ class UserManagementView extends GetView<SettingsController> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: user.isAdmin ? AppTheme.primary.withOpacity(0.1) : AppTheme.accent.withOpacity(0.1),
+                        backgroundColor: user.isAdmin ? AppTheme.primary.withValues(alpha: 0.1) : AppTheme.accent.withValues(alpha: 0.1),
                         child: Icon(Icons.person, color: user.isAdmin ? AppTheme.primary : AppTheme.accent),
                       ),
                       SizedBox(width: 16.w),
@@ -69,7 +69,7 @@ class UserManagementView extends GetView<SettingsController> {
                       Switch(
                         value: user.status == 'aktif',
                         onChanged: isMe || user.isAdmin ? null : (v) => c.toggleUserStatus(user.id),
-                        activeColor: AppTheme.primary,
+                        activeThumbColor: AppTheme.primary,
                       ),
                     ],
                   ),

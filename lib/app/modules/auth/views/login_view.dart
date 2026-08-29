@@ -27,7 +27,7 @@ class LoginView extends GetView<AuthController> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.2),
+                        color: AppTheme.primary.withValues(alpha: 0.2),
                         blurRadius: 15,
                         spreadRadius: 5,
                         offset: const Offset(0, 5),
@@ -83,24 +83,29 @@ class LoginView extends GetView<AuthController> {
                 ),
               ),
               SizedBox(height: 8.h),
-              TextField(
+              Obx(() => TextField(
                 controller: controller.passwordController,
-                obscureText: true,
+                obscureText: controller.isPasswordHidden.value,
                 decoration: InputDecoration(
                   hintText: 'Masukkan password Anda',
                   prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppTheme.textSecondary),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.visibility_off_outlined, color: AppTheme.textSecondary),
-                    onPressed: () {}, // Toggle password visibility (simplified for MVP)
+                    icon: Icon(
+                      controller.isPasswordHidden.value ? Icons.visibility_off_outlined : Icons.visibility_outlined, 
+                      color: AppTheme.textSecondary
+                    ),
+                    onPressed: controller.togglePasswordVisibility,
                   ),
                 ),
-              ),
+              )),
               
               SizedBox(height: 16.h),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.snackbar('Bantuan', 'Silakan hubungi Super Admin untuk mereset password Anda.');
+                  },
                   child: Text(
                     'Lupa Password?',
                     style: TextStyle(

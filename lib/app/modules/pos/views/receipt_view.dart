@@ -10,6 +10,8 @@ import '../../../data/services/shop_service.dart';
 import '../../../data/services/printer_service.dart';
 import '../../../routes/app_pages.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 class ReceiptView extends StatelessWidget {
   final SaleModel sale;
@@ -27,7 +29,7 @@ class ReceiptView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () {},
+            onPressed: () => _shareReceipt(sale),
           ),
           IconButton(
             icon: const Icon(Icons.print),
@@ -256,6 +258,46 @@ class ReceiptView extends StatelessWidget {
         Get.snackbar('Error', 'Tidak dapat membuka WhatsApp');
       }
     }
+  }
+
+  void _shareReceipt(SaleModel sale) {
+    final shopService = Get.find<ShopService>();
+    final storeName = shopService.shop.value?.name ?? "FATHIYAH STORE";
+    final footer = shopService.shop.value?.receiptFooter ?? "Terima Kasih!";
+    
+    // Build receipt text
+    StringBuffer sb = StringBuffer();
+    sb.writeln("*$storeName*");
+    sb.writeln("──────────────────");
+    sb.writeln("TRX-${sale.id.substring(0, 8).toUpperCase()}");
+    sb.writeln("Waktu: ${DateFormat('dd MMM yyyy HH:mm').format(sale.createdAt)}");
+    
+    if (sale.customerId != null) {
+      sb.writeln("Pelanggan: ${sale.customerType.toUpperCase()}");
+    }
+    sb.writeln("──────────────────");
+    
+    for (var item in sale.items) {
+      sb.writeln("${item.productName}");
+      sb.writeln("${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)} = ${CurrencyFormatter.formatRupiah(item.subtotal)}");
+    }
+    
+    sb.writeln("──────────────────");
+    sb.writeln("Total: *${CurrencyFormatter.formatRupiah(sale.totalAmount)}*");
+    sb.writeln("Dibayar: ${CurrencyFormatter.formatRupiah(sale.paidAmount)}");
+    
+    if (sale.remainingAmount > 0) {
+      sb.writeln("Sisa/Piutang: ${CurrencyFormatter.formatRupiah(sale.remainingAmount)}");
+      sb.writeln("Status: 🟡 BELUM LUNAS");
+    } else {
+      sb.writeln("Kembali: ${CurrencyFormatter.formatRupiah(sale.paidAmount - sale.totalAmount)}");
+      sb.writeln("Status: 🟢 LUNAS");
+    }
+    
+    sb.writeln("──────────────────");
+    sb.writeln(footer);
+
+    Share.share(sb.toString(), subject: 'Struk Belanja $storeName');
   }
 
   void _showPrinterDialog(BuildContext context, SaleModel sale) {

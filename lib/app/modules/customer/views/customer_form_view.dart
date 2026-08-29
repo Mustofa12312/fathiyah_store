@@ -174,7 +174,7 @@ class _CustomerFormViewState extends State<CustomerFormView> {
                     Switch(
                       value: _isVip,
                       onChanged: _handleVipToggle,
-                      activeColor: AppTheme.vipGold,
+                      activeThumbColor: AppTheme.vipGold,
                     ),
                   ],
                 ),

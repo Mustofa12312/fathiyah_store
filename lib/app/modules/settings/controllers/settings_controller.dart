@@ -33,4 +33,22 @@ class SettingsController extends GetxController {
       update(); // refresh UI
     }
   }
+
+  void changePassword(String oldPass, String newPass) async {
+    final user = currentUser;
+    if (user == null) return;
+
+    if (user.password != oldPass) {
+      Get.snackbar('Error', 'Password lama salah', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    try {
+      await _authService.updateUser(user.copyWith(password: newPass));
+      Get.back();
+      Get.snackbar('Sukses', 'Password berhasil diubah', snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengubah password', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
 }

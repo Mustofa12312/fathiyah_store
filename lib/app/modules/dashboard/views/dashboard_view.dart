@@ -84,7 +84,7 @@ class DashboardView extends GetView<DashboardController> {
                         ],
                       ),
                       CircleAvatar(
-                        backgroundColor: AppTheme.primary.withOpacity(0.1),
+                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                         radius: 24.w,
                         child: Icon(Icons.person, color: AppTheme.primary),
                       ),
@@ -261,7 +261,7 @@ class DashboardView extends GetView<DashboardController> {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 28.sp),
@@ -291,7 +291,7 @@ class DashboardView extends GetView<DashboardController> {
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(icon, color: color, size: 24.sp),

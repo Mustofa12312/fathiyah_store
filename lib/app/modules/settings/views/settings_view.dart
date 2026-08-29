@@ -7,6 +7,7 @@ import '../../user_management/views/user_management_view.dart';
 import '../../audit_log/views/audit_log_view.dart';
 import '../../shop/views/shop_settings_view.dart';
 import '../../../data/services/backup_service.dart';
+import 'change_password_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -35,14 +36,14 @@ class SettingsView extends StatelessWidget {
                   color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 5)),
                   ],
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 32.r,
-                      backgroundColor: AppTheme.primary.withOpacity(0.1),
+                      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                       child: Icon(Icons.person, size: 32.sp, color: AppTheme.primary),
                     ),
                     SizedBox(width: 16.w),
@@ -142,9 +143,7 @@ class SettingsView extends StatelessWidget {
             _buildMenuTile(
               icon: Icons.lock_outline_rounded,
               title: 'Ubah Password',
-              onTap: () {
-                Get.snackbar('Info', 'Fitur Ubah Password segera hadir.');
-              },
+              onTap: () => Get.to(() => const ChangePasswordView()),
             ),
             _buildMenuTile(
               icon: Icons.logout_rounded,

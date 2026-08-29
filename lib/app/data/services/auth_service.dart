@@ -24,7 +24,6 @@ class AuthService extends GetxService {
           name: 'Super Admin',
           role: 'admin',
           status: 'aktif',
-          createdAt: DateTime.now(),
         );
         await _firestore.collection('users').doc(defaultAdmin.id).set(defaultAdmin.toJson());
       }

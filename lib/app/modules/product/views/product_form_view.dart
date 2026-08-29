@@ -66,7 +66,7 @@ class _ProductFormViewState extends State<ProductFormView> {
   void _saveProduct() {
     if (_formKey.currentState!.validate()) {
       if (_selectedCategoryId == null) {
-        Get.snackbar('Error', 'Pilih kategori terlebih dahulu!', backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
+        Get.snackbar('Error', 'Pilih kategori terlebih dahulu!', backgroundColor: Colors.red.withValues(alpha: 0.1), colorText: Colors.red);
         return;
       }
 
@@ -152,12 +152,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.qr_code_scanner),
                     onPressed: () async {
-                      var res = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SimpleBarcodeScannerPage(),
-                        ),
-                      );
+                      var res = await Get.to(() => const SimpleBarcodeScannerPage());
                       if (res is String && res != '-1') {
                         _barcodeController.text = res;
                       }
@@ -197,7 +192,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                         _buildLabel('Satuan'),
                         DropdownButtonFormField<String>(
                           isExpanded: true,
-                          value: _selectedUnit,
+                          initialValue: _selectedUnit,
                           items: _units.map((u) {
                             return DropdownMenuItem(value: u, child: Text(u));
                           }).toList(),

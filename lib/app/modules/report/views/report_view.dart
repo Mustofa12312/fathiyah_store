@@ -71,7 +71,7 @@ class ReportView extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
-                      BoxShadow(color: AppTheme.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                      BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
                     ],
                   ),
                   child: Column(
@@ -267,7 +267,7 @@ class ReportView extends StatelessWidget {
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8.r)),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
               child: Icon(icon, color: color),
             ),
             SizedBox(width: 16.w),

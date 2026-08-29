@@ -7,6 +7,7 @@ class AuthController extends GetxController {
   final emailController = TextEditingController(text: 'admin'); // Set default dummy
   final passwordController = TextEditingController(text: '123'); // Set default dummy
   final isLoading = false.obs;
+  final isPasswordHidden = true.obs;
   
   final AuthService _authService = Get.find<AuthService>();
 
@@ -17,13 +18,17 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
+  void togglePasswordVisibility() {
+    isPasswordHidden.value = !isPasswordHidden.value;
+  }
+
   void login() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Get.snackbar(
         'Error',
         'Username dan Password tidak boleh kosong',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
       );
       return;
@@ -45,7 +50,7 @@ class AuthController extends GetxController {
         'Login Gagal',
         'Username atau Password salah, atau akun nonaktif.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
       );
     }

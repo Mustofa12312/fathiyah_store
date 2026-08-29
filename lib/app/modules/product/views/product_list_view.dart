@@ -160,7 +160,7 @@ class ProductListView extends GetView<ProductController> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: stockColor.withOpacity(0.1),
+                      color: stockColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
