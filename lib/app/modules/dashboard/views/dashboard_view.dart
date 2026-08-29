@@ -6,6 +6,8 @@ import '../controllers/dashboard_controller.dart';
 import '../../product/views/product_list_view.dart';
 import '../../customer/views/customer_list_view.dart';
 import '../../pos/views/pos_view.dart';
+import '../../debt/views/debt_list_view.dart';
+import '../../report/views/report_view.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -19,7 +21,7 @@ class DashboardView extends GetView<DashboardController> {
           _buildHomeTab(context),
           const ProductListView(),
           const PosView(),
-          const Center(child: Text('Laporan')),
+          const ReportView(),
           const Center(child: Text('Pengaturan')),
         ],
       )),
@@ -160,17 +162,20 @@ class DashboardView extends GetView<DashboardController> {
                       ),
                       _buildQuickAction(
                         context,
-                        'Stok',
-                        Icons.inventory_rounded,
-                        Colors.orange.shade500,
-                        () {},
+                        'Piutang',
+                        Icons.account_balance_wallet_rounded,
+                        AppTheme.vipGold,
+                        () => Get.to(() => const DebtListView()),
                       ),
                       _buildQuickAction(
                         context,
                         'Laporan',
                         Icons.insert_chart_rounded,
                         Colors.purple.shade500,
-                        () {},
+                        () {
+                          // Change tab index to Laporan (index 3)
+                          controller.changeTab(3);
+                        },
                       ),
                     ],
                   ),

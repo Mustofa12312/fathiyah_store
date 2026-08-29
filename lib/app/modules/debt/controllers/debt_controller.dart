@@ -1,0 +1,29 @@
+import 'package:get/get.dart';
+import '../../../data/services/sale_service.dart';
+import '../../../data/services/customer_service.dart';
+import '../../../data/models/customer_model.dart';
+import '../../../data/models/sale_model.dart';
+
+class DebtController extends GetxController {
+  final SaleService _saleService = Get.find<SaleService>();
+  final CustomerService _customerService = Get.find<CustomerService>();
+
+  // Map of customer ID to total debt
+  Map<String, double> get customerDebts => _saleService.getDebtsByCustomer();
+
+  List<CustomerModel> get customersWithDebt {
+    final debts = customerDebts;
+    if (debts.isEmpty) return [];
+
+    return _customerService.customers.where((c) => debts.containsKey(c.id)).toList();
+  }
+
+  List<SaleModel> getUnpaidSalesFor(String customerId) {
+    return _saleService.getUnpaidSalesForCustomer(customerId);
+  }
+
+  void payDebt(String saleId, double amount) {
+    _saleService.payDebt(saleId, amount, 'Cash');
+    update(); // Force UI to rebuild since sales list items are modified
+  }
+}

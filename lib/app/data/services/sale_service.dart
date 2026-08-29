@@ -122,4 +122,61 @@ class SaleService extends GetxService {
 
     return sale;
   }
+
+  // --- Piutang (Debt) Logic ---
+  
+  /// Returns a map of customerId to their total debt
+  Map<String, double> getDebtsByCustomer() {
+    final Map<String, double> debts = {};
+    for (var sale in sales) {
+      if (sale.remainingAmount > 0 && sale.customerId != null) {
+        debts[sale.customerId!] = (debts[sale.customerId!] ?? 0) + sale.remainingAmount;
+      }
+    }
+    return debts;
+  }
+
+  /// Get all unpaid sales for a specific customer
+  List<SaleModel> getUnpaidSalesForCustomer(String customerId) {
+    return sales.where((s) => s.customerId == customerId && s.remainingAmount > 0).toList();
+  }
+
+  /// Pay debt for a specific sale
+  void payDebt(String saleId, double amount, String paymentMethod) {
+    final index = sales.indexWhere((s) => s.id == saleId);
+    if (index >= 0) {
+      final sale = sales[index];
+      if (sale.remainingAmount <= 0) return;
+
+      final newPaidAmount = sale.paidAmount + amount;
+      final newRemaining = sale.totalAmount - newPaidAmount;
+      
+      String newStatus = sale.paymentStatus;
+      if (newRemaining <= 0) {
+        newStatus = 'lunas';
+      } else {
+        newStatus = 'sebagian';
+      }
+
+      // Update the sale object in the list
+      sales[index] = SaleModel(
+        id: sale.id,
+        customerId: sale.customerId,
+        customerType: sale.customerType,
+        cashierId: sale.cashierId,
+        cashierName: sale.cashierName,
+        subtotal: sale.subtotal,
+        totalAmount: sale.totalAmount,
+        paidAmount: newPaidAmount,
+        remainingAmount: newRemaining > 0 ? newRemaining : 0,
+        paymentStatus: newStatus,
+        paymentMethod: sale.paymentMethod, // Original method
+        items: sale.items,
+        createdAt: sale.createdAt,
+      );
+      
+      // In a real app, we would also save this to a Payment table/collection
+      // e.g. PaymentModel(...)
+    }
+  }
 }
