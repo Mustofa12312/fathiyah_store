@@ -37,7 +37,7 @@ class DashboardView extends GetView<DashboardController> {
             Get.snackbar('Akses Ditolak', 'Hanya admin yang dapat melihat laporan');
             return;
           }
-          controller.changeTab(index);
+          controller.changePage(index);
         },
         type: BottomNavigationBarType.fixed,
         items: [
@@ -175,7 +175,7 @@ class DashboardView extends GetView<DashboardController> {
                           'Laporan',
                           Icons.insert_chart_rounded,
                           Colors.purple.shade500,
-                          () => controller.changeTab(3),
+                          () => controller.changePage(3),
                         ),
                       ] else ...[
                         _buildQuickAction(

@@ -57,7 +57,7 @@ class ReportController extends GetxController {
       for (var item in sale.items) {
         final product = _productService.products.firstWhereOrNull((p) => p.id == item.productId);
         if (product != null) {
-          totalCapital += (product.capitalPrice * item.quantity);
+          totalCapital += (product.purchasePrice * item.quantity);
         }
       }
     }
@@ -130,7 +130,7 @@ class ReportController extends GetxController {
         ['Laba Bersih', filteredNetProfit],
       ];
 
-      String csvData = const ListToCsvConverter().convert(rows);
+      String csvData = ListToCsvConverter().convert(rows);
 
       final directory = await getApplicationDocumentsDirectory();
       final String filePath = '${directory.path}/laporan_fathiyah_store.csv';

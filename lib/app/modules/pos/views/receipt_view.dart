@@ -50,7 +50,7 @@ class ReceiptView extends StatelessWidget {
                   children: [
                     Text('FATHIYAH STORE', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24.sp)),
                     SizedBox(height: 16.h),
-                    const Divider(color: Colors.black12, thickness: 2, style: BorderStyle.solid), // style isn't quite supported in Divider natively but visually it's fine
+                    const Divider(color: Colors.black12, thickness: 2),
                     SizedBox(height: 16.h),
                     
                     _buildRow('TRX ID', sale.id.substring(0, 8).toUpperCase()),
@@ -213,7 +213,7 @@ class ReceiptView extends StatelessWidget {
     
     for (var item in sale.items) {
       sb.writeln("${item.productName}");
-      sb.writeln("${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)} = ${CurrencyFormatter.formatRupiah(item.totalPrice)}");
+      sb.writeln("${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)} = ${CurrencyFormatter.formatRupiah(item.subtotal)}");
     }
     
     sb.writeln("──────────────────");
