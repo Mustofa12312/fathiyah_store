@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../data/models/sale_model.dart';
 import '../../../routes/app_pages.dart';
 
@@ -125,16 +126,35 @@ class ReceiptView extends StatelessWidget {
               // Back to Dashboard Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Get.offAllNamed(Routes.DASHBOARD);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppTheme.primary,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                  ),
-                  child: const Text('Kembali ke Dashboard'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _shareToWhatsApp(sale),
+                        icon: const Icon(Icons.share),
+                        label: const Text('Share WA'),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.offAllNamed(Routes.DASHBOARD);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppTheme.primary,
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                        ),
+                        child: const Text('Kembali ke Dashboard'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -174,5 +194,56 @@ class ReceiptView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _shareToWhatsApp(SaleModel sale) async {
+    final storeName = "FATHIYAH STORE";
+    
+    // Build receipt text
+    StringBuffer sb = StringBuffer();
+    sb.writeln("*$storeName*");
+    sb.writeln("──────────────────");
+    sb.writeln("TRX-${sale.id.substring(0, 8).toUpperCase()}");
+    sb.writeln("Waktu: ${DateFormat('dd MMM yyyy HH:mm').format(sale.createdAt)}");
+    
+    if (sale.customerId != null) {
+      sb.writeln("Pelanggan: ${sale.customerType.toUpperCase()}");
+    }
+    sb.writeln("──────────────────");
+    
+    for (var item in sale.items) {
+      sb.writeln("${item.productName}");
+      sb.writeln("${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)} = ${CurrencyFormatter.formatRupiah(item.totalPrice)}");
+    }
+    
+    sb.writeln("──────────────────");
+    sb.writeln("Total: *${CurrencyFormatter.formatRupiah(sale.totalAmount)}*");
+    sb.writeln("Dibayar: ${CurrencyFormatter.formatRupiah(sale.paidAmount)}");
+    
+    if (sale.remainingAmount > 0) {
+      sb.writeln("Sisa/Piutang: ${CurrencyFormatter.formatRupiah(sale.remainingAmount)}");
+      sb.writeln("Status: 🟡 BELUM LUNAS");
+    } else {
+      sb.writeln("Kembali: ${CurrencyFormatter.formatRupiah(sale.paidAmount - sale.totalAmount)}");
+      sb.writeln("Status: 🟢 LUNAS");
+    }
+    
+    sb.writeln("──────────────────");
+    sb.writeln("Terima Kasih!");
+
+    final text = Uri.encodeComponent(sb.toString());
+    final url = Uri.parse("whatsapp://send?text=$text");
+    
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      // Fallback to generic URL if Whatsapp app is not installed
+      final webUrl = Uri.parse("https://wa.me/?text=$text");
+      if (await canLaunchUrl(webUrl)) {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar('Error', 'Tidak dapat membuka WhatsApp');
+      }
+    }
   }
 }

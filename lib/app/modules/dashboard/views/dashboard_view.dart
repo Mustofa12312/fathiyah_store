@@ -9,48 +9,50 @@ import '../../pos/views/pos_view.dart';
 import '../../debt/views/debt_list_view.dart';
 import '../../report/views/report_view.dart';
 
+import '../../settings/views/settings_view.dart';
+import '../../../data/services/auth_service.dart';
+
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = Get.find<AuthService>().isAdmin;
+
     return Scaffold(
       body: Obx(() => IndexedStack(
         index: controller.currentIndex.value,
         children: [
-          _buildHomeTab(context),
+          _buildHomeTab(context, isAdmin),
           const ProductListView(),
           const PosView(),
-          const ReportView(),
-          const Center(child: Text('Pengaturan')),
+          if (isAdmin) const ReportView() else const SizedBox.shrink(),
+          const SettingsView(),
         ],
       )),
-      bottomNavigationBar: Obx(() => Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: controller.currentIndex.value,
-          onTap: controller.changePage,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.inventory_2_rounded), label: 'Produk'),
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_rounded), label: 'Transaksi'),
-            BottomNavigationBarItem(icon: Icon(Icons.bar_chart_rounded), label: 'Laporan'),
-            BottomNavigationBarItem(icon: Icon(Icons.settings_rounded), label: 'Pengaturan'),
-          ],
-        ),
+      bottomNavigationBar: Obx(() => BottomNavigationBar(
+        currentIndex: controller.currentIndex.value,
+        onTap: (index) {
+          if (!isAdmin && index == 3) {
+            Get.snackbar('Akses Ditolak', 'Hanya admin yang dapat melihat laporan');
+            return;
+          }
+          controller.changeTab(index);
+        },
+        type: BottomNavigationBarType.fixed,
+        items: [
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          const BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Produk'),
+          const BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Kasir'),
+          if (isAdmin) const BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Laporan'),
+          if (!isAdmin) const BottomNavigationBarItem(icon: Icon(Icons.bar_chart, color: Colors.grey), label: 'Laporan'),
+          const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Pengaturan'),
+        ],
       )),
     );
   }
 
-  Widget _buildHomeTab(BuildContext context) {
+  Widget _buildHomeTab(BuildContext context, bool isAdmin) {
     return SafeArea(
       child: CustomScrollView(
         slivers: [
@@ -160,23 +162,37 @@ class DashboardView extends GetView<DashboardController> {
                         AppTheme.accent,
                         () => Get.to(() => const PosView()),
                       ),
-                      _buildQuickAction(
-                        context,
-                        'Piutang',
-                        Icons.account_balance_wallet_rounded,
-                        AppTheme.vipGold,
-                        () => Get.to(() => const DebtListView()),
-                      ),
-                      _buildQuickAction(
-                        context,
-                        'Laporan',
-                        Icons.insert_chart_rounded,
-                        Colors.purple.shade500,
-                        () {
-                          // Change tab index to Laporan (index 3)
-                          controller.changeTab(3);
-                        },
-                      ),
+                      if (isAdmin) ...[
+                        _buildQuickAction(
+                          context,
+                          'Piutang',
+                          Icons.account_balance_wallet_rounded,
+                          AppTheme.vipGold,
+                          () => Get.to(() => const DebtListView()),
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Laporan',
+                          Icons.insert_chart_rounded,
+                          Colors.purple.shade500,
+                          () => controller.changeTab(3),
+                        ),
+                      ] else ...[
+                        _buildQuickAction(
+                          context,
+                          'Piutang',
+                          Icons.account_balance_wallet_rounded,
+                          Colors.grey,
+                          () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Piutang'),
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Laporan',
+                          Icons.insert_chart_rounded,
+                          Colors.grey,
+                          () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Laporan'),
+                        ),
+                      ]
                     ],
                   ),
                   

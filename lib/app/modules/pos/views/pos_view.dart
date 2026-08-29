@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/pos_controller.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'checkout_view.dart';
 
 class PosView extends GetView<PosController> {
@@ -19,8 +20,25 @@ class PosView extends GetView<PosController> {
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () {
-              Get.snackbar('Info', 'Fitur scanner akan hadir di versi rilis');
+            onPressed: () async {
+              var res = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SimpleBarcodeScannerPage(),
+                ),
+              );
+              if (res is String && res != '-1') {
+                // If scanned, search the product and add to cart if found
+                controller.searchQuery.value = res;
+                final products = controller.filteredProducts;
+                if (products.length == 1) {
+                  controller.saleService.addToCart(products.first);
+                  Get.snackbar('Berhasil', '${products.first.name} ditambahkan ke keranjang');
+                  controller.searchQuery.value = ''; // clear search
+                } else if (products.isEmpty) {
+                  Get.snackbar('Tidak Ditemukan', 'Barcode $res tidak cocok dengan barang apapun');
+                }
+              }
             },
           ),
         ],

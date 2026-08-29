@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -139,9 +140,16 @@ class _ProductFormViewState extends State<ProductFormView> {
                   hintText: 'Scan barcode atau ketik manual',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.qr_code_scanner),
-                    onPressed: () {
-                      // Implement barcode scanner later
-                      Get.snackbar('Info', 'Fitur scanner akan hadir di versi rilis');
+                    onPressed: () async {
+                      var res = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SimpleBarcodeScannerPage(),
+                        ),
+                      );
+                      if (res is String && res != '-1') {
+                        _barcodeController.text = res;
+                      }
                     },
                   ),
                 ),
