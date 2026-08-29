@@ -37,7 +37,7 @@ class CheckoutView extends GetView<PosController> {
             Text('Pelanggan', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp)),
             SizedBox(height: 8.h),
             Obx(() {
-              final selected = controller.saleService.selectedCustomer;
+              final selected = controller.saleService.selectedCustomer.value;
               return InkWell(
                 onTap: () => _showCustomerPicker(context),
                 borderRadius: BorderRadius.circular(12.r),
@@ -96,7 +96,7 @@ class CheckoutView extends GetView<PosController> {
             
             // VIP Info Box
             Obx(() {
-              final selected = controller.saleService.selectedCustomer;
+              final selected = controller.saleService.selectedCustomer.value;
               if (selected == null || !selected.isVip) {
                 return Container(
                   padding: EdgeInsets.all(12.w),

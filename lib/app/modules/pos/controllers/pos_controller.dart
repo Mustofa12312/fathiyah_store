@@ -47,7 +47,7 @@ class PosController extends GetxController {
     final paidAmount = double.tryParse(paidAmountStr) ?? 0.0;
     
     final total = saleService.cartTotal;
-    final isVip = saleService.selectedCustomer?.isVip ?? false;
+    final isVip = saleService.selectedCustomer.value?.isVip ?? false;
 
     if (!isVip && paidAmount < total) {
       Get.snackbar(

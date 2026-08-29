@@ -12,8 +12,14 @@ class ReportController extends GetxController {
   final ExpenseService _expenseService = Get.find<ExpenseService>();
   final ProductService _productService = Get.find<ProductService>();
 
-  // Filter: 'Hari Ini', 'Minggu Ini', 'Bulan Ini', 'Semua'
   final RxString selectedFilter = 'Hari Ini'.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    ever(_saleService.sales, (_) => update());
+    ever(_expenseService.expenses, (_) => update());
+  }
 
   void setFilter(String filter) {
     selectedFilter.value = filter;

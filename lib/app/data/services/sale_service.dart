@@ -28,7 +28,7 @@ class SaleService extends GetxService {
   final cartItems = <CartItem>[].obs;
   final sales = <SaleModel>[].obs;
 
-  CustomerModel? selectedCustomer;
+  final Rx<CustomerModel?> selectedCustomer = Rx<CustomerModel?>(null);
 
   Future<SaleService> init() async {
     _firestore.collection('sales').orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
@@ -75,12 +75,12 @@ class SaleService extends GetxService {
   }
 
   void setCustomer(CustomerModel? customer) {
-    selectedCustomer = customer;
+    selectedCustomer.value = customer;
   }
 
   void clearCart() {
     cartItems.clear();
-    selectedCustomer = null;
+    selectedCustomer.value = null;
   }
 
   Future<SaleModel> processCheckout({
@@ -100,8 +100,8 @@ class SaleService extends GetxService {
     final saleId = const Uuid().v4();
     final sale = SaleModel(
       id: saleId,
-      customerId: selectedCustomer?.id,
-      customerType: selectedCustomer?.type ?? 'general',
+      customerId: selectedCustomer.value?.id,
+      customerType: selectedCustomer.value?.type ?? 'general',
       cashierId: _authService.currentUser.value?.id ?? 'unknown',
       cashierName: _authService.currentUser.value?.name ?? 'Unknown',
       subtotal: total,
