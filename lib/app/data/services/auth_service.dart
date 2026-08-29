@@ -13,6 +13,25 @@ class AuthService extends GetxService {
   final users = <UserModel>[].obs;
 
   Future<AuthService> init() async {
+    // Auto-create admin if database is empty
+    try {
+      final query = await _firestore.collection('users').limit(1).get();
+      if (query.docs.isEmpty) {
+        final defaultAdmin = UserModel(
+          id: const Uuid().v4(),
+          username: 'admin',
+          password: '123',
+          name: 'Super Admin',
+          role: 'admin',
+          status: 'aktif',
+          createdAt: DateTime.now(),
+        );
+        await _firestore.collection('users').doc(defaultAdmin.id).set(defaultAdmin.toJson());
+      }
+    } catch (e) {
+      print("Error checking/creating default admin: $e");
+    }
+
     // Load users from Firestore
     _firestore.collection('users').snapshots().listen((snapshot) {
       users.value = snapshot.docs.map((doc) => UserModel.fromJson(doc.data(), doc.id)).toList();

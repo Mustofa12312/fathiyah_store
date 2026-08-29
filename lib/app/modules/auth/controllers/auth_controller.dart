@@ -34,7 +34,7 @@ class AuthController extends GetxController {
     // Simulate delay
     await Future.delayed(const Duration(seconds: 1));
     
-    final user = _authService.login(emailController.text, passwordController.text);
+    final user = await _authService.login(emailController.text, passwordController.text);
     
     isLoading.value = false;
     
