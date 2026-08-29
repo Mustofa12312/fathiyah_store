@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/pos_controller.dart';
-import '../../../data/models/customer_model.dart';
+
 
 class CheckoutView extends GetView<PosController> {
   const CheckoutView({super.key});

@@ -10,9 +10,7 @@ import '../../../data/models/sale_model.dart';
 import '../../../data/services/shop_service.dart';
 import '../../../data/services/printer_service.dart';
 import '../../../routes/app_pages.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:intl/intl.dart';
 
 class ReceiptView extends StatelessWidget {
   final SaleModel sale;
