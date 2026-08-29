@@ -33,7 +33,7 @@ class SaleService extends GetxService {
   Future<SaleService> init() async {
     _firestore.collection('sales').orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
       sales.value = snapshot.docs.map((doc) => SaleModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('SaleService Error: $e'));
     return this;
   }
 

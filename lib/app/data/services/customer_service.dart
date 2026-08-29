@@ -11,7 +11,7 @@ class CustomerService extends GetxService {
   Future<CustomerService> init() async {
     _firestore.collection('customers').snapshots().listen((snapshot) {
       customers.value = snapshot.docs.map((doc) => CustomerModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('CustomerService Error: $e'));
     return this;
   }
 

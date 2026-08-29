@@ -11,7 +11,7 @@ class ExpenseService extends GetxService {
   Future<ExpenseService> init() async {
     _firestore.collection('expenses').orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
       expenses.value = snapshot.docs.map((doc) => ExpenseModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('ExpenseService Error: $e'));
     return this;
   }
 

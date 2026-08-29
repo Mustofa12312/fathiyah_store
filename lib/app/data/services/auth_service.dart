@@ -16,7 +16,7 @@ class AuthService extends GetxService {
     // Load users from Firestore
     _firestore.collection('users').snapshots().listen((snapshot) {
       users.value = snapshot.docs.map((doc) => UserModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('AuthService Error: $e'));
     return this;
   }
 

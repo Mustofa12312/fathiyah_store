@@ -23,7 +23,7 @@ class ShiftService extends GetxService {
     // Listen to all shifts for admin/reports
     _firestore.collection('shifts').orderBy('startTime', descending: true).snapshots().listen((snapshot) {
       shifts.value = snapshot.docs.map((doc) => ShiftModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('ShiftService Error: $e'));
 
     return this;
   }
