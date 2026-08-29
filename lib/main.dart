@@ -26,17 +26,21 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Services - urutan PENTING! Service yang dibutuhkan harus diinisialisasi lebih dulu
+  // Initialize Services - urutan berdasarkan dependency graph
+  // Layer 1: tidak bergantung pada service lain
   Get.put(AuthService(), permanent: true).init();
-  Get.put(AuditLogService(), permanent: true).init(); // Harus sebelum service lain yang bergantung padanya
+  Get.put(StockMovementService(), permanent: true);
+  Get.put(AuditLogService(), permanent: true).init();
+  Get.put(ShiftService(), permanent: true).init();
+  // Layer 2: bergantung pada Layer 1
+  Get.put(ShopService(), permanent: true).init();
   Get.put(ProductService(), permanent: true).init();
   Get.put(CustomerService(), permanent: true).init();
+  // Layer 3: bergantung pada Layer 1 & 2
   Get.put(SaleService(), permanent: true).init();
   Get.put(ExpenseService(), permanent: true).init();
-  Get.put(ShiftService(), permanent: true).init();
-  Get.put(StockMovementService(), permanent: true);
-  Get.put(ShopService(), permanent: true).init();
   Get.put(PrinterService(), permanent: true).init();
+  // Layer 4: bergantung pada semua layer di atas
   Get.put(BackupService(), permanent: true);
 
   // Set preferred orientations
