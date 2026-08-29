@@ -3,7 +3,7 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:intl/intl.dart';
 import '../models/sale_model.dart';
 import 'shop_service.dart';
-import '../../core/utils/currency_formatter.dart';
+import 'package:fathiyah_store/app/core/utils/currency_formatter.dart';
 
 class PrinterService extends GetxService {
   final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
