@@ -12,6 +12,7 @@ import '../../report/views/report_view.dart';
 import '../../settings/views/settings_view.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/product_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -146,7 +147,7 @@ class DashboardView extends GetView<DashboardController> {
                   }),
                   
                   // Summary Cards Grid
-                  GridView.count(
+                  Obx(() => GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -156,30 +157,30 @@ class DashboardView extends GetView<DashboardController> {
                     children: [
                       _buildSummaryCard(
                         'Penjualan',
-                        'Rp2.500.000',
+                        CurrencyFormatter.formatRupiah(controller.todaySales),
                         Icons.trending_up_rounded,
                         AppTheme.primary,
                       ),
                       _buildSummaryCard(
                         'Uang Masuk',
-                        'Rp2.200.000',
+                        CurrencyFormatter.formatRupiah(controller.todayCashIn),
                         Icons.account_balance_wallet_rounded,
                         AppTheme.accent,
                       ),
                       _buildSummaryCard(
                         'Pengeluaran',
-                        'Rp500.000',
+                        CurrencyFormatter.formatRupiah(controller.todayExpenses),
                         Icons.trending_down_rounded,
                         Colors.red.shade500,
                       ),
                       _buildSummaryCard(
                         'Piutang',
-                        'Rp300.000',
+                        CurrencyFormatter.formatRupiah(controller.todayDebt),
                         Icons.receipt_long_rounded,
                         AppTheme.vipGold,
                       ),
                     ],
-                  ),
+                  )),
                   
                   SizedBox(height: 32.h),
                   

@@ -196,6 +196,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                       children: [
                         _buildLabel('Satuan'),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           value: _selectedUnit,
                           items: _units.map((u) {
                             return DropdownMenuItem(value: u, child: Text(u));
