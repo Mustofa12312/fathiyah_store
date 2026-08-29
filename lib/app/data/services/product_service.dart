@@ -1,9 +1,12 @@
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product_model.dart';
 import '../models/category_model.dart';
 
 class ProductService extends GetxService {
-  // Dummy Categories
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // Dummy Categories for now (or move to Firestore later)
   final categories = <CategoryModel>[
     CategoryModel(id: 'cat_1', name: 'Minuman'),
     CategoryModel(id: 'cat_2', name: 'Sembako'),
@@ -11,64 +14,24 @@ class ProductService extends GetxService {
     CategoryModel(id: 'cat_4', name: 'Kebutuhan Mandi'),
   ].obs;
 
-  // Dummy Products
-  final products = <ProductModel>[
-    ProductModel(
-      id: 'prod_1',
-      name: 'Kopi Kapal Api',
-      categoryId: 'cat_1',
-      unit: 'Sachet',
-      purchasePrice: 1000,
-      sellingPrice: 1500,
-      stock: 5, // low stock
-      minimumStock: 10,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ),
-    ProductModel(
-      id: 'prod_2',
-      name: 'Beras Bulog 5Kg',
-      categoryId: 'cat_2',
-      unit: 'Sak',
-      purchasePrice: 50000,
-      sellingPrice: 55000,
-      stock: 20, // good stock
-      minimumStock: 5,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ),
-    ProductModel(
-      id: 'prod_3',
-      name: 'Minyak Goreng Bimoli 1L',
-      categoryId: 'cat_2',
-      unit: 'Pouch',
-      purchasePrice: 15000,
-      sellingPrice: 17500,
-      stock: 0, // out of stock
-      minimumStock: 10,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ),
-  ].obs;
+  final products = <ProductModel>[].obs;
 
   Future<ProductService> init() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    _firestore.collection('products').snapshots().listen((snapshot) {
+      products.value = snapshot.docs.map((doc) => ProductModel.fromJson(doc.data(), doc.id)).toList();
+    });
     return this;
   }
 
-  void addProduct(ProductModel product) {
-    products.add(product);
+  Future<void> addProduct(ProductModel product) async {
+    await _firestore.collection('products').doc(product.id).set(product.toJson());
   }
 
-  void updateProduct(ProductModel updatedProduct) {
-    final index = products.indexWhere((p) => p.id == updatedProduct.id);
-    if (index != -1) {
-      products[index] = updatedProduct;
-    }
+  Future<void> updateProduct(ProductModel updatedProduct) async {
+    await _firestore.collection('products').doc(updatedProduct.id).update(updatedProduct.toJson());
   }
 
-  void deleteProduct(String id) {
-    products.removeWhere((p) => p.id == id);
+  Future<void> deleteProduct(String id) async {
+    await _firestore.collection('products').doc(id).delete();
   }
 }

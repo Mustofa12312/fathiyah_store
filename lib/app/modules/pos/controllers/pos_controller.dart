@@ -40,7 +40,7 @@ class PosController extends GetxController {
     saleService.setCustomer(customer);
   }
 
-  void processPayment() {
+  Future<void> processPayment() async {
     final paidAmountStr = paidAmountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final paidAmount = double.tryParse(paidAmountStr) ?? 0.0;
     
@@ -59,7 +59,7 @@ class PosController extends GetxController {
     }
 
     // Process checkout
-    final saleResult = saleService.processCheckout(
+    final saleResult = await saleService.processCheckout(
       paidAmount: paidAmount,
       paymentMethod: paymentMethod.value,
     );

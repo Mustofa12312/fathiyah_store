@@ -1,60 +1,35 @@
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/customer_model.dart';
 
 class CustomerService extends GetxService {
-  final customers = <CustomerModel>[
-    CustomerModel(
-      id: 'cust_1',
-      name: 'Ahmad',
-      phone: '081234567890',
-      address: 'Jl. Merdeka No. 1',
-      type: 'vip',
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-    ),
-    CustomerModel(
-      id: 'cust_2',
-      name: 'Budi Santoso',
-      phone: '085678901234',
-      address: 'Komp. Melati Blok B/2',
-      type: 'general',
-      createdAt: DateTime.now().subtract(const Duration(days: 15)),
-    ),
-    CustomerModel(
-      id: 'cust_3',
-      name: 'Siti Rahma',
-      phone: '089912345678',
-      type: 'vip',
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-    ),
-  ].obs;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final customers = <CustomerModel>[].obs;
 
   Future<CustomerService> init() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    _firestore.collection('customers').snapshots().listen((snapshot) {
+      customers.value = snapshot.docs.map((doc) => CustomerModel.fromJson(doc.data(), doc.id)).toList();
+    });
     return this;
   }
 
-  void addCustomer(CustomerModel customer) {
-    customers.add(customer);
+  Future<void> addCustomer(CustomerModel customer) async {
+    await _firestore.collection('customers').doc(customer.id).set(customer.toJson());
   }
 
-  void updateCustomer(CustomerModel updatedCustomer) {
-    final index = customers.indexWhere((c) => c.id == updatedCustomer.id);
-    if (index != -1) {
-      customers[index] = updatedCustomer;
-    }
+  Future<void> updateCustomer(CustomerModel updatedCustomer) async {
+    await _firestore.collection('customers').doc(updatedCustomer.id).update(updatedCustomer.toJson());
   }
 
-  void deleteCustomer(String id) {
-    customers.removeWhere((c) => c.id == id);
+  Future<void> deleteCustomer(String id) async {
+    await _firestore.collection('customers').doc(id).delete();
   }
 
-  void toggleVipStatus(String customerId) {
-    final index = customers.indexWhere((c) => c.id == customerId);
-    if (index != -1) {
-      final customer = customers[index];
+  Future<void> toggleVipStatus(String customerId) async {
+    final customer = customers.firstWhereOrNull((c) => c.id == customerId);
+    if (customer != null) {
       final newType = customer.type == 'vip' ? 'general' : 'vip';
-      customers[index] = customer.copyWith(type: newType);
+      await _firestore.collection('customers').doc(customerId).update({'type': newType});
     }
   }
 }
