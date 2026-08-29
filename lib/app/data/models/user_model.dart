@@ -14,6 +14,27 @@ class UserModel {
     required this.role,
     this.status = 'aktif',
   });
+
+  factory UserModel.fromJson(Map<String, dynamic> json, String documentId) {
+    return UserModel(
+      id: documentId,
+      name: json['name'] ?? '',
+      username: json['username'] ?? '',
+      password: json['password'] ?? '',
+      role: json['role'] ?? 'cashier',
+      status: json['status'] ?? 'aktif',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'username': username,
+      'password': password,
+      'role': role,
+      'status': status,
+    };
+  }
   
   bool get isAdmin => role == 'admin';
 

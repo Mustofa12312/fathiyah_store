@@ -130,7 +130,7 @@ class ReportController extends GetxController {
         ['Laba Bersih', filteredNetProfit],
       ];
 
-      String csvData = ListToCsvConverter().convert(rows);
+      String csvData = Csv().encode(rows);
 
       final directory = await getApplicationDocumentsDirectory();
       final String filePath = '${directory.path}/laporan_fathiyah_store.csv';
