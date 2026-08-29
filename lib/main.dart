@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 // import 'package:firebase_core/firebase_core.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
+import 'app/data/services/auth_service.dart';
 import 'app/data/services/product_service.dart';
 import 'app/data/services/customer_service.dart';
 import 'app/data/services/sale_service.dart';
@@ -14,6 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize Services
+  Get.put(AuthService(), permanent: true);
   Get.put(ProductService(), permanent: true);
   Get.put(CustomerService(), permanent: true);
   Get.put(SaleService(), permanent: true);

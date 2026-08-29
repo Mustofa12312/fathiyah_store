@@ -1,0 +1,34 @@
+import 'package:get/get.dart';
+import '../../../data/services/auth_service.dart';
+import '../../../data/models/user_model.dart';
+import '../../../routes/app_pages.dart';
+
+class SettingsController extends GetxController {
+  final AuthService _authService = Get.find<AuthService>();
+
+  UserModel? get currentUser => _authService.currentUser.value;
+  bool get isAdmin => _authService.isAdmin;
+
+  List<UserModel> get allUsers => _authService.users;
+
+  void logout() {
+    _authService.logout();
+    Get.offAllNamed(Routes.AUTH);
+  }
+
+  void toggleUserStatus(String userId) {
+    if (!isAdmin) return;
+    
+    final user = allUsers.firstWhereOrNull((u) => u.id == userId);
+    if (user != null) {
+      if (user.role == 'admin') {
+        Get.snackbar('Error', 'Tidak dapat menonaktifkan Admin Utama');
+        return;
+      }
+      
+      final newStatus = user.status == 'aktif' ? 'nonaktif' : 'aktif';
+      _authService.updateUser(user.copyWith(status: newStatus));
+      update(); // refresh UI
+    }
+  }
+}
