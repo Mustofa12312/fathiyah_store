@@ -10,13 +10,9 @@ class ProductService extends GetxService {
   final AuditLogService _auditLogService = Get.find<AuditLogService>();
   final StockMovementService _stockMovementService = Get.find<StockMovementService>();
   
-  // Dummy Categories for now (or move to Firestore later)
-  final categories = <CategoryModel>[
-    CategoryModel(id: 'cat_1', name: 'Minuman'),
-    CategoryModel(id: 'cat_2', name: 'Sembako'),
-    CategoryModel(id: 'cat_3', name: 'Makanan Ringan'),
-    CategoryModel(id: 'cat_4', name: 'Kebutuhan Mandi'),
-  ].obs;
+  final CategoryService _categoryService = Get.find<CategoryService>();
+  
+  RxList<CategoryModel> get categories => _categoryService.categories;
 
   final products = <ProductModel>[].obs;
 

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import 'package:flutter/services.dart';
 import '../controllers/pos_controller.dart';
 import '../../../data/models/customer_model.dart';
 
@@ -86,6 +87,7 @@ class CheckoutView extends GetView<PosController> {
             TextField(
               controller: controller.paidAmountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsFormatter()],
               style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
               decoration: const InputDecoration(
                 prefixText: 'Rp ',

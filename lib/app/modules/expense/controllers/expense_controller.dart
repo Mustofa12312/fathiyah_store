@@ -43,6 +43,8 @@ class ExpenseController extends GetxController {
     
     update(); // refresh list
     Get.back();
-    Get.snackbar('Sukses', 'Pengeluaran berhasil dicatat', backgroundColor: Colors.green.shade100);
+    Future.delayed(const Duration(milliseconds: 300), () {
+      Get.snackbar('Sukses', 'Pengeluaran berhasil dicatat', backgroundColor: Colors.green.shade100);
+    });
   }
 }

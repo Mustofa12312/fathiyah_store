@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/debt_controller.dart';
+import 'package:flutter/services.dart';
 import '../../../data/models/customer_model.dart';
 import '../../../data/models/sale_model.dart';
 
@@ -132,6 +133,7 @@ class DebtDetailView extends GetView<DebtController> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsFormatter()],
               decoration: const InputDecoration(
                 prefixText: 'Rp ',
                 labelText: 'Nominal Bayar',

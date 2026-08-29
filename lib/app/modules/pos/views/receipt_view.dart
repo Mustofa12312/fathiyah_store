@@ -103,6 +103,8 @@ class ReceiptView extends StatelessWidget {
                     
                     if (sale.remainingAmount > 0)
                       _buildTotalRow('Sisa / Piutang', sale.remainingAmount, isHighlight: true),
+                    if (sale.paidAmount > sale.totalAmount)
+                      _buildTotalRow('Kembalian', sale.paidAmount - sale.totalAmount, isHighlight: true),
                       
                     SizedBox(height: 24.h),
                     

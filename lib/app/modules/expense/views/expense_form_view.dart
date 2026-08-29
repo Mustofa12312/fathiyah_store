@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../controllers/expense_controller.dart';
 
 class ExpenseFormView extends GetView<ExpenseController> {
@@ -31,6 +33,7 @@ class ExpenseFormView extends GetView<ExpenseController> {
             TextField(
               controller: controller.amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsFormatter()],
               style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
               decoration: const InputDecoration(
                 prefixText: 'Rp ',

@@ -11,6 +11,7 @@ class CustomerListView extends GetView<CustomerController> {
 
   @override
   Widget build(BuildContext context) {
+    Get.put(CustomerController());
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Pelanggan'),

@@ -81,92 +81,227 @@ class PosView extends GetView<PosController> {
             // Search Bar
             Container(
               padding: EdgeInsets.all(16.w),
-              color: AppTheme.surface,
-              child: TextField(
-                onChanged: (value) => controller.searchQuery.value = value,
-                decoration: InputDecoration(
-                  hintText: 'Cari barang (nama/barcode)...',
-                  prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
+              color: AppTheme.background,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: TextField(
+                  onChanged: (value) => controller.searchQuery.value = value,
+                  decoration: InputDecoration(
+                    hintText: 'Cari barang (nama/barcode)...',
+                    prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+                  ),
                 ),
               ),
             ),
           
-          // Product List Grid
+          // Product and Cart Split View
           Expanded(
-            child: Obx(() {
-              final products = controller.filteredProducts;
-              if (products.isEmpty) {
-                return const Center(child: Text('Tidak ada produk.'));
-              }
-              
-              return GridView.builder(
-                padding: EdgeInsets.all(16.w),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16.w,
-                  mainAxisSpacing: 16.w,
-                ),
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  final isOutOfStock = product.stock <= 0;
-                  
-                  return Card(
-                    child: InkWell(
-                      onTap: isOutOfStock ? null : () => controller.saleService.addToCart(product),
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppTheme.divider,
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                              ),
-                              child: Icon(Icons.inventory_2_outlined, color: AppTheme.textSecondary, size: 40.sp),
-                            ),
+            child: Column(
+              children: [
+                // Product List
+                Expanded(
+                  flex: 3,
+                  child: Obx(() {
+                    final products = controller.filteredProducts;
+                    if (products.isEmpty) {
+                      return const Center(child: Text('Tidak ada produk.'));
+                    }
+                    
+                    return ListView.separated(
+                      padding: EdgeInsets.all(16.w),
+                      itemCount: products.length,
+                      separatorBuilder: (context, index) => SizedBox(height: 8.h),
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        final isOutOfStock = product.stock <= 0;
+                        
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                            ],
                           ),
-                          Padding(
-                            padding: EdgeInsets.all(12.w),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                            title: Text(
+                              product.name,
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp, color: AppTheme.textPrimary),
+                            ),
+                            subtitle: Text(
+                              isOutOfStock ? 'Stok Habis' : 'Stok: ${product.stock}',
+                              style: TextStyle(
+                                color: isOutOfStock ? Colors.red : AppTheme.textSecondary,
+                                fontSize: 13.sp,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  product.name,
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 4.h),
                                 Text(
                                   CurrencyFormatter.formatRupiah(product.sellingPrice),
                                   style: TextStyle(
                                     color: AppTheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15.sp,
                                   ),
                                 ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  isOutOfStock ? 'Stok Habis' : 'Stok: ${product.stock}',
-                                  style: TextStyle(
-                                    color: isOutOfStock ? Colors.red : AppTheme.textSecondary,
-                                    fontSize: 12.sp,
+                                SizedBox(width: 16.w),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: isOutOfStock ? Colors.grey.shade100 : AppTheme.accent.withOpacity(0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.add,
+                                      color: isOutOfStock ? Colors.grey : AppTheme.accent,
+                                      size: 24.sp,
+                                    ),
+                                    onPressed: isOutOfStock ? null : () => controller.saleService.addToCart(product),
                                   ),
                                 ),
                               ],
                             ),
-                          )
-                        ],
-                      ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+                
+                // Cart Items List
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, -5)),
+                      ],
                     ),
-                  );
-                },
-              );
-            }),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                          child: Row(
+                            children: [
+                              Icon(Icons.shopping_cart_outlined, color: AppTheme.primary, size: 20.sp),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Keranjang Belanja',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1, color: AppTheme.divider),
+                        Expanded(
+                          child: Obx(() {
+                            final cartItems = controller.saleService.cartItems;
+                            if (cartItems.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.remove_shopping_cart_outlined, color: Colors.grey.shade300, size: 48.sp),
+                                    SizedBox(height: 8.h),
+                                    Text('Keranjang masih kosong', style: TextStyle(color: Colors.grey.shade500)),
+                                  ],
+                                ),
+                              );
+                            }
+                            
+                            return ListView.separated(
+                              padding: EdgeInsets.symmetric(vertical: 8.h),
+                              itemCount: cartItems.length,
+                              separatorBuilder: (context, index) => const Divider(height: 1, color: AppTheme.divider),
+                              itemBuilder: (context, index) {
+                                final item = cartItems[index];
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.product.name,
+                                              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                                            ),
+                                            SizedBox(height: 4.h),
+                                            Text(
+                                              CurrencyFormatter.formatRupiah(item.product.sellingPrice),
+                                              style: TextStyle(color: AppTheme.primary, fontSize: 13.sp, fontWeight: FontWeight.w500),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.background,
+                                          borderRadius: BorderRadius.circular(20.r),
+                                          border: Border.all(color: AppTheme.divider),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            InkWell(
+                                              onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
+                                              borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                                                child: Icon(Icons.remove, color: Colors.red.shade400, size: 18.sp),
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                              child: Text(
+                                                '${item.quantity}',
+                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                                              ),
+                                            ),
+                                            InkWell(
+                                              onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity + 1),
+                                              borderRadius: BorderRadius.horizontal(right: Radius.circular(20.r)),
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                                                child: Icon(Icons.add, color: AppTheme.primary, size: 18.sp),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           
           // Cart Summary Bottom Bar
@@ -211,12 +346,13 @@ class PosView extends GetView<PosController> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => _showCartBottomSheet(context),
+                      onPressed: () => Get.to(() => const CheckoutView()),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accent,
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                       ),
-                      child: const Text('Cek Keranjang'),
+                      child: const Text('Bayar Sekarang'),
                     ),
                   ],
                 ),
@@ -274,137 +410,6 @@ class PosView extends GetView<PosController> {
             child: const Text('Mulai Shift'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showCartBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        child: Column(
-          children: [
-            // Handle
-            Container(
-              margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppTheme.divider,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Keranjang', style: Theme.of(context).textTheme.displayMedium),
-                  TextButton(
-                    onPressed: () {
-                      controller.saleService.clearCart();
-                      Get.back();
-                    },
-                    child: Text('Kosongkan', style: TextStyle(color: Colors.red.shade400)),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Cart Items
-            Expanded(
-              child: Obx(() {
-                final items = controller.saleService.cartItems;
-                return ListView.separated(
-                  padding: EdgeInsets.all(24.w),
-                  itemCount: items.length,
-                  separatorBuilder: (c, i) => Divider(color: AppTheme.divider, height: 32.h),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(item.product.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                              SizedBox(height: 4.h),
-                              Text(CurrencyFormatter.formatRupiah(item.product.sellingPrice), style: TextStyle(color: AppTheme.textSecondary)),
-                            ],
-                          ),
-                        ),
-                        // Qty control
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
-                              icon: const Icon(Icons.remove_circle_outline),
-                              color: AppTheme.primary,
-                            ),
-                            Text('${item.quantity}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                            IconButton(
-                              onPressed: () => controller.saleService.updateQuantity(item.product.id, item.quantity + 1),
-                              icon: const Icon(Icons.add_circle_outline),
-                              color: AppTheme.primary,
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }),
-            ),
-            
-            // Checkout Footer
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                border: Border(top: BorderSide(color: AppTheme.divider)),
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Total Pembayaran', style: TextStyle(fontSize: 16.sp)),
-                        Obx(() => Text(
-                          CurrencyFormatter.formatRupiah(controller.saleService.cartTotal),
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp, color: AppTheme.primary),
-                        )),
-                      ],
-                    ),
-                    SizedBox(height: 16.h),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Get.back(); // close cart
-                          Get.to(() => const CheckoutView()); // to checkout
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                        ),
-                        child: const Text('Lanjut ke Pembayaran'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

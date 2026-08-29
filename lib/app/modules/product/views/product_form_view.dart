@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 import 'package:intl/intl.dart';
 
@@ -41,10 +43,15 @@ class _ProductFormViewState extends State<ProductFormView> {
     super.initState();
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _barcodeController = TextEditingController(text: widget.product?.barcode ?? '');
-    _purchasePriceController = TextEditingController(text: widget.product?.purchasePrice.toInt().toString() ?? '');
-    _sellingPriceController = TextEditingController(text: widget.product?.sellingPrice.toInt().toString() ?? '');
-    _stockController = TextEditingController(text: widget.product?.stock.toString() ?? '');
-    _minimumStockController = TextEditingController(text: widget.product?.minimumStock.toString() ?? '');
+    final formatNumber = (num? value) {
+      if (value == null) return '';
+      return NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(value).trim();
+    };
+
+    _purchasePriceController = TextEditingController(text: formatNumber(widget.product?.purchasePrice));
+    _sellingPriceController = TextEditingController(text: formatNumber(widget.product?.sellingPrice));
+    _stockController = TextEditingController(text: formatNumber(widget.product?.stock));
+    _minimumStockController = TextEditingController(text: formatNumber(widget.product?.minimumStock));
     
     _selectedCategoryId = widget.product?.categoryId;
     if (widget.product != null && _units.contains(widget.product!.unit)) {
@@ -78,9 +85,9 @@ class _ProductFormViewState extends State<ProductFormView> {
         categoryId: _selectedCategoryId!,
         barcode: _barcodeController.text.isEmpty ? null : _barcodeController.text,
         unit: _selectedUnit,
-        purchasePrice: double.tryParse(_purchasePriceController.text) ?? 0,
-        sellingPrice: double.tryParse(_sellingPriceController.text) ?? 0,
-        stock: int.tryParse(_stockController.text) ?? 0,
+        purchasePrice: double.tryParse(_purchasePriceController.text.replaceAll('.', '')) ?? 0,
+        sellingPrice: double.tryParse(_sellingPriceController.text.replaceAll('.', '')) ?? 0,
+        stock: int.tryParse(_stockController.text.replaceAll('.', '')) ?? 0,
         minimumStock: int.tryParse(_minimumStockController.text) ?? 0,
         createdAt: isEdit ? widget.product!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
@@ -88,13 +95,19 @@ class _ProductFormViewState extends State<ProductFormView> {
 
       if (isEdit) {
         _productService.updateProduct(product);
-        Get.snackbar('Sukses', 'Produk berhasil diperbarui');
       } else {
         _productService.addProduct(product);
-        Get.snackbar('Sukses', 'Produk berhasil ditambahkan');
       }
 
       Get.back();
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Get.snackbar(
+          'Sukses', 
+          isEdit ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan',
+          snackPosition: SnackPosition.TOP,
+        );
+      });
     }
   }
 
@@ -216,6 +229,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                         TextFormField(
                           controller: _purchasePriceController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsFormatter()],
                           validator: (v) => v!.isEmpty ? 'Wajib' : null,
                           decoration: const InputDecoration(prefixText: 'Rp '),
                         ),
@@ -231,6 +245,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                         TextFormField(
                           controller: _sellingPriceController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsFormatter()],
                           validator: (v) => v!.isEmpty ? 'Wajib' : null,
                           decoration: const InputDecoration(prefixText: 'Rp '),
                         ),
@@ -252,6 +267,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                         TextFormField(
                           controller: _stockController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsFormatter()],
                           validator: (v) => v!.isEmpty ? 'Wajib' : null,
                         ),
                       ],
@@ -266,6 +282,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                         TextFormField(
                           controller: _minimumStockController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsFormatter()],
                           validator: (v) => v!.isEmpty ? 'Wajib' : null,
                         ),
                       ],

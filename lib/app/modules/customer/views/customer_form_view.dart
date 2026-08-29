@@ -56,13 +56,19 @@ class _CustomerFormViewState extends State<CustomerFormView> {
 
       if (isEdit) {
         _customerService.updateCustomer(customer);
-        Get.snackbar('Sukses', 'Data pelanggan berhasil diperbarui');
       } else {
         _customerService.addCustomer(customer);
-        Get.snackbar('Sukses', 'Pelanggan berhasil ditambahkan');
       }
 
       Get.back();
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Get.snackbar(
+          'Sukses', 
+          isEdit ? 'Data pelanggan berhasil diperbarui' : 'Pelanggan berhasil ditambahkan',
+          backgroundColor: Colors.green.shade100,
+        );
+      });
     }
   }
 

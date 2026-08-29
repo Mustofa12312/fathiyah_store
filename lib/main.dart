@@ -8,6 +8,7 @@ import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/services/auth_service.dart';
 import 'app/data/services/product_service.dart';
+import 'app/data/services/category_service.dart';
 import 'app/data/services/customer_service.dart';
 import 'app/data/services/sale_service.dart';
 import 'app/data/services/expense_service.dart';
@@ -34,6 +35,7 @@ void main() async {
   Get.put(ShiftService(), permanent: true).init();
   // Layer 2: bergantung pada Layer 1
   Get.put(ShopService(), permanent: true).init();
+  Get.put(CategoryService(), permanent: true).init();
   Get.put(ProductService(), permanent: true).init();
   Get.put(CustomerService(), permanent: true).init();
   // Layer 3: bergantung pada Layer 1 & 2
