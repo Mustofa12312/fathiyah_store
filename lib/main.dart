@@ -14,6 +14,8 @@ import 'app/data/services/expense_service.dart';
 import 'app/data/services/shift_service.dart';
 import 'app/data/services/audit_log_service.dart';
 import 'app/data/services/stock_movement_service.dart';
+import 'app/data/services/shop_service.dart';
+import 'app/data/services/printer_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +34,8 @@ void main() async {
   Get.put(ShiftService(), permanent: true).init();
   Get.put(AuditLogService(), permanent: true).init();
   Get.put(StockMovementService(), permanent: true);
+  Get.put(ShopService(), permanent: true).init();
+  Get.put(PrinterService(), permanent: true).init();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

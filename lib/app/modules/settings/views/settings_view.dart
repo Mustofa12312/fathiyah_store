@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/settings_controller.dart';
 import '../../user_management/views/user_management_view.dart';
 import '../../audit_log/views/audit_log_view.dart';
+import '../../shop/views/shop_settings_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -102,9 +103,7 @@ class SettingsView extends StatelessWidget {
               icon: Icons.storefront_rounded,
               title: 'Profil Toko',
               subtitle: 'Atur nama toko, alamat, dan logo',
-              onTap: () {
-                Get.snackbar('Info', 'Fitur Profil Toko akan tersedia di pembaruan selanjutnya.');
-              },
+              onTap: () => Get.to(() => const ShopSettingsView()),
             ),
 
             SizedBox(height: 24.h),

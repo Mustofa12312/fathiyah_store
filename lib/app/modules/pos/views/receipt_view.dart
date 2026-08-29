@@ -6,7 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../data/models/sale_model.dart';
+import '../../../data/services/shop_service.dart';
+import '../../../data/services/printer_service.dart';
 import '../../../routes/app_pages.dart';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 
 class ReceiptView extends StatelessWidget {
   final SaleModel sale;
@@ -28,7 +31,7 @@ class ReceiptView extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.print),
-            onPressed: () {},
+            onPressed: () => _showPrinterDialog(context, sale),
           ),
         ],
       ),
@@ -48,7 +51,10 @@ class ReceiptView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('FATHIYAH STORE', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24.sp)),
+                    Obx(() {
+                      final shopName = Get.find<ShopService>().shop.value?.name ?? 'FATHIYAH STORE';
+                      return Text(shopName, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24.sp));
+                    }),
                     SizedBox(height: 16.h),
                     const Divider(color: Colors.black12, thickness: 2),
                     SizedBox(height: 16.h),
@@ -117,7 +123,10 @@ class ReceiptView extends StatelessWidget {
                     ),
                     
                     SizedBox(height: 32.h),
-                    Text('Terima Kasih', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 12.sp)),
+                    Obx(() {
+                      final footer = Get.find<ShopService>().shop.value?.receiptFooter ?? 'Terima Kasih';
+                      return Text(footer, textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 12.sp));
+                    }),
                   ],
                 ),
               ),
@@ -197,7 +206,9 @@ class ReceiptView extends StatelessWidget {
   }
 
   void _shareToWhatsApp(SaleModel sale) async {
-    final storeName = "FATHIYAH STORE";
+    final shopService = Get.find<ShopService>();
+    final storeName = shopService.shop.value?.name ?? "FATHIYAH STORE";
+    final footer = shopService.shop.value?.receiptFooter ?? "Terima Kasih!";
     
     // Build receipt text
     StringBuffer sb = StringBuffer();
@@ -229,7 +240,7 @@ class ReceiptView extends StatelessWidget {
     }
     
     sb.writeln("──────────────────");
-    sb.writeln("Terima Kasih!");
+    sb.writeln(footer);
 
     final text = Uri.encodeComponent(sb.toString());
     final url = Uri.parse("whatsapp://send?text=$text");
@@ -245,5 +256,83 @@ class ReceiptView extends StatelessWidget {
         Get.snackbar('Error', 'Tidak dapat membuka WhatsApp');
       }
     }
+  }
+
+  void _showPrinterDialog(BuildContext context, SaleModel sale) {
+    final printerService = Get.find<PrinterService>();
+    
+    Get.bottomSheet(
+      Container(
+        color: Colors.white,
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Pilih Printer Bluetooth', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                IconButton(icon: const Icon(Icons.refresh), onPressed: printerService.scanDevices),
+              ],
+            ),
+            Divider(color: AppTheme.divider),
+            Obx(() {
+              if (printerService.devices.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: Text('Tidak ada perangkat bluetooth ditemukan')),
+                );
+              }
+              
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: printerService.devices.length,
+                itemBuilder: (context, index) {
+                  final device = printerService.devices[index];
+                  return ListTile(
+                    leading: const Icon(Icons.print),
+                    title: Text(device.name ?? 'Unknown Device'),
+                    subtitle: Text(device.address ?? ''),
+                    trailing: Obx(() => printerService.selectedDevice.value?.address == device.address
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : const SizedBox.shrink()),
+                    onTap: () async {
+                      await printerService.connect(device);
+                      if (printerService.isConnected.value) {
+                        Get.back();
+                        printerService.printReceipt(sale);
+                      }
+                    },
+                  );
+                },
+              );
+            }),
+            SizedBox(height: 16.h),
+            Obx(() {
+              if (printerService.isConnected.value) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Get.back();
+                      printerService.printReceipt(sale);
+                    },
+                    icon: const Icon(Icons.print),
+                    label: const Text('Cetak Struk Sekarang'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 }
