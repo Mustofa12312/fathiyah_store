@@ -49,6 +49,7 @@ dependencies:
   simple_barcode_scanner: ^0.6.0
   url_launcher: ^6.3.2
   blue_thermal_printer: ^1.2.3
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:

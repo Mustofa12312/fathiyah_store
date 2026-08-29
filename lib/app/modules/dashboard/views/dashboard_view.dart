@@ -11,6 +11,7 @@ import '../../report/views/report_view.dart';
 
 import '../../settings/views/settings_view.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/product_service.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -98,6 +99,51 @@ class DashboardView extends GetView<DashboardController> {
                     ),
                   ),
                   SizedBox(height: 16.h),
+                  
+                  // Low Stock Alert
+                  Obx(() {
+                    final productService = Get.find<ProductService>();
+                    final lowStockItems = productService.products.where((p) => p.stock <= p.minimumStock).toList();
+                    
+                    if (lowStockItems.isEmpty) return const SizedBox.shrink();
+                    
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        border: Border.all(color: Colors.orange.shade300),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800, size: 28.w),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Peringatan Stok Menipis',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade900),
+                                ),
+                                Text(
+                                  'Terdapat ${lowStockItems.length} produk yang stoknya hampir atau sudah habis.',
+                                  style: TextStyle(color: Colors.orange.shade800, fontSize: 12.sp),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              controller.changePage(1); // Go to products tab
+                            },
+                            child: const Text('Lihat'),
+                          )
+                        ],
+                      ),
+                    );
+                  }),
                   
                   // Summary Cards Grid
                   GridView.count(

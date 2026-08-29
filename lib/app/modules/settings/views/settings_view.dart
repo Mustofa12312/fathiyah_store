@@ -6,6 +6,7 @@ import '../controllers/settings_controller.dart';
 import '../../user_management/views/user_management_view.dart';
 import '../../audit_log/views/audit_log_view.dart';
 import '../../shop/views/shop_settings_view.dart';
+import '../../../data/services/backup_service.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -106,6 +107,19 @@ class SettingsView extends StatelessWidget {
               onTap: () => Get.to(() => const ShopSettingsView()),
             ),
 
+            SizedBox(height: 24.h),
+            Text('Manajemen Data', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+            SizedBox(height: 8.h),
+            _buildMenuTile(
+              icon: Icons.backup_rounded,
+              title: 'Backup Data (Ekspor)',
+              subtitle: 'Simpan semua data (Produk, Pelanggan, Transaksi) ke CSV',
+              onTap: () async {
+                final backupService = Get.find<BackupService>();
+                await backupService.exportAndShareBackup();
+              },
+            ),
+            
             SizedBox(height: 24.h),
             Text('Akun & Keamanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
             SizedBox(height: 12.h),
