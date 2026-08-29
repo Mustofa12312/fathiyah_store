@@ -42,6 +42,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   font_awesome_flutter: ^11.0.0
   intl: ^0.20.3
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:

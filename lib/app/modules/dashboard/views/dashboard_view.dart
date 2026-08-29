@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/dashboard_controller.dart';
+import '../../product/views/product_list_view.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -14,7 +15,7 @@ class DashboardView extends GetView<DashboardController> {
         index: controller.currentIndex.value,
         children: [
           _buildHomeTab(context),
-          const Center(child: Text('Produk')),
+          const ProductListView(),
           const Center(child: Text('Transaksi')),
           const Center(child: Text('Laporan')),
           const Center(child: Text('Pengaturan')),
