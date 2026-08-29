@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/dashboard_controller.dart';
 import '../../product/views/product_list_view.dart';
+import '../../customer/views/customer_list_view.dart';
+import '../../pos/views/pos_view.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -16,7 +18,7 @@ class DashboardView extends GetView<DashboardController> {
         children: [
           _buildHomeTab(context),
           const ProductListView(),
-          const Center(child: Text('Transaksi')),
+          const PosView(),
           const Center(child: Text('Laporan')),
           const Center(child: Text('Pengaturan')),
         ],
@@ -131,9 +133,78 @@ class DashboardView extends GetView<DashboardController> {
                   
                   SizedBox(height: 32.h),
                   
-                  // Quick Actions or Recent Transactions could go here
+                  // Quick Actions
+                  Text(
+                    'Aksi Cepat',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildQuickAction(
+                        context,
+                        'Pelanggan',
+                        Icons.people_alt_rounded,
+                        AppTheme.secondary,
+                        () => Get.to(() => const CustomerListView()),
+                      ),
+                      _buildQuickAction(
+                        context,
+                        'Kasir',
+                        Icons.point_of_sale_rounded,
+                        AppTheme.accent,
+                        () => Get.to(() => const PosView()),
+                      ),
+                      _buildQuickAction(
+                        context,
+                        'Stok',
+                        Icons.inventory_rounded,
+                        Colors.orange.shade500,
+                        () {},
+                      ),
+                      _buildQuickAction(
+                        context,
+                        'Laporan',
+                        Icons.insert_chart_rounded,
+                        Colors.purple.shade500,
+                        () {},
+                      ),
+                    ],
+                  ),
+                  
+                  SizedBox(height: 32.h),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 28.sp),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            title,
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
