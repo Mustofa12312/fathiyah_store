@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../data/services/sale_service.dart';
 import '../../../data/services/product_service.dart';
 import '../../../data/services/customer_service.dart';
+import '../../../data/services/shift_service.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/customer_model.dart';
 import 'package:fathiyah_store/app/modules/pos/views/receipt_view.dart';
@@ -11,6 +12,7 @@ class PosController extends GetxController {
   final SaleService saleService = Get.find<SaleService>();
   final ProductService _productService = Get.find<ProductService>();
   final CustomerService _customerService = Get.find<CustomerService>();
+  final ShiftService shiftService = Get.find<ShiftService>();
 
   final searchQuery = ''.obs;
   

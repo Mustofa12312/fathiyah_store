@@ -5,8 +5,11 @@ import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 
+import 'package:intl/intl.dart';
+
 import '../../../data/models/product_model.dart';
 import '../../../data/services/product_service.dart';
+import '../../../data/services/stock_movement_service.dart';
 
 class ProductFormView extends StatefulWidget {
   final ProductModel? product; // If null, it's Add Mode. If provided, it's Edit Mode.
@@ -101,6 +104,14 @@ class _ProductFormViewState extends State<ProductFormView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Produk' : 'Tambah Produk'),
+        actions: [
+          if (isEdit)
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Riwayat Stok',
+              onPressed: () => _showStockHistory(context),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(24.w),
@@ -329,6 +340,73 @@ class _ProductFormViewState extends State<ProductFormView> {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  void _showStockHistory(BuildContext context) {
+    if (widget.product == null) return;
+    
+    final stockService = Get.find<StockMovementService>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.r))),
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.8,
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Riwayat Stok', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: StreamBuilder(
+                  stream: stockService.getMovementsForProduct(widget.product!.id),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('Belum ada riwayat pergerakan stok.'));
+                    }
+
+                    final movements = snapshot.data!;
+                    return ListView.separated(
+                      padding: EdgeInsets.all(16.w),
+                      itemCount: movements.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final m = movements[index];
+                        final isAdd = m.quantity > 0;
+                        return ListTile(
+                          title: Text('${isAdd ? '+' : ''}${m.quantity} ${m.type}'),
+                          subtitle: Text(
+                            '${m.note}\nOleh ${m.userName} • ${DateFormat('dd MMM yyyy, HH:mm').format(m.createdAt)}',
+                            style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
+                          ),
+                          trailing: Icon(
+                            isAdd ? Icons.arrow_circle_up : Icons.arrow_circle_down,
+                            color: isAdd ? Colors.green : Colors.red,
+                          ),
+                          isThreeLine: true,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 }

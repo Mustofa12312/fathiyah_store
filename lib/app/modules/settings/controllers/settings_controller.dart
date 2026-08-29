@@ -2,9 +2,11 @@ import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
+import '../../../data/services/shift_service.dart';
 
 class SettingsController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
+  final ShiftService shiftService = Get.find<ShiftService>();
 
   UserModel? get currentUser => _authService.currentUser.value;
   bool get isAdmin => _authService.isAdmin;

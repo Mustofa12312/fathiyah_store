@@ -5,6 +5,9 @@ import '../models/sale_model.dart';
 import '../models/product_model.dart';
 import '../models/customer_model.dart';
 import 'product_service.dart';
+import 'auth_service.dart';
+import 'shift_service.dart';
+import 'stock_movement_service.dart';
 
 class CartItem {
   final ProductModel product;
@@ -18,6 +21,9 @@ class CartItem {
 class SaleService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ProductService _productService = Get.find<ProductService>();
+  final AuthService _authService = Get.find<AuthService>();
+  final ShiftService _shiftService = Get.find<ShiftService>();
+  final StockMovementService _stockMovementService = Get.find<StockMovementService>();
 
   final cartItems = <CartItem>[].obs;
   final sales = <SaleModel>[].obs;
@@ -96,8 +102,8 @@ class SaleService extends GetxService {
       id: saleId,
       customerId: selectedCustomer?.id,
       customerType: selectedCustomer?.type ?? 'general',
-      cashierId: 'cashier_1',
-      cashierName: 'Kasir Fulan', // TODO: Get from AuthService
+      cashierId: _authService.currentUser.value?.id ?? 'unknown',
+      cashierName: _authService.currentUser.value?.name ?? 'Unknown',
       subtotal: total,
       totalAmount: total,
       paidAmount: paidAmount,
@@ -123,6 +129,18 @@ class SaleService extends GetxService {
       await _productService.updateProduct(
         product.copyWith(stock: product.stock - item.quantity)
       );
+      
+      await _stockMovementService.recordMovement(
+        productId: product.id,
+        productName: product.name,
+        quantity: -item.quantity,
+        type: 'SALE',
+        note: 'Penjualan TRX: $saleId',
+      );
+    }
+
+    if (paymentMethod.toLowerCase() == 'cash' && paidAmount > 0) {
+      await _shiftService.recordCashSale(paidAmount);
     }
 
     clearCart();
@@ -162,5 +180,9 @@ class SaleService extends GetxService {
       'remainingAmount': newRemaining > 0 ? newRemaining : 0,
       'paymentStatus': newStatus,
     });
+    
+    if (paymentMethod.toLowerCase() == 'cash' && amount > 0) {
+      await _shiftService.recordCashSale(amount);
+    }
   }
 }

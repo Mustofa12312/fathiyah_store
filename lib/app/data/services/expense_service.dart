@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/expense_model.dart';
+import 'shift_service.dart';
 
 class ExpenseService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ShiftService _shiftService = Get.find<ShiftService>();
   final expenses = <ExpenseModel>[].obs;
 
   Future<ExpenseService> init() async {
@@ -15,6 +17,9 @@ class ExpenseService extends GetxService {
 
   Future<void> addExpense(ExpenseModel expense) async {
     await _firestore.collection('expenses').doc(expense.id).set(expense.toJson());
+    
+    // Assume all current expenses are cash since no paymentMethod exists in ExpenseModel yet
+    await _shiftService.recordCashExpense(expense.amount);
   }
 
   List<ExpenseModel> getExpensesByDate(DateTime date) {

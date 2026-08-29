@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
+import '../models/audit_log_model.dart';
 
 class AuthService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -48,9 +50,28 @@ class AuthService extends GetxService {
 
   Future<void> addUser(UserModel user) async {
     await _firestore.collection('users').doc(user.id).set(user.toJson());
+    await _logAction('CREATE', 'USER', user.id, 'Menambahkan user: ${user.name}');
   }
   
   Future<void> updateUser(UserModel updatedUser) async {
     await _firestore.collection('users').doc(updatedUser.id).update(updatedUser.toJson());
+    await _logAction('UPDATE', 'USER', updatedUser.id, 'Mengubah data user: ${updatedUser.name}');
+  }
+  
+  Future<void> _logAction(String action, String entity, String entityId, String details) async {
+    final curUser = currentUser.value;
+    if (curUser == null) return;
+    
+    final log = AuditLogModel(
+      id: const Uuid().v4(),
+      userId: curUser.id,
+      userName: curUser.name,
+      action: action,
+      entity: entity,
+      entityId: entityId,
+      details: details,
+      createdAt: DateTime.now(),
+    );
+    await _firestore.collection('audit_logs').doc(log.id).set(log.toJson());
   }
 }

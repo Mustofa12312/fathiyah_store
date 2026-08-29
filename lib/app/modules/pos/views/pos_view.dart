@@ -7,6 +7,8 @@ import '../controllers/pos_controller.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'checkout_view.dart';
 
+import 'package:fathiyah_store/app/data/services/auth_service.dart';
+
 class PosView extends GetView<PosController> {
   const PosView({super.key});
 
@@ -43,21 +45,52 @@ class PosView extends GetView<PosController> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search Bar
-          Container(
-            padding: EdgeInsets.all(16.w),
-            color: AppTheme.surface,
-            child: TextField(
-              onChanged: (value) => controller.searchQuery.value = value,
-              decoration: InputDecoration(
-                hintText: 'Cari barang (nama/barcode)...',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
+      body: Obx(() {
+        final authService = Get.find<AuthService>();
+        final isAdmin = authService.isAdmin;
+        final shift = controller.shiftService.currentShift.value;
+
+        if (!isAdmin && shift == null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_clock, size: 80.r, color: Colors.grey),
+                SizedBox(height: 16.h),
+                Text('Shift Belum Dibuka', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8.h),
+                Text('Anda harus membuka shift terlebih dahulu\nsebelum dapat melakukan transaksi.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+                SizedBox(height: 24.h),
+                ElevatedButton.icon(
+                  onPressed: () => _showOpenShiftDialog(context),
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Buka Shift Sekarang'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            // Search Bar
+            Container(
+              padding: EdgeInsets.all(16.w),
+              color: AppTheme.surface,
+              child: TextField(
+                onChanged: (value) => controller.searchQuery.value = value,
+                decoration: InputDecoration(
+                  hintText: 'Cari barang (nama/barcode)...',
+                  prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
+                ),
               ),
             ),
-          ),
           
           // Product List Grid
           Expanded(
@@ -190,6 +223,56 @@ class PosView extends GetView<PosController> {
               ),
             );
           }),
+        ],
+      );
+      }),
+    );
+  }
+
+  void _showOpenShiftDialog(BuildContext context) {
+    final startBalanceController = TextEditingController();
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Buka Shift'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Masukkan modal awal (uang tunai di laci kasir):'),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: startBalanceController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Modal Awal (Rp)',
+                prefixText: 'Rp ',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final amountStr = startBalanceController.text.replaceAll(RegExp(r'[^0-9]'), '');
+              final amount = double.tryParse(amountStr) ?? 0.0;
+              
+              Get.back();
+              // Show loading
+              Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+              
+              await controller.shiftService.openShift(amount);
+              
+              Get.back(); // close loading
+              Get.snackbar('Shift Dibuka', 'Selamat bertugas!');
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary, foregroundColor: Colors.white),
+            child: const Text('Mulai Shift'),
+          ),
         ],
       ),
     );
