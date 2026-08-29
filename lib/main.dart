@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/services/auth_service.dart';
@@ -14,15 +15,17 @@ import 'app/data/services/expense_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Services
-  Get.put(AuthService(), permanent: true);
-  Get.put(ProductService(), permanent: true);
-  Get.put(CustomerService(), permanent: true);
-  Get.put(SaleService(), permanent: true);
-  Get.put(ExpenseService(), permanent: true);
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  // Initialize Firebase (commented out until google-services.json is ready)
-  // await Firebase.initializeApp();
+  // Initialize Services (Async init for firestore stream listeners)
+  Get.put(AuthService(), permanent: true).init();
+  Get.put(ProductService(), permanent: true).init();
+  Get.put(CustomerService(), permanent: true).init();
+  Get.put(SaleService(), permanent: true).init();
+  Get.put(ExpenseService(), permanent: true).init();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

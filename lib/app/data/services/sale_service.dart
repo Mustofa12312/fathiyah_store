@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../models/sale_model.dart';
 import '../models/product_model.dart';
@@ -15,6 +16,7 @@ class CartItem {
 }
 
 class SaleService extends GetxService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ProductService _productService = Get.find<ProductService>();
 
   final cartItems = <CartItem>[].obs;
@@ -22,12 +24,18 @@ class SaleService extends GetxService {
 
   CustomerModel? selectedCustomer;
 
+  Future<SaleService> init() async {
+    _firestore.collection('sales').orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
+      sales.value = snapshot.docs.map((doc) => SaleModel.fromJson(doc.data(), doc.id)).toList();
+    });
+    return this;
+  }
+
   double get cartTotal {
     return cartItems.fold(0, (sum, item) => sum + item.subtotal);
   }
 
   void addToCart(ProductModel product) {
-    // Check if enough stock
     if (product.stock <= 0) {
       Get.snackbar('Error', 'Stok ${product.name} habis!', snackPosition: SnackPosition.BOTTOM);
       return;
@@ -37,7 +45,7 @@ class SaleService extends GetxService {
     if (existingIndex >= 0) {
       if (cartItems[existingIndex].quantity < product.stock) {
         cartItems[existingIndex].quantity++;
-        cartItems.refresh(); // force UI update
+        cartItems.refresh();
       } else {
         Get.snackbar('Peringatan', 'Maksimal stok tercapai', snackPosition: SnackPosition.BOTTOM);
       }
@@ -69,10 +77,10 @@ class SaleService extends GetxService {
     selectedCustomer = null;
   }
 
-  SaleModel processCheckout({
+  Future<SaleModel> processCheckout({
     required double paidAmount,
     required String paymentMethod,
-  }) {
+  }) async {
     final total = cartTotal;
     final remaining = total - paidAmount;
     
@@ -83,13 +91,13 @@ class SaleService extends GetxService {
       status = 'sebagian';
     }
 
-    // Buat objek transaksi
+    final saleId = const Uuid().v4();
     final sale = SaleModel(
-      id: const Uuid().v4(),
+      id: saleId,
       customerId: selectedCustomer?.id,
       customerType: selectedCustomer?.type ?? 'general',
-      cashierId: 'cashier_1', // dummy
-      cashierName: 'Kasir Fulan', // dummy
+      cashierId: 'cashier_1',
+      cashierName: 'Kasir Fulan', // TODO: Get from AuthService
       subtotal: total,
       totalAmount: total,
       paidAmount: paidAmount,
@@ -106,26 +114,21 @@ class SaleService extends GetxService {
       )).toList(),
     );
 
-    // Simpan transaksi
-    sales.add(sale);
+    // Save to Firestore
+    await _firestore.collection('sales').doc(saleId).set(sale.toJson());
 
-    // Kurangi Stok Barang di ProductService
+    // Update Product Stock in Firestore
     for (var item in cartItems) {
       final product = item.product;
-      _productService.updateProduct(
+      await _productService.updateProduct(
         product.copyWith(stock: product.stock - item.quantity)
       );
     }
 
-    // Bersihkan keranjang
     clearCart();
-
     return sale;
   }
-
-  // --- Piutang (Debt) Logic ---
   
-  /// Returns a map of customerId to their total debt
   Map<String, double> getDebtsByCustomer() {
     final Map<String, double> debts = {};
     for (var sale in sales) {
@@ -136,47 +139,28 @@ class SaleService extends GetxService {
     return debts;
   }
 
-  /// Get all unpaid sales for a specific customer
   List<SaleModel> getUnpaidSalesForCustomer(String customerId) {
     return sales.where((s) => s.customerId == customerId && s.remainingAmount > 0).toList();
   }
 
-  /// Pay debt for a specific sale
-  void payDebt(String saleId, double amount, String paymentMethod) {
-    final index = sales.indexWhere((s) => s.id == saleId);
-    if (index >= 0) {
-      final sale = sales[index];
-      if (sale.remainingAmount <= 0) return;
+  Future<void> payDebt(String saleId, double amount, String paymentMethod) async {
+    final sale = sales.firstWhereOrNull((s) => s.id == saleId);
+    if (sale == null || sale.remainingAmount <= 0) return;
 
-      final newPaidAmount = sale.paidAmount + amount;
-      final newRemaining = sale.totalAmount - newPaidAmount;
-      
-      String newStatus = sale.paymentStatus;
-      if (newRemaining <= 0) {
-        newStatus = 'lunas';
-      } else {
-        newStatus = 'sebagian';
-      }
-
-      // Update the sale object in the list
-      sales[index] = SaleModel(
-        id: sale.id,
-        customerId: sale.customerId,
-        customerType: sale.customerType,
-        cashierId: sale.cashierId,
-        cashierName: sale.cashierName,
-        subtotal: sale.subtotal,
-        totalAmount: sale.totalAmount,
-        paidAmount: newPaidAmount,
-        remainingAmount: newRemaining > 0 ? newRemaining : 0,
-        paymentStatus: newStatus,
-        paymentMethod: sale.paymentMethod, // Original method
-        items: sale.items,
-        createdAt: sale.createdAt,
-      );
-      
-      // In a real app, we would also save this to a Payment table/collection
-      // e.g. PaymentModel(...)
+    final newPaidAmount = sale.paidAmount + amount;
+    final newRemaining = sale.totalAmount - newPaidAmount;
+    
+    String newStatus = sale.paymentStatus;
+    if (newRemaining <= 0) {
+      newStatus = 'lunas';
+    } else {
+      newStatus = 'sebagian';
     }
+
+    await _firestore.collection('sales').doc(saleId).update({
+      'paidAmount': newPaidAmount,
+      'remainingAmount': newRemaining > 0 ? newRemaining : 0,
+      'paymentStatus': newStatus,
+    });
   }
 }

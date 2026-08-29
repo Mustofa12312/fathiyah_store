@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1003973221947",
+    "project_id": "fatiyah-store",
+    "storage_bucket": "fatiyah-store.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1003973221947:android:757fbf2a13e23171ad861e",
+        "android_client_info": {
+          "package_name": "com.fathiyah.fathiyah_store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz2CrRZnFqphryJFg29Y1TgSdvmg-09KY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
