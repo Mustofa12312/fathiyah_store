@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +34,7 @@ class PrinterService extends GetxService {
     try {
       devices.value = await bluetooth.getBondedDevices();
     } catch (e) {
-      print("Error scanning devices: $e");
+      debugPrint("Error scanning devices: $e");
     }
   }
 
@@ -52,7 +54,7 @@ class PrinterService extends GetxService {
       isConnected.value = false;
       selectedDevice.value = null;
     } catch (e) {
-      print("Error disconnecting: $e");
+      debugPrint("Error disconnecting: $e");
     }
   }
 

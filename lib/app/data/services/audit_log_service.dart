@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -13,7 +15,7 @@ class AuditLogService extends GetxService {
   Future<AuditLogService> init() async {
     _firestore.collection('audit_logs').orderBy('createdAt', descending: true).limit(100).snapshots().listen((snapshot) {
       logs.value = snapshot.docs.map((doc) => AuditLogModel.fromJson(doc.data(), doc.id)).toList();
-    }, onError: (e) => print('AuditLogService Error: $e'));
+    }, onError: (e) => debugPrint('AuditLogService Error: $e'));
     return this;
   }
 

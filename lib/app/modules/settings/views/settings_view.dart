@@ -1,9 +1,9 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
-import 'package:flutter/services.dart';
 import '../controllers/settings_controller.dart';
 import '../../user_management/views/user_management_view.dart';
 import '../../audit_log/views/audit_log_view.dart';

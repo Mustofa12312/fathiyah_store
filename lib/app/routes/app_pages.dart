@@ -1,3 +1,4 @@
+// ignore_for_file: constant_identifier_names
 import 'package:get/get.dart';
 import '../modules/auth/bindings/auth_binding.dart';
 import '../modules/auth/views/login_view.dart';

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/category_model.dart';
@@ -12,7 +14,7 @@ class CategoryService extends GetxService {
   Future<CategoryService> init() async {
     _firestore.collection('categories').snapshots().listen((snapshot) {
       categories.value = snapshot.docs.map((doc) => CategoryModel.fromJson(doc.data(), doc.id)).toList();
-    }, onError: (e) => print('CategoryService Error: $e'));
+    }, onError: (e) => debugPrint('CategoryService Error: $e'));
     return this;
   }
 

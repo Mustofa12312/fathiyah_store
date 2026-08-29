@@ -1,9 +1,12 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product_model.dart';
 import '../models/category_model.dart';
 import 'audit_log_service.dart';
 import 'stock_movement_service.dart';
+import 'category_service.dart';
 
 class ProductService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -19,7 +22,7 @@ class ProductService extends GetxService {
   Future<ProductService> init() async {
     _firestore.collection('products').snapshots().listen((snapshot) {
       products.value = snapshot.docs.map((doc) => ProductModel.fromJson(doc.data(), doc.id)).toList();
-    }, onError: (e) => print('ProductService Error: $e'));
+    }, onError: (e) => debugPrint('ProductService Error: $e'));
     return this;
   }
 

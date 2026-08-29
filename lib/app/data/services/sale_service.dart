@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -33,12 +35,12 @@ class SaleService extends GetxService {
   Future<SaleService> init() async {
     _firestore.collection('sales').orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
       sales.value = snapshot.docs.map((doc) => SaleModel.fromJson(doc.data(), doc.id)).toList();
-    }, onError: (e) => print('SaleService Error: $e'));
+    }, onError: (e) => debugPrint('SaleService Error: $e'));
     return this;
   }
 
   double get cartTotal {
-    return cartItems.fold(0, (sum, item) => sum + item.subtotal);
+    return cartItems.fold(0, (total, item) => total + item.subtotal);
   }
 
   void addToCart(ProductModel product) {

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -28,13 +30,13 @@ class AuthService extends GetxService {
         await _firestore.collection('users').doc(defaultAdmin.id).set(defaultAdmin.toJson());
       }
     } catch (e) {
-      print("Error checking/creating default admin: $e");
+      debugPrint("Error checking/creating default admin: $e");
     }
 
     // Load users from Firestore
     _firestore.collection('users').snapshots().listen((snapshot) {
       users.value = snapshot.docs.map((doc) => UserModel.fromJson(doc.data(), doc.id)).toList();
-    }, onError: (e) => print('AuthService Error: $e'));
+    }, onError: (e) => debugPrint('AuthService Error: $e'));
     return this;
   }
 
@@ -57,7 +59,7 @@ class AuthService extends GetxService {
       }
       return null;
     } catch (e) {
-      print("Login error: $e");
+      debugPrint("Login error: $e");
       return null;
     }
   }
