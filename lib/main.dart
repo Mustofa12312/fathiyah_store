@@ -26,14 +26,14 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Services (Async init for firestore stream listeners)
+  // Initialize Services - urutan PENTING! Service yang dibutuhkan harus diinisialisasi lebih dulu
   Get.put(AuthService(), permanent: true).init();
+  Get.put(AuditLogService(), permanent: true).init(); // Harus sebelum service lain yang bergantung padanya
   Get.put(ProductService(), permanent: true).init();
   Get.put(CustomerService(), permanent: true).init();
   Get.put(SaleService(), permanent: true).init();
   Get.put(ExpenseService(), permanent: true).init();
   Get.put(ShiftService(), permanent: true).init();
-  Get.put(AuditLogService(), permanent: true).init();
   Get.put(StockMovementService(), permanent: true);
   Get.put(ShopService(), permanent: true).init();
   Get.put(PrinterService(), permanent: true).init();
