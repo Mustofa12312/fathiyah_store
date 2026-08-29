@@ -192,9 +192,17 @@ class DashboardView extends GetView<DashboardController> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  Wrap(
+                    alignment: WrapAlignment.spaceAround,
+                    runSpacing: 16.h,
                     children: [
+                      _buildQuickAction(
+                        context,
+                        'Kategori',
+                        Icons.category_rounded,
+                        Colors.orange.shade500,
+                        () => Get.toNamed(Routes.CATEGORY),
+                      ),
                       _buildQuickAction(
                         context,
                         'Pelanggan',
