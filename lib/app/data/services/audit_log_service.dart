@@ -13,7 +13,7 @@ class AuditLogService extends GetxService {
   Future<AuditLogService> init() async {
     _firestore.collection('audit_logs').orderBy('createdAt', descending: true).limit(100).snapshots().listen((snapshot) {
       logs.value = snapshot.docs.map((doc) => AuditLogModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('AuditLogService Error: $e'));
     return this;
   }
 

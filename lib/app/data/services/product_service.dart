@@ -23,7 +23,7 @@ class ProductService extends GetxService {
   Future<ProductService> init() async {
     _firestore.collection('products').snapshots().listen((snapshot) {
       products.value = snapshot.docs.map((doc) => ProductModel.fromJson(doc.data(), doc.id)).toList();
-    });
+    }, onError: (e) => print('ProductService Error: $e'));
     return this;
   }
 
