@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../data/services/sale_service.dart';
 import '../../../data/services/expense_service.dart';
 import '../../../data/services/product_service.dart';
+import '../../../core/utils/financial_report_calculator.dart';
 
 class ReportController extends GetxController {
   final SaleService _saleService = Get.find<SaleService>();
@@ -27,60 +28,34 @@ class ReportController extends GetxController {
     update();
   }
 
-  bool _isWithinFilter(DateTime date) {
-    final now = DateTime.now();
-    switch (selectedFilter.value) {
-      case 'Hari Ini':
-        return date.year == now.year && date.month == now.month && date.day == now.day;
-      case 'Minggu Ini':
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        final start = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-        final end = start.add(const Duration(days: 7));
-        return date.isAfter(start.subtract(const Duration(milliseconds: 1))) && date.isBefore(end);
-      case 'Bulan Ini':
-        return date.year == now.year && date.month == now.month;
-      case 'Semua':
-      default:
-        return true;
-    }
+  FinancialReportCalculator get _calculator {
+    return FinancialReportCalculator(
+      sales: _saleService.sales,
+      expenses: _expenseService.expenses,
+      products: _productService.products,
+      filter: selectedFilter.value,
+    );
   }
+
+
 
   // 1. Omzet
-  double get filteredOmzet {
-    return _saleService.sales.where((s) => _isWithinFilter(s.createdAt)).fold(0, (sum, s) => sum + s.totalAmount);
-  }
+  double get filteredOmzet => _calculator.filteredOmzet;
 
   // 2. Cash In Hand
-  double get filteredCashInHand {
-    return _saleService.sales.where((s) => _isWithinFilter(s.createdAt)).fold(0, (sum, s) => sum + s.paidAmount);
-  }
+  double get filteredCashInHand => _calculator.filteredCashInHand;
 
   // 3. Modal Barang Terjual
-  double get filteredCapital {
-    double totalCapital = 0;
-    final filteredSales = _saleService.sales.where((s) => _isWithinFilter(s.createdAt));
-    
-    for (var sale in filteredSales) {
-      for (var item in sale.items) {
-        final product = _productService.products.firstWhereOrNull((p) => p.id == item.productId);
-        if (product != null) {
-          totalCapital += (product.purchasePrice * item.quantity);
-        }
-      }
-    }
-    return totalCapital;
-  }
+  double get filteredCapital => _calculator.filteredCapital;
 
   // 4. Laba Kotor
-  double get filteredGrossProfit => filteredOmzet - filteredCapital;
+  double get filteredGrossProfit => _calculator.filteredGrossProfit;
 
   // 5. Total Pengeluaran
-  double get filteredExpense {
-    return _expenseService.expenses.where((e) => _isWithinFilter(e.createdAt)).fold(0, (sum, e) => sum + e.amount);
-  }
+  double get filteredExpense => _calculator.filteredExpense;
 
   // 6. Laba Bersih
-  double get filteredNetProfit => filteredGrossProfit - filteredExpense;
+  double get filteredNetProfit => _calculator.filteredNetProfit;
 
   void refreshData() {
     update();
@@ -88,36 +63,11 @@ class ReportController extends GetxController {
 
   // Data for Chart (Last 7 days omzet)
   List<double> getWeeklyOmzetData() {
-    final now = DateTime.now();
-    List<double> weeklyData = List.filled(7, 0.0);
-    
-    for (int i = 0; i < 7; i++) {
-      final date = now.subtract(Duration(days: i));
-      final omzet = _saleService.sales.where((s) {
-        return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
-      }).fold(0.0, (sum, s) => sum + s.totalAmount);
-      
-      // Store in reverse order so index 0 is oldest day, index 6 is today
-      weeklyData[6 - i] = omzet;
-    }
-    
-    return weeklyData;
+    return _calculator.getWeeklyOmzetData();
   }
   
   List<double> getWeeklyExpenseData() {
-    final now = DateTime.now();
-    List<double> weeklyData = List.filled(7, 0.0);
-    
-    for (int i = 0; i < 7; i++) {
-      final date = now.subtract(Duration(days: i));
-      final expense = _expenseService.expenses.where((s) {
-        return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
-      }).fold(0.0, (sum, s) => sum + s.amount);
-      
-      weeklyData[6 - i] = expense;
-    }
-    
-    return weeklyData;
+    return _calculator.getWeeklyExpenseData();
   }
 
   Future<void> exportCSV() async {
