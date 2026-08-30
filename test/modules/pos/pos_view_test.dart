@@ -13,36 +13,36 @@ import 'package:fathiyah_store/app/data/models/user_model.dart';
 import 'package:fathiyah_store/app/data/models/shift_model.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
-import 'pos_view_test.mocks.dart';
+class FakeAuthService extends GetxService implements AuthService {
+  @override
+  Rx<UserModel?> get currentUser => Rx<UserModel?>(null);
+}
 
-@GenerateNiceMocks([
-  MockSpec<PosController>(),
-  MockSpec<SaleService>(),
-  MockSpec<ProductService>(),
-  MockSpec<CategoryService>(),
-  MockSpec<CustomerService>(),
-  MockSpec<ShiftService>(),
-  MockSpec<AuthService>()
-])
+class FakeShiftService extends GetxService implements ShiftService {
+  @override
+  Rx<ShiftModel?> get currentShift => Rx<ShiftModel?>(null);
+}
+
+class FakeSaleService extends GetxService implements SaleService {
+  @override
+  RxList<CartItem> get cartItems => <CartItem>[].obs;
+  
+  @override
+  double get cartTotal => 0.0;
+}
+
+class FakeProductService extends GetxService implements ProductService {}
+class FakeCategoryService extends GetxService implements CategoryService {}
+class FakeCustomerService extends GetxService implements CustomerService {}
+
 void main() {
   setUp(() {
-    final mockAuth = MockAuthService();
-    when(mockAuth.currentUser).thenReturn(Rx<UserModel?>(null));
-
-    final mockShift = MockShiftService();
-    when(mockShift.currentShift).thenReturn(Rx<ShiftModel?>(null));
-
-    final mockSale = MockSaleService();
-    when(mockSale.cartItems).thenReturn(<CartItem>[].obs);
-    when(mockSale.cartTotal).thenReturn(0.0);
-
-    Get.put<AuthService>(mockAuth);
-    Get.put<ShiftService>(mockShift);
-    Get.put<SaleService>(mockSale);
-    Get.put<ProductService>(MockProductService());
-    Get.put<CategoryService>(MockCategoryService());
-    Get.put<CustomerService>(MockCustomerService());
+    Get.put<AuthService>(FakeAuthService());
+    Get.put<ShiftService>(FakeShiftService());
+    Get.put<SaleService>(FakeSaleService());
+    Get.put<ProductService>(FakeProductService());
+    Get.put<CategoryService>(FakeCategoryService());
+    Get.put<CustomerService>(FakeCustomerService());
   });
 
   tearDown(() {

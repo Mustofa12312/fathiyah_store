@@ -8,19 +8,35 @@ import 'package:fathiyah_store/app/data/services/shift_service.dart';
 import 'package:fathiyah_store/app/data/services/stock_movement_service.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
-import 'sale_service_test.mocks.dart';
+class FakeProductService extends GetxService implements ProductService {
+  @override
+  Future<void> updateProduct(ProductModel product) async {}
+}
 
-@GenerateNiceMocks([MockSpec<ProductService>(), MockSpec<AuthService>(), MockSpec<ShiftService>(), MockSpec<StockMovementService>()])
+class FakeAuthService extends GetxService implements AuthService {
+  @override
+  Rx<UserModel?> get currentUser => Rx<UserModel?>(UserModel(id: '1', username: 'admin', password: '123', name: 'Admin', role: 'admin', status: 'aktif'));
+}
+
+class FakeShiftService extends GetxService implements ShiftService {
+  @override
+  Future<void> recordCashSale(double amount) async {}
+}
+
+class FakeStockMovementService extends GetxService implements StockMovementService {
+  @override
+  Future<void> recordMovement({required String productId, required String productName, required int quantity, required String type, String? note}) async {}
+}
+
 void main() {
   late SaleService saleService;
 
   setUp(() {
     // Inject mock dependencies
-    Get.put<ProductService>(MockProductService());
-    Get.put<AuthService>(MockAuthService());
-    Get.put<ShiftService>(MockShiftService());
-    Get.put<StockMovementService>(MockStockMovementService());
+    Get.put<ProductService>(FakeProductService());
+    Get.put<AuthService>(FakeAuthService());
+    Get.put<ShiftService>(FakeShiftService());
+    Get.put<StockMovementService>(FakeStockMovementService());
 
     // NOTE: Because SaleService calls FirebaseFirestore.instance on initialization,
     // we must ensure it doesn't crash. Normally we'd pass the firestore instance in constructor.
