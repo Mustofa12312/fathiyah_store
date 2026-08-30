@@ -167,6 +167,15 @@ class SettingsView extends StatelessWidget {
                         await backupService.exportAndShareBackup();
                       },
                     ),
+                    _buildMenuTile(
+                      icon: Icons.cloud_upload_rounded,
+                      title: 'Restore Data (Impor)',
+                      subtitle: 'Kembalikan data Produk atau Pelanggan dari CSV',
+                      onTap: () async {
+                        final backupService = Get.find<BackupService>();
+                        await backupService.importData();
+                      },
+                    ),
                     
                     SizedBox(height: 24.h),
                     Text('Akun & Keamanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary)),
