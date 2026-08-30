@@ -298,7 +298,8 @@ class ReportView extends StatelessWidget {
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 final date = now.subtract(Duration(days: 6 - value.toInt()));
-                final format = DateFormat('E').format(date); // e.g. Mon, Tue
+                final indoDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+                final format = indoDays[date.weekday - 1];
                 return Padding(
                   padding: EdgeInsets.only(top: 8.h),
                   child: Text(format, style: TextStyle(color: AppTheme.textSecondary, fontSize: 11.sp, fontWeight: FontWeight.bold)),
