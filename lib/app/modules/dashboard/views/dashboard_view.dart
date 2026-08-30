@@ -109,6 +109,8 @@ class DashboardView extends GetView<DashboardController> {
   }
 
   Widget _buildHomeTab(BuildContext context, bool isAdmin) {
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SingleChildScrollView(
@@ -122,7 +124,7 @@ class DashboardView extends GetView<DashboardController> {
                 top: MediaQuery.of(context).padding.top + 24.h,
                 left: 24.w,
                 right: 24.w,
-                bottom: 40.h,
+                bottom: isTablet ? 60.h : 40.h,
               ),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -185,7 +187,7 @@ class DashboardView extends GetView<DashboardController> {
             
             // Main Content Area
             Transform.translate(
-              offset: Offset(0, -24.h),
+              offset: Offset(0, isTablet ? -12.h : -24.h),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
@@ -266,14 +268,16 @@ class DashboardView extends GetView<DashboardController> {
                     SizedBox(height: 16.h),
                     
                     // Summary Cards Grid
-                    Obx(() => GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 16.w,
-                      mainAxisSpacing: 16.w,
-                      childAspectRatio: 1.1,
-                      children: [
+                    Obx(() {
+                      final isTablet = MediaQuery.of(context).size.width > 600;
+                      return GridView.count(
+                        crossAxisCount: isTablet ? 4 : 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisSpacing: 16.w,
+                        mainAxisSpacing: 16.w,
+                        childAspectRatio: isTablet ? 1.3 : 1.1,
+                        children: [
                         _buildSummaryCard(
                           'Penjualan',
                           CurrencyFormatter.formatRupiah(controller.todaySales),
@@ -299,7 +303,8 @@ class DashboardView extends GetView<DashboardController> {
                           AppTheme.vipGold,
                         ),
                       ],
-                    )),
+                    );
+                    }),
                     
                     SizedBox(height: 32.h),
                     

@@ -147,8 +147,10 @@ class PosView extends GetView<PosController> {
           
           // Product and Cart Split View
           Expanded(
-            child: Column(
-              children: [
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isTablet = constraints.maxWidth > 600;
+                final layoutChildren = [
                 // Product List
                 Expanded(
                   flex: 3,
@@ -382,7 +384,11 @@ class PosView extends GetView<PosController> {
                     ),
                   ),
                 ),
-              ],
+                ];
+                return isTablet
+                    ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: layoutChildren)
+                    : Column(children: layoutChildren);
+              },
             ),
           ),
           

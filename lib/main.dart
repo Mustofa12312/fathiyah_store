@@ -68,17 +68,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(390, 844), // iPhone 13/14 Pro sizes as reference
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return GetMaterialApp(
-          title: 'Fathiyah Store',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          initialRoute: AppPages.INITIAL,
-          getPages: AppPages.routes,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTablet = constraints.maxWidth > 600;
+        // Gunakan ukuran desain yang lebih besar untuk tablet agar elemen tidak terlalu besar
+        final designSize = isTablet ? const Size(800, 1280) : const Size(390, 844);
+
+        return ScreenUtilInit(
+          designSize: designSize,
+          minTextAdapt: true,
+          splitScreenMode: true,
+          builder: (context, child) {
+            return GetMaterialApp(
+              title: 'Fathiyah Store',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              initialRoute: AppPages.INITIAL,
+              getPages: AppPages.routes,
+            );
+          },
         );
       },
     );
