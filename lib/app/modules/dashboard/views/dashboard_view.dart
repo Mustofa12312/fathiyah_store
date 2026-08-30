@@ -14,6 +14,7 @@ import '../../expense/views/expense_list_view.dart';
 
 import '../../settings/views/settings_view.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/connectivity_service.dart';
 import '../../../data/services/product_service.dart';
 import '../../../core/utils/currency_formatter.dart';
 
@@ -25,18 +26,40 @@ class DashboardView extends GetView<DashboardController> {
     final isAdmin = Get.find<AuthService>().isAdmin;
 
     return Scaffold(
-      body: Obx(
-        () => IndexedStack(
-          index: controller.currentIndex.value,
+      body: Obx(() {
+        final isOffline = Get.find<ConnectivityService>().isOffline.value;
+        return Column(
           children: [
-            _buildHomeTab(context, isAdmin),
-            const ProductListView(),
-            const PosView(),
-            if (isAdmin) const ReportView() else const SizedBox.shrink(),
-            const SettingsView(),
+            if (isOffline)
+              Container(
+                width: double.infinity,
+                color: Colors.red.shade400,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 8.h, 
+                  bottom: 8.h,
+                ),
+                child: Center(
+                  child: Text(
+                    'Mode Offline - Data akan disinkronkan saat online',
+                    style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            Expanded(
+              child: IndexedStack(
+                index: controller.currentIndex.value,
+                children: [
+                  _buildHomeTab(context, isAdmin),
+                  const ProductListView(),
+                  const PosView(),
+                  if (isAdmin) const ReportView() else const SizedBox.shrink(),
+                  const SettingsView(),
+                ],
+              ),
+            ),
           ],
-        ),
-      ),
+        );
+      }),
       bottomNavigationBar: Obx(() {
         return Container(
           decoration: BoxDecoration(

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
@@ -19,6 +20,9 @@ import 'app/data/services/stock_movement_service.dart';
 import 'app/data/services/shop_service.dart';
 import 'app/data/services/printer_service.dart';
 import 'app/data/services/backup_service.dart';
+import 'app/data/repositories/product_repository.dart';
+import 'app/data/repositories/customer_repository.dart';
+import 'app/data/services/connectivity_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,14 +31,23 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Konfigurasi Persistence Offline (Cache tidak terbatas)
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
 
   // Initialize Services - urutan berdasarkan dependency graph
   // Layer 1: tidak bergantung pada service lain
+  Get.put(ConnectivityService(), permanent: true).init();
   Get.put(AuthService(), permanent: true).init();
   Get.put(StockMovementService(), permanent: true);
   Get.put(AuditLogService(), permanent: true).init();
   Get.put(ShiftService(), permanent: true).init();
   // Layer 2: bergantung pada Layer 1
+  Get.put<ProductRepository>(FirebaseProductRepository(), permanent: true);
+  Get.put<CustomerRepository>(FirebaseCustomerRepository(), permanent: true);
   Get.put(ShopService(), permanent: true).init();
   Get.put(CategoryService(), permanent: true).init();
   Get.put(ProductService(), permanent: true).init();

@@ -1,24 +1,24 @@
 // ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../repositories/customer_repository.dart';
 import '../models/customer_model.dart';
 import 'audit_log_service.dart';
 
 class CustomerService extends GetxService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CustomerRepository _repository = Get.find<CustomerRepository>();
   final AuditLogService _auditLogService = Get.find<AuditLogService>();
   final customers = <CustomerModel>[].obs;
 
   Future<CustomerService> init() async {
-    _firestore.collection('customers').snapshots().listen((snapshot) {
-      customers.value = snapshot.docs.map((doc) => CustomerModel.fromJson(doc.data(), doc.id)).toList();
+    _repository.streamCustomers().listen((fetchedCustomers) {
+      customers.value = fetchedCustomers;
     }, onError: (e) => debugPrint('CustomerService Error: $e'));
     return this;
   }
 
   Future<void> addCustomer(CustomerModel customer) async {
-    await _firestore.collection('customers').doc(customer.id).set(customer.toJson());
+    await _repository.addCustomer(customer);
     
     await _auditLogService.logAction(
       action: 'CREATE',
@@ -29,7 +29,7 @@ class CustomerService extends GetxService {
   }
 
   Future<void> updateCustomer(CustomerModel updatedCustomer) async {
-    await _firestore.collection('customers').doc(updatedCustomer.id).update(updatedCustomer.toJson());
+    await _repository.updateCustomer(updatedCustomer);
     
     await _auditLogService.logAction(
       action: 'UPDATE',
@@ -41,7 +41,7 @@ class CustomerService extends GetxService {
 
   Future<void> deleteCustomer(String id) async {
     final customer = customers.firstWhereOrNull((c) => c.id == id);
-    await _firestore.collection('customers').doc(id).delete();
+    await _repository.deleteCustomer(id);
     
     if (customer != null) {
       await _auditLogService.logAction(
@@ -57,7 +57,7 @@ class CustomerService extends GetxService {
     final customer = customers.firstWhereOrNull((c) => c.id == customerId);
     if (customer != null) {
       final newType = customer.type == 'vip' ? 'general' : 'vip';
-      await _firestore.collection('customers').doc(customerId).update({'type': newType});
+      await _repository.updateCustomerType(customerId, newType);
       
       await _auditLogService.logAction(
         action: 'UPDATE',
