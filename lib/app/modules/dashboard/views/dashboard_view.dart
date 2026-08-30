@@ -25,16 +25,18 @@ class DashboardView extends GetView<DashboardController> {
     final isAdmin = Get.find<AuthService>().isAdmin;
 
     return Scaffold(
-      body: Obx(() => IndexedStack(
-        index: controller.currentIndex.value,
-        children: [
-          _buildHomeTab(context, isAdmin),
-          const ProductListView(),
-          const PosView(),
-          if (isAdmin) const ReportView() else const SizedBox.shrink(),
-          const SettingsView(),
-        ],
-      )),
+      body: Obx(
+        () => IndexedStack(
+          index: controller.currentIndex.value,
+          children: [
+            _buildHomeTab(context, isAdmin),
+            const ProductListView(),
+            const PosView(),
+            if (isAdmin) const ReportView() else const SizedBox.shrink(),
+            const SettingsView(),
+          ],
+        ),
+      ),
       bottomNavigationBar: Obx(() {
         return Container(
           decoration: BoxDecoration(
@@ -53,11 +55,37 @@ class DashboardView extends GetView<DashboardController> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, Icons.home_rounded, 'Home', controller.currentIndex.value),
-                  _buildNavItem(1, Icons.inventory_2_rounded, 'Produk', controller.currentIndex.value),
-                  _buildNavItem(2, Icons.point_of_sale_rounded, 'Kasir', controller.currentIndex.value),
-                  _buildNavItem(3, Icons.bar_chart_rounded, 'Laporan', controller.currentIndex.value, disabled: !isAdmin),
-                  _buildNavItem(4, Icons.settings_rounded, 'Pengaturan', controller.currentIndex.value),
+                  _buildNavItem(
+                    0,
+                    Icons.home_rounded,
+                    'Home',
+                    controller.currentIndex.value,
+                  ),
+                  _buildNavItem(
+                    1,
+                    Icons.inventory_2_rounded,
+                    'Produk',
+                    controller.currentIndex.value,
+                  ),
+                  _buildNavItem(
+                    2,
+                    Icons.point_of_sale_rounded,
+                    'Kasir',
+                    controller.currentIndex.value,
+                  ),
+                  _buildNavItem(
+                    3,
+                    Icons.bar_chart_rounded,
+                    'Laporan',
+                    controller.currentIndex.value,
+                    disabled: !isAdmin,
+                  ),
+                  _buildNavItem(
+                    4,
+                    Icons.settings_rounded,
+                    'Pengaturan',
+                    controller.currentIndex.value,
+                  ),
                 ],
               ),
             ),
@@ -67,26 +95,40 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, int currentIndex, {bool disabled = false}) {
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    String label,
+    int currentIndex, {
+    bool disabled = false,
+  }) {
     final isSelected = index == currentIndex;
-    final color = disabled ? Colors.grey.shade300 : (isSelected ? AppTheme.primary : Colors.grey.shade500);
+    final color = disabled
+        ? Colors.grey.shade300
+        : (isSelected ? AppTheme.primary : Colors.grey.shade500);
 
     return InkWell(
-      onTap: disabled ? () {
-        Get.snackbar('Akses Ditolak', 'Hanya admin yang dapat melihat laporan',
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-          margin: EdgeInsets.all(16.w),
-          borderRadius: 16.r,
-        );
-      } : () => Get.find<DashboardController>().changePage(index),
+      onTap: disabled
+          ? () {
+              Get.snackbar(
+                'Akses Ditolak',
+                'Hanya admin yang dapat melihat laporan',
+                backgroundColor: Colors.red.shade100,
+                colorText: Colors.red.shade900,
+                margin: EdgeInsets.all(16.w),
+                borderRadius: 16.r,
+              );
+            }
+          : () => Get.find<DashboardController>().changePage(index),
       borderRadius: BorderRadius.circular(16.r),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isSelected
+              ? AppTheme.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
@@ -124,11 +166,14 @@ class DashboardView extends GetView<DashboardController> {
                 top: MediaQuery.of(context).padding.top + 24.h,
                 left: 24.w,
                 right: 24.w,
-                bottom: isTablet ? 60.h : 40.h,
+                bottom: isTablet ? 32.h : 24.h,
               ),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppTheme.primary, Color(0xFF1E3A8A)], // Dark blue gradient
+                  colors: [
+                    AppTheme.primary,
+                    Color(0xFF1E3A8A),
+                  ], // Dark blue gradient
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -151,7 +196,7 @@ class DashboardView extends GetView<DashboardController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Halo, Owner',
+                        'Assalamualaikum Wr.Wb',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 14.sp,
@@ -178,106 +223,128 @@ class DashboardView extends GetView<DashboardController> {
                     child: CircleAvatar(
                       backgroundColor: Colors.white10,
                       radius: 26.r,
-                      child: Icon(Icons.person, color: Colors.white, size: 28.sp),
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 28.sp,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Main Content Area
-            Transform.translate(
-              offset: Offset(0, isTablet ? -12.h : -24.h),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Low Stock Alert (Overlapping header slightly)
-                    Obx(() {
-                      final productService = Get.find<ProductService>();
-                      final lowStockItems = productService.products.where((p) => p.stock <= p.minimumStock).toList();
-                      
-                      if (lowStockItems.isEmpty) return const SizedBox.shrink();
-                      
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 24.h),
-                        padding: EdgeInsets.all(16.w),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.shade200.withValues(alpha: 0.5),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Low Stock Alert (Overlapping header slightly)
+                  Obx(() {
+                    final productService = Get.find<ProductService>();
+                    final lowStockItems = productService.products
+                        .where((p) => p.stock <= p.minimumStock)
+                        .toList();
+
+                    if (lowStockItems.isEmpty) return const SizedBox.shrink();
+
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 24.h),
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(16.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.shade200.withValues(
+                              alpha: 0.5,
                             ),
-                          ],
-                          border: Border.all(color: Colors.orange.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8.w),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade100,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800, size: 24.w),
-                            ),
-                            SizedBox(width: 16.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Peringatan Stok',
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade900, fontSize: 14.sp),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    '${lowStockItems.length} produk hampir/sudah habis.',
-                                    style: TextStyle(color: Colors.orange.shade800, fontSize: 12.sp),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => controller.changePage(1),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange.shade600,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                              ),
-                              child: const Text('Cek'),
-                            )
-                          ],
-                        ),
-                      );
-                    }),
-                    
-                    Text(
-                      'Ringkasan Hari Ini',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.sp,
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                        border: Border.all(color: Colors.orange.shade200),
                       ),
-                    ),
-                    SizedBox(height: 16.h),
-                    
-                    // Summary Cards Grid
-                    Obx(() {
-                      final isTablet = MediaQuery.of(context).size.width > 600;
-                      return GridView.count(
-                        crossAxisCount: isTablet ? 4 : 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 16.w,
-                        mainAxisSpacing: 16.w,
-                        childAspectRatio: isTablet ? 1.3 : 1.1,
+                      child: Row(
                         children: [
+                          Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange.shade800,
+                              size: 24.w,
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Peringatan Stok',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange.shade900,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  '${lowStockItems.length} produk hampir/sudah habis.',
+                                  style: TextStyle(
+                                    color: Colors.orange.shade800,
+                                    fontSize: 12.sp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => controller.changePage(1),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade600,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 8.h,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                            ),
+                            child: const Text('Cek'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                  Text(
+                    'Ringkasan Hari Ini',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // Summary Cards Grid
+                  Obx(() {
+                    final isTablet = MediaQuery.of(context).size.width > 600;
+                    return GridView.count(
+                      crossAxisCount: isTablet ? 4 : 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 16.w,
+                      mainAxisSpacing: 16.w,
+                      childAspectRatio: isTablet ? 1.3 : 1.1,
+                      children: [
                         _buildSummaryCard(
                           'Penjualan',
                           CurrencyFormatter.formatRupiah(controller.todaySales),
@@ -286,13 +353,17 @@ class DashboardView extends GetView<DashboardController> {
                         ),
                         _buildSummaryCard(
                           'Uang Masuk',
-                          CurrencyFormatter.formatRupiah(controller.todayCashIn),
+                          CurrencyFormatter.formatRupiah(
+                            controller.todayCashIn,
+                          ),
                           Icons.account_balance_wallet_rounded,
                           AppTheme.accent,
                         ),
                         _buildSummaryCard(
                           'Pengeluaran',
-                          CurrencyFormatter.formatRupiah(controller.todayExpenses),
+                          CurrencyFormatter.formatRupiah(
+                            controller.todayExpenses,
+                          ),
                           Icons.trending_down_rounded,
                           Colors.red.shade500,
                         ),
@@ -304,96 +375,104 @@ class DashboardView extends GetView<DashboardController> {
                         ),
                       ],
                     );
-                    }),
-                    
-                    SizedBox(height: 32.h),
-                    
-                    // Quick Actions
-                    Text(
-                      'Aksi Cepat',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.sp,
+                  }),
+
+                  SizedBox(height: 32.h),
+
+                  // Quick Actions
+                  Text(
+                    'Aksi Cepat',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 24.w,
+                    runSpacing: 24.h,
+                    children: [
+                      _buildQuickAction(
+                        context,
+                        'Kategori',
+                        Icons.category_rounded,
+                        Colors.orange.shade500,
+                        () => Get.toNamed(Routes.CATEGORY),
                       ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 24.w,
-                      runSpacing: 24.h,
-                      children: [
+                      _buildQuickAction(
+                        context,
+                        'Pelanggan',
+                        Icons.people_alt_rounded,
+                        AppTheme.secondary,
+                        () => Get.to(() => const CustomerListView()),
+                      ),
+                      _buildQuickAction(
+                        context,
+                        'Kasir',
+                        Icons.point_of_sale_rounded,
+                        AppTheme.accent,
+                        () => Get.to(() => const PosView()),
+                      ),
+                      if (isAdmin) ...[
                         _buildQuickAction(
                           context,
-                          'Kategori',
-                          Icons.category_rounded,
-                          Colors.orange.shade500,
-                          () => Get.toNamed(Routes.CATEGORY),
+                          'Piutang',
+                          Icons.account_balance_wallet_rounded,
+                          AppTheme.vipGold,
+                          () => Get.to(() => const DebtListView()),
                         ),
                         _buildQuickAction(
                           context,
-                          'Pelanggan',
-                          Icons.people_alt_rounded,
-                          AppTheme.secondary,
-                          () => Get.to(() => const CustomerListView()),
+                          'Laporan',
+                          Icons.insert_chart_rounded,
+                          Colors.purple.shade500,
+                          () => controller.changePage(3),
                         ),
                         _buildQuickAction(
                           context,
-                          'Kasir',
-                          Icons.point_of_sale_rounded,
-                          AppTheme.accent,
-                          () => Get.to(() => const PosView()),
+                          'Pengeluaran',
+                          Icons.money_off_rounded,
+                          Colors.red.shade400,
+                          () => Get.to(() => const ExpenseListView()),
                         ),
-                        if (isAdmin) ...[
-                          _buildQuickAction(
-                            context,
-                            'Piutang',
-                            Icons.account_balance_wallet_rounded,
-                            AppTheme.vipGold,
-                            () => Get.to(() => const DebtListView()),
+                      ] else ...[
+                        _buildQuickAction(
+                          context,
+                          'Piutang',
+                          Icons.account_balance_wallet_rounded,
+                          Colors.grey,
+                          () => Get.snackbar(
+                            'Akses Ditolak',
+                            'Hubungi admin untuk akses Piutang',
                           ),
-                          _buildQuickAction(
-                            context,
-                            'Laporan',
-                            Icons.insert_chart_rounded,
-                            Colors.purple.shade500,
-                            () => controller.changePage(3),
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Laporan',
+                          Icons.insert_chart_rounded,
+                          Colors.grey,
+                          () => Get.snackbar(
+                            'Akses Ditolak',
+                            'Hubungi admin untuk akses Laporan',
                           ),
-                          _buildQuickAction(
-                            context,
-                            'Pengeluaran',
-                            Icons.money_off_rounded,
-                            Colors.red.shade400,
-                            () => Get.to(() => const ExpenseListView()),
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Pengeluaran',
+                          Icons.money_off_rounded,
+                          Colors.grey,
+                          () => Get.snackbar(
+                            'Akses Ditolak',
+                            'Hubungi admin untuk akses Pengeluaran',
                           ),
-                        ] else ...[
-                          _buildQuickAction(
-                            context,
-                            'Piutang',
-                            Icons.account_balance_wallet_rounded,
-                            Colors.grey,
-                            () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Piutang'),
-                          ),
-                          _buildQuickAction(
-                            context,
-                            'Laporan',
-                            Icons.insert_chart_rounded,
-                            Colors.grey,
-                            () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Laporan'),
-                          ),
-                          _buildQuickAction(
-                            context,
-                            'Pengeluaran',
-                            Icons.money_off_rounded,
-                            Colors.grey,
-                            () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Pengeluaran'),
-                          ),
-                        ]
+                        ),
                       ],
-                    ),
-                    
-                    SizedBox(height: 32.h),
-                  ],
-                ),
+                    ],
+                  ),
+
+                  SizedBox(height: 32.h),
+                ],
               ),
             ),
           ],
@@ -402,7 +481,13 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildQuickAction(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -429,7 +514,12 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildSummaryCard(String title, String amount, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+    String title,
+    String amount,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -459,7 +549,11 @@ class DashboardView extends GetView<DashboardController> {
                 ),
                 child: Icon(icon, color: color, size: 22.sp),
               ),
-              Icon(Icons.arrow_outward_rounded, color: Colors.grey.shade300, size: 16.sp),
+              Icon(
+                Icons.arrow_outward_rounded,
+                color: Colors.grey.shade300,
+                size: 16.sp,
+              ),
             ],
           ),
           Column(
