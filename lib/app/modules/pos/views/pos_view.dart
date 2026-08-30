@@ -6,8 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/pos_controller.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'checkout_view.dart';
-
+import '../../../core/widgets/empty_state_widget.dart';
+import '../../../data/services/printer_service.dart';
 import 'package:fathiyah_store/app/data/services/auth_service.dart';
 
 class PosView extends GetView<PosController> {
@@ -115,6 +117,36 @@ class PosView extends GetView<PosController> {
                             child: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
                           ),
                         ),
+                        SizedBox(width: 12.w),
+                        // Printer Status Indicator
+                        Obx(() {
+                          final isPrinterConnected = Get.find<PrinterService>().isConnected.value;
+                          return Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                            decoration: BoxDecoration(
+                              color: isPrinterConnected ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isPrinterConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
+                                  color: isPrinterConnected ? Colors.green : Colors.red,
+                                  size: 16.sp,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  isPrinterConnected ? 'Online' : 'Offline',
+                                  style: TextStyle(
+                                    color: isPrinterConnected ? Colors.green : Colors.red,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
                       ],
                     ),
                     SizedBox(height: 24.h),
@@ -157,7 +189,11 @@ class PosView extends GetView<PosController> {
                   child: Obx(() {
                     final products = controller.filteredProducts;
                     if (products.isEmpty) {
-                      return const Center(child: Text('Tidak ada produk.'));
+                      return EmptyStateWidget(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'Produk Tidak Ditemukan',
+                        subtitle: 'Coba gunakan kata kunci atau barcode yang berbeda.',
+                      );
                     }
                     
                     return ListView.builder(
@@ -181,7 +217,7 @@ class PosView extends GetView<PosController> {
                             padding: EdgeInsets.all(16.w),
                             child: Row(
                               children: [
-                                // Icon
+                                // Icon or Image
                                 Container(
                                   width: 50.w,
                                   height: 50.w,
@@ -189,7 +225,15 @@ class PosView extends GetView<PosController> {
                                     color: isOutOfStock ? Colors.grey.shade50 : AppTheme.primary.withValues(alpha: 0.05),
                                     borderRadius: BorderRadius.circular(12.r),
                                   ),
-                                  child: Icon(Icons.inventory_2_rounded, color: isOutOfStock ? Colors.grey : AppTheme.primary, size: 24.sp),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                                      ? CachedNetworkImage(
+                                          imageUrl: product.imageUrl!,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Center(child: SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(strokeWidth: 2))),
+                                          errorWidget: (context, url, error) => Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400, size: 24.sp),
+                                        )
+                                      : Icon(Icons.inventory_2_rounded, color: isOutOfStock ? Colors.grey : AppTheme.primary, size: 24.sp),
                                 ),
                                 SizedBox(width: 16.w),
                                 // Info
@@ -385,73 +429,102 @@ class PosView extends GetView<PosController> {
                   ),
                 ),
                 ];
+                
                 return isTablet
-                    ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: layoutChildren)
-                    : Column(children: layoutChildren);
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          layoutChildren[0], // Left: Products
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              children: [
+                                layoutChildren[1], // Right top: Cart List
+                                _buildCartSummaryBottomBar(), // Right bottom: Summary
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Expanded(child: layoutChildren[0]), // Top: Products
+                          // Bottom sheet cart for mobile
+                        ],
+                      );
               },
             ),
           ),
           
-          // Cart Summary Bottom Bar
-          Obx(() {
-            final cartCount = controller.saleService.cartItems.length;
-            final cartTotal = controller.saleService.cartTotal;
-            
-            if (cartCount == 0) return const SizedBox.shrink();
-            
-            return Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  )
-                ],
-              ),
-              child: SafeArea(
-                child: Row(
+          // Cart Summary Bottom Bar for Mobile
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 600) return const SizedBox.shrink(); // Handled in split screen
+              return _buildCartSummaryBottomBar();
+            },
+          ),
+        ],
+      ),
+    );
+  }),
+);
+}
+
+  Widget _buildCartSummaryBottomBar() {
+    return Obx(() {
+      final cartCount = controller.saleService.cartItems.length;
+      final cartTotal = controller.saleService.cartTotal;
+      
+      if (cartCount == 0) return const SizedBox.shrink();
+      
+      return Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            )
+          ],
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$cartCount Barang',
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
-                          ),
-                          Text(
-                            CurrencyFormatter.formatRupiah(cartTotal),
-                            style: TextStyle(
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18.sp,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Text(
+                      '$cartCount Barang',
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
                     ),
-                    ElevatedButton(
-                      onPressed: () => Get.to(() => const CheckoutView()),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    Text(
+                      CurrencyFormatter.formatRupiah(cartTotal),
+                      style: TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.sp,
                       ),
-                      child: const Text('Bayar Sekarang'),
                     ),
                   ],
                 ),
               ),
-            );
-          }),
-        ],
+              ElevatedButton(
+                onPressed: () => Get.to(() => const CheckoutView()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                ),
+                child: const Text('Bayar Sekarang'),
+              ),
+            ],
           ),
-        );
-      }),
-    );
+        ),
+      );
+    });
   }
 
   void _showOpenShiftDialog(BuildContext context) {

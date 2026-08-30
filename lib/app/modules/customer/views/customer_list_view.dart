@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/customer_controller.dart';
 import 'customer_form_view.dart';
 import '../../../data/models/customer_model.dart';
+import '../../../core/widgets/empty_state_widget.dart';
 
 class CustomerListView extends GetView<CustomerController> {
   const CustomerListView({super.key});
@@ -41,11 +42,12 @@ class CustomerListView extends GetView<CustomerController> {
             child: Obx(() {
               final customers = controller.filteredCustomers;
               if (customers.isEmpty) {
-                return Center(
-                  child: Text(
-                    'Tidak ada pelanggan ditemukan',
-                    style: TextStyle(color: AppTheme.textSecondary),
-                  ),
+                return EmptyStateWidget(
+                  icon: Icons.people_alt_outlined,
+                  title: 'Belum Ada Pelanggan',
+                  subtitle: 'Mulai bangun basis pelanggan Anda dengan menambah data baru.',
+                  buttonText: 'Tambah Pelanggan',
+                  onButtonTap: () => Get.to(() => const CustomerFormView()),
                 );
               }
               

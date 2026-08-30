@@ -19,11 +19,16 @@ class ProductService extends GetxService {
   RxList<CategoryModel> get categories => _categoryService.categories;
 
   final products = <ProductModel>[].obs;
+  final isLoading = true.obs;
 
   Future<ProductService> init() async {
     _repository.streamProducts().listen((fetchedProducts) {
       products.value = fetchedProducts;
-    }, onError: (e) => debugPrint('ProductService Error: $e'));
+      isLoading.value = false;
+    }, onError: (e) {
+      debugPrint('ProductService Error: $e');
+      isLoading.value = false;
+    });
     return this;
   }
 

@@ -5,8 +5,12 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/product_controller.dart';
+import '../../../data/services/product_service.dart';
 import 'product_form_view.dart';
 import '../../../data/models/product_model.dart';
+import '../../../core/widgets/empty_state_widget.dart';
+import '../../../core/widgets/shimmer_loading.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProductListView extends GetView<ProductController> {
   const ProductListView({super.key});
@@ -100,19 +104,20 @@ class ProductListView extends GetView<ProductController> {
             Expanded(
               child: Obx(() {
                 final products = controller.filteredProducts;
+                
+                // Get the isLoading state from the controller's service
+                final isLoading = Get.find<ProductService>().isLoading.value;
+                if (isLoading && products.isEmpty) {
+                  return const ShimmerListLoading();
+                }
+
                 if (products.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inventory_2_outlined, size: 64.w, color: Colors.grey.shade300),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'Tidak ada produk ditemukan',
-                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 16.sp),
-                        ),
-                      ],
-                    ),
+                  return EmptyStateWidget(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Tidak ada produk ditemukan',
+                    subtitle: 'Tambahkan produk pertama Anda sekarang.',
+                    buttonText: 'Tambah Produk',
+                    onButtonTap: () => Get.to(() => const ProductFormView()),
                   );
                 }
                 
@@ -177,7 +182,15 @@ class ProductListView extends GetView<ProductController> {
                     color: AppTheme.primary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16.r),
                   ),
-                  child: Icon(Icons.inventory_2_rounded, color: AppTheme.primary, size: 28.sp),
+                  clipBehavior: Clip.antiAlias,
+                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: product.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Center(child: SizedBox(width: 24.w, height: 24.w, child: const CircularProgressIndicator(strokeWidth: 2))),
+                          errorWidget: (context, url, error) => Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400, size: 28.sp),
+                        )
+                      : Icon(Icons.inventory_2_rounded, color: AppTheme.primary, size: 28.sp),
                 ),
                 SizedBox(width: 16.w),
                 
