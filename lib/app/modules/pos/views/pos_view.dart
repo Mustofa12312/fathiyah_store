@@ -18,34 +18,7 @@ class PosView extends GetView<PosController> {
     Get.put(PosController()); // Ensure controller is loaded
     
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kasir / Mesin POS'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () async {
-              var res = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SimpleBarcodeScannerPage(),
-                ),
-              );
-              if (res is String && res != '-1') {
-                // If scanned, search the product and add to cart if found
-                controller.searchQuery.value = res;
-                final products = controller.filteredProducts;
-                if (products.length == 1) {
-                  controller.saleService.addToCart(products.first);
-                  Get.snackbar('Berhasil', '${products.first.name} ditambahkan ke keranjang');
-                  controller.searchQuery.value = ''; // clear search
-                } else if (products.isEmpty) {
-                  Get.snackbar('Tidak Ditemukan', 'Barcode $res tidak cocok dengan barang apapun');
-                }
-              }
-            },
-          ),
-        ],
-      ),
+      backgroundColor: AppTheme.background,
       body: Obx(() {
         final authService = Get.find<AuthService>();
         final isAdmin = authService.isAdmin;
@@ -56,20 +29,22 @@ class PosView extends GetView<PosController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.lock_clock, size: 80.r, color: Colors.grey),
+                Icon(Icons.lock_clock_rounded, size: 80.r, color: Colors.grey.shade300),
                 SizedBox(height: 16.h),
-                Text('Shift Belum Dibuka', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                Text('Shift Belum Dibuka', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 SizedBox(height: 8.h),
-                Text('Anda harus membuka shift terlebih dahulu\nsebelum dapat melakukan transaksi.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+                Text('Anda harus membuka shift terlebih dahulu\nsebelum dapat melakukan transaksi.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade500, fontSize: 14.sp)),
                 SizedBox(height: 24.h),
                 ElevatedButton.icon(
                   onPressed: () => _showOpenShiftDialog(context),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Buka Shift Sekarang'),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: const Text('Buka Shift Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                    elevation: 4,
                   ),
                 ),
               ],
@@ -77,35 +52,98 @@ class PosView extends GetView<PosController> {
           );
         }
 
-        return Column(
-          children: [
-            // Search Bar
-            Container(
-              padding: EdgeInsets.all(16.w),
-              color: AppTheme.background,
-              child: Container(
+        return SafeArea(
+          child: Column(
+            children: [
+              // Header & Search
+              Container(
+                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(32.r),
+                    bottomRight: Radius.circular(32.r),
+                  ),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 20,
+                      offset: const Offset(0, 5),
+                    ),
                   ],
                 ),
-                child: TextField(
-                  onChanged: (value) => controller.searchQuery.value = value,
-                  decoration: InputDecoration(
-                    hintText: 'Cari barang (nama/barcode)...',
-                    prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                    filled: true,
-                    fillColor: Colors.transparent,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Kasir',
+                          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                            fontSize: 26.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            var res = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SimpleBarcodeScannerPage(),
+                              ),
+                            );
+                            if (res is String && res != '-1') {
+                              controller.searchQuery.value = res;
+                              final products = controller.filteredProducts;
+                              if (products.length == 1) {
+                                controller.saleService.addToCart(products.first);
+                                Get.snackbar('Berhasil', '${products.first.name} ditambahkan ke keranjang', snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
+                                controller.searchQuery.value = ''; // clear search
+                              } else if (products.isEmpty) {
+                                Get.snackbar('Tidak Ditemukan', 'Barcode $res tidak cocok dengan barang apapun', snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
+                              }
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(50),
+                          child: Container(
+                            padding: EdgeInsets.all(10.w),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withValues(alpha: 0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24.h),
+                    // Search Bar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.background,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: TextField(
+                        onChanged: (value) => controller.searchQuery.value = value,
+                        decoration: InputDecoration(
+                          hintText: 'Cari nama atau barcode...',
+                          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14.sp),
+                          prefixIcon: Icon(Icons.search_rounded, color: AppTheme.primary),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.r),
+                            borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
           
           // Product and Cart Split View
           Expanded(
@@ -120,61 +158,97 @@ class PosView extends GetView<PosController> {
                       return const Center(child: Text('Tidak ada produk.'));
                     }
                     
-                    return ListView.separated(
-                      padding: EdgeInsets.all(16.w),
+                    return ListView.builder(
+                      padding: EdgeInsets.all(24.w),
                       itemCount: products.length,
-                      separatorBuilder: (context, index) => SizedBox(height: 8.h),
                       itemBuilder: (context, index) {
                         final product = products[index];
                         final isOutOfStock = product.stock <= 0;
                         
                         return Container(
+                          margin: EdgeInsets.only(bottom: 16.h),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(20.r),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 4)),
                             ],
+                            border: Border.all(color: Colors.grey.shade100),
                           ),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                            title: Text(
-                              product.name,
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp, color: AppTheme.textPrimary),
-                            ),
-                            subtitle: Text(
-                              isOutOfStock ? 'Stok Habis' : 'Stok: ${product.stock}',
-                              style: TextStyle(
-                                color: isOutOfStock ? Colors.red : AppTheme.textSecondary,
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
+                          child: Padding(
+                            padding: EdgeInsets.all(16.w),
+                            child: Row(
                               children: [
-                                Text(
-                                  CurrencyFormatter.formatRupiah(product.sellingPrice),
-                                  style: TextStyle(
-                                    color: AppTheme.primary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15.sp,
+                                // Icon
+                                Container(
+                                  width: 50.w,
+                                  height: 50.w,
+                                  decoration: BoxDecoration(
+                                    color: isOutOfStock ? Colors.grey.shade50 : AppTheme.primary.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(12.r),
                                   ),
+                                  child: Icon(Icons.inventory_2_rounded, color: isOutOfStock ? Colors.grey : AppTheme.primary, size: 24.sp),
                                 ),
                                 SizedBox(width: 16.w),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: isOutOfStock ? Colors.grey.shade100 : AppTheme.accent.withOpacity(0.15),
-                                    shape: BoxShape.circle,
+                                // Info
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        product.name,
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        isOutOfStock ? 'Stok Habis' : 'Stok: ${product.stock}',
+                                        style: TextStyle(
+                                          color: isOutOfStock ? Colors.red.shade400 : AppTheme.textSecondary,
+                                          fontSize: 13.sp,
+                                          fontWeight: isOutOfStock ? FontWeight.w600 : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.add,
-                                      color: isOutOfStock ? Colors.grey : AppTheme.accent,
-                                      size: 24.sp,
+                                ),
+                                // Price & Add button
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      CurrencyFormatter.formatRupiah(product.sellingPrice),
+                                      style: TextStyle(
+                                        color: AppTheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15.sp,
+                                      ),
                                     ),
-                                    onPressed: isOutOfStock ? null : () => controller.saleService.addToCart(product),
-                                  ),
+                                    SizedBox(height: 8.h),
+                                    InkWell(
+                                      onTap: isOutOfStock ? null : () => controller.saleService.addToCart(product),
+                                      borderRadius: BorderRadius.circular(30),
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                                        decoration: BoxDecoration(
+                                          color: isOutOfStock ? Colors.grey.shade200 : AppTheme.accent,
+                                          borderRadius: BorderRadius.circular(20.r),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.add_shopping_cart_rounded, color: isOutOfStock ? Colors.grey : Colors.white, size: 16.sp),
+                                            SizedBox(width: 6.w),
+                                            Text(
+                                              'Tambah',
+                                              style: TextStyle(color: isOutOfStock ? Colors.grey : Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -221,9 +295,16 @@ class PosView extends GetView<PosController> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.remove_shopping_cart_outlined, color: Colors.grey.shade300, size: 48.sp),
-                                    SizedBox(height: 8.h),
-                                    Text('Keranjang masih kosong', style: TextStyle(color: Colors.grey.shade500)),
+                                    Container(
+                                      padding: EdgeInsets.all(24.w),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.shopping_cart_outlined, color: Colors.grey.shade300, size: 48.sp),
+                                    ),
+                                    SizedBox(height: 16.h),
+                                    Text('Keranjang masih kosong', style: TextStyle(color: Colors.grey.shade500, fontSize: 14.sp)),
                                   ],
                                 ),
                               );
@@ -248,10 +329,10 @@ class PosView extends GetView<PosController> {
                                               style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                                             ),
                                             SizedBox(height: 4.h),
-                                            Text(
-                                              CurrencyFormatter.formatRupiah(item.product.sellingPrice),
-                                              style: TextStyle(color: AppTheme.primary, fontSize: 13.sp, fontWeight: FontWeight.w500),
-                                            ),
+                                              Text(
+                                                CurrencyFormatter.formatRupiah(item.product.sellingPrice),
+                                                style: TextStyle(color: AppTheme.primary, fontSize: 14.sp, fontWeight: FontWeight.w700),
+                                              ),
                                           ],
                                         ),
                                       ),
@@ -361,7 +442,8 @@ class PosView extends GetView<PosController> {
             );
           }),
         ],
-      );
+          ),
+        );
       }),
     );
   }

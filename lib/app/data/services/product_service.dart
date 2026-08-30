@@ -11,31 +11,37 @@ import 'category_service.dart';
 class ProductService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuditLogService _auditLogService = Get.find<AuditLogService>();
-  final StockMovementService _stockMovementService = Get.find<StockMovementService>();
-  
+  final StockMovementService _stockMovementService =
+      Get.find<StockMovementService>();
+
   final CategoryService _categoryService = Get.find<CategoryService>();
-  
+
   RxList<CategoryModel> get categories => _categoryService.categories;
 
   final products = <ProductModel>[].obs;
 
   Future<ProductService> init() async {
     _firestore.collection('products').snapshots().listen((snapshot) {
-      products.value = snapshot.docs.map((doc) => ProductModel.fromJson(doc.data(), doc.id)).toList();
+      products.value = snapshot.docs
+          .map((doc) => ProductModel.fromJson(doc.data(), doc.id))
+          .toList();
     }, onError: (e) => debugPrint('ProductService Error: $e'));
     return this;
   }
 
   Future<void> addProduct(ProductModel product) async {
-    await _firestore.collection('products').doc(product.id).set(product.toJson());
-    
+    await _firestore
+        .collection('products')
+        .doc(product.id)
+        .set(product.toJson());
+
     await _auditLogService.logAction(
       action: 'CREATE',
       entity: 'PRODUCT',
       entityId: product.id,
       details: 'Menambahkan produk baru: ${product.name}',
     );
-    
+
     if (product.stock > 0) {
       await _stockMovementService.recordMovement(
         productId: product.id,
@@ -49,8 +55,11 @@ class ProductService extends GetxService {
 
   Future<void> updateProduct(ProductModel product) async {
     final oldProduct = products.firstWhereOrNull((p) => p.id == product.id);
-    await _firestore.collection('products').doc(product.id).update(product.toJson());
-    
+    await _firestore
+        .collection('products')
+        .doc(product.id)
+        .update(product.toJson());
+
     await _auditLogService.logAction(
       action: 'UPDATE',
       entity: 'PRODUCT',
@@ -73,7 +82,7 @@ class ProductService extends GetxService {
   Future<void> deleteProduct(String id) async {
     final product = products.firstWhereOrNull((p) => p.id == id);
     await _firestore.collection('products').doc(id).delete();
-    
+
     if (product != null) {
       await _auditLogService.logAction(
         action: 'DELETE',

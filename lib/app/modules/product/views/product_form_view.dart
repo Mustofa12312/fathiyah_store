@@ -115,230 +115,288 @@ class _ProductFormViewState extends State<ProductFormView> {
   Widget build(BuildContext context) {
     final isEdit = widget.product != null;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? 'Edit Produk' : 'Tambah Produk'),
-        actions: [
-          if (isEdit)
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'Riwayat Stok',
-              onPressed: () => _showStockHistory(context),
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 24.w, 24.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32.r),
+                  bottomRight: Radius.circular(32.r),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 20,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20.sp),
+                        onPressed: () => Get.back(),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        isEdit ? 'Edit Produk' : 'Tambah Produk',
+                        style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontSize: 22.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (isEdit)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.history_rounded, color: AppTheme.primary),
+                        tooltip: 'Riwayat Stok',
+                        onPressed: () => _showStockHistory(context),
+                      ),
+                    ),
+                ],
+              ),
             ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(24.w),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Gambar Produk Placeholder
-              Center(
-                child: Container(
-                  width: 100.w,
-                  height: 100.w,
-                  decoration: BoxDecoration(
-                    color: AppTheme.divider,
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                  child: Icon(Icons.add_a_photo_outlined, color: AppTheme.textSecondary, size: 32.sp),
-                ),
-              ),
-              SizedBox(height: 32.h),
 
-              // Nama Produk
-              _buildLabel('Nama Produk'),
-              TextFormField(
-                controller: _nameController,
-                validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
-                decoration: const InputDecoration(hintText: 'Contoh: Kopi Kapal Api'),
-              ),
-              SizedBox(height: 16.h),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(24.w),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Nama Produk
+                      _buildLabel('Nama Produk'),
+                      TextFormField(
+                        controller: _nameController,
+                        validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
+                        decoration: _inputDecoration(hintText: 'Contoh: Kopi Kapal Api'),
+                      ),
+                      SizedBox(height: 20.h),
 
-              // Barcode
-              _buildLabel('Barcode (Opsional)'),
-              TextFormField(
-                controller: _barcodeController,
-                decoration: InputDecoration(
-                  hintText: 'Scan barcode atau ketik manual',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.qr_code_scanner),
-                    onPressed: () async {
-                      var res = await Get.to(() => const SimpleBarcodeScannerPage());
-                      if (res is String && res != '-1') {
-                        _barcodeController.text = res;
-                      }
-                    },
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-
-              // Kategori & Satuan (Row)
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Kategori'),
-                        DropdownButtonFormField<String>(
-                          value: _selectedCategoryId,
-                          hint: const Text('Pilih'),
-                          validator: (v) => v == null ? 'Pilih kategori' : null,
-                          items: _productService.categories.map((c) {
-                            return DropdownMenuItem(value: c.id, child: Text(c.name));
-                          }).toList(),
-                          onChanged: (val) => setState(() => _selectedCategoryId = val),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Satuan'),
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          initialValue: _selectedUnit,
-                          items: _units.map((u) {
-                            return DropdownMenuItem(value: u, child: Text(u));
-                          }).toList(),
-                          onChanged: (val) => setState(() => _selectedUnit = val!),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              // Harga Beli & Harga Jual
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Harga Beli (Modal)'),
-                        TextFormField(
-                          controller: _purchasePriceController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [ThousandsFormatter()],
-                          validator: (v) => v!.isEmpty ? 'Wajib' : null,
-                          decoration: const InputDecoration(prefixText: 'Rp '),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Harga Jual'),
-                        TextFormField(
-                          controller: _sellingPriceController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [ThousandsFormatter()],
-                          validator: (v) => v!.isEmpty ? 'Wajib' : null,
-                          decoration: const InputDecoration(prefixText: 'Rp '),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              // Stok Saat Ini & Batas Minimum
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Stok Saat Ini'),
-                        TextFormField(
-                          controller: _stockController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [ThousandsFormatter()],
-                          validator: (v) => v!.isEmpty ? 'Wajib' : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Batas Minimum Stok'),
-                        TextFormField(
-                          controller: _minimumStockController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [ThousandsFormatter()],
-                          validator: (v) => v!.isEmpty ? 'Wajib' : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 32.h),
-              
-              // Action Buttons
-              Row(
-                children: [
-                  if (isEdit) ...[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          // Show confirmation dialog before delete
-                          Get.defaultDialog(
-                            title: 'Hapus Produk',
-                            middleText: 'Yakin ingin menghapus produk ini?',
-                            textConfirm: 'Hapus',
-                            textCancel: 'Batal',
-                            confirmTextColor: Colors.white,
-                            buttonColor: Colors.red,
-                            onConfirm: () {
-                              _productService.deleteProduct(widget.product!.id);
-                              Get.back(); // close dialog
-                              Get.back(); // go back to list
+                      // Barcode
+                      _buildLabel('Barcode (Opsional)'),
+                      TextFormField(
+                        controller: _barcodeController,
+                        decoration: _inputDecoration(
+                          hintText: 'Scan barcode atau ketik manual',
+                        ).copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
+                            onPressed: () async {
+                              var res = await Get.to(() => const SimpleBarcodeScannerPage());
+                              if (res is String && res != '-1') {
+                                _barcodeController.text = res;
+                              }
                             },
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          ),
                         ),
-                        child: const Text('Hapus'),
                       ),
-                    ),
-                    SizedBox(width: 16.w),
-                  ],
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _saveProduct,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                      SizedBox(height: 20.h),
+
+                      // Kategori & Satuan (Row)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('Kategori'),
+                                DropdownButtonFormField<String>(
+                                  value: _selectedCategoryId,
+                                  hint: const Text('Pilih'),
+                                  validator: (v) => v == null ? 'Pilih kategori' : null,
+                                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary),
+                                  decoration: _inputDecoration(),
+                                  items: _productService.categories.map((c) {
+                                    return DropdownMenuItem(value: c.id, child: Text(c.name));
+                                  }).toList(),
+                                  onChanged: (val) => setState(() => _selectedCategoryId = val),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('Satuan'),
+                                DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  value: _selectedUnit,
+                                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary),
+                                  decoration: _inputDecoration(),
+                                  items: _units.map((u) {
+                                    return DropdownMenuItem(value: u, child: Text(u));
+                                  }).toList(),
+                                  onChanged: (val) => setState(() => _selectedUnit = val!),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Text(isEdit ? 'Simpan Perubahan' : 'Tambah Produk'),
-                    ),
+                      SizedBox(height: 20.h),
+
+                      // Harga Beli & Harga Jual
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('Harga Beli (Modal)'),
+                                TextFormField(
+                                  controller: _purchasePriceController,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [ThousandsFormatter()],
+                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  decoration: _inputDecoration(prefixText: 'Rp '),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('Harga Jual'),
+                                TextFormField(
+                                  controller: _sellingPriceController,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [ThousandsFormatter()],
+                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  decoration: _inputDecoration(prefixText: 'Rp '),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Stok Saat Ini & Batas Minimum
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('Stok Saat Ini'),
+                                TextFormField(
+                                  controller: _stockController,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [ThousandsFormatter()],
+                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  decoration: _inputDecoration(hintText: '0'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('Batas Minimum Stok'),
+                                TextFormField(
+                                  controller: _minimumStockController,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [ThousandsFormatter()],
+                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  decoration: _inputDecoration(hintText: '0'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 40.h),
+                      
+                      // Action Buttons
+                      Row(
+                        children: [
+                          if (isEdit) ...[
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  // Show confirmation dialog before delete
+                                  Get.defaultDialog(
+                                    title: 'Hapus Produk',
+                                    titleStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    middleText: 'Yakin ingin menghapus produk ini?',
+                                    textConfirm: 'Hapus',
+                                    textCancel: 'Batal',
+                                    confirmTextColor: Colors.white,
+                                    buttonColor: Colors.red.shade600,
+                                    cancelTextColor: AppTheme.textPrimary,
+                                    onConfirm: () {
+                                      _productService.deleteProduct(widget.product!.id);
+                                      Get.back(); // close dialog
+                                      Get.back(); // go back to list
+                                    },
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red.shade600,
+                                  side: BorderSide(color: Colors.red.shade200, width: 2),
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                ),
+                                child: Text('Hapus', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
+                          ],
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: _saveProduct,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primary,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                elevation: 4,
+                                shadowColor: AppTheme.primary.withValues(alpha: 0.5),
+                              ),
+                              child: Text(
+                                isEdit ? 'Simpan Perubahan' : 'Tambah Produk',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 32.h), // Bottom padding
+                    ],
                   ),
-                ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -349,9 +407,43 @@ class _ProductFormViewState extends State<ProductFormView> {
       padding: EdgeInsets.only(bottom: 8.h),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textSecondary,
+          fontSize: 14.sp,
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration({String? hintText, String? prefixText}) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14.sp),
+      prefixText: prefixText,
+      prefixStyle: TextStyle(color: AppTheme.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.w500),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: Colors.red.shade400),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 2),
       ),
     );
   }
@@ -364,22 +456,32 @@ class _ProductFormViewState extends State<ProductFormView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.r))),
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.8,
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+          ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Riwayat Stok', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Riwayat Stok', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp, color: AppTheme.textPrimary)),
+                  Container(
+                    decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
+                    child: IconButton(
+                      icon: Icon(Icons.close_rounded, color: Colors.grey.shade600),
+                      onPressed: () => Get.back(),
+                    ),
+                  ),
+                ],
               ),
+              SizedBox(height: 16.h),
               Expanded(
                 child: StreamBuilder(
                   stream: stockService.getMovementsForProduct(widget.product!.id),
@@ -388,28 +490,87 @@ class _ProductFormViewState extends State<ProductFormView> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('Belum ada riwayat pergerakan stok.'));
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history_rounded, size: 64.w, color: Colors.grey.shade300),
+                            SizedBox(height: 16.h),
+                            Text('Belum ada riwayat pergerakan stok.', style: TextStyle(color: AppTheme.textSecondary)),
+                          ],
+                        ),
+                      );
                     }
 
                     final movements = snapshot.data!;
-                    return ListView.separated(
-                      padding: EdgeInsets.all(16.w),
+                    return ListView.builder(
                       itemCount: movements.length,
-                      separatorBuilder: (_, __) => const Divider(),
                       itemBuilder: (context, index) {
                         final m = movements[index];
                         final isAdd = m.quantity > 0;
-                        return ListTile(
-                          title: Text('${isAdd ? '+' : ''}${m.quantity} ${m.type}'),
-                          subtitle: Text(
-                            '${m.note}\nOleh ${m.userName} • ${DateFormat('dd MMM yyyy, HH:mm').format(m.createdAt)}',
-                            style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 12.h),
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            color: AppTheme.background,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(color: Colors.grey.shade100),
                           ),
-                          trailing: Icon(
-                            isAdd ? Icons.arrow_circle_up : Icons.arrow_circle_down,
-                            color: isAdd ? Colors.green : Colors.red,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(12.w),
+                                decoration: BoxDecoration(
+                                  color: isAdd ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                                child: Icon(
+                                  isAdd ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                                  color: isAdd ? Colors.green : Colors.red,
+                                  size: 24.sp,
+                                ),
+                              ),
+                              SizedBox(width: 16.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      m.type,
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textPrimary),
+                                    ),
+                                    SizedBox(height: 6.h),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person_outline_rounded, size: 12.sp, color: AppTheme.textSecondary),
+                                        SizedBox(width: 4.w),
+                                        Expanded(
+                                          child: Text(
+                                            '${m.userName} • ${DateFormat('dd MMM, HH:mm').format(m.createdAt)}',
+                                            style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (m.note != null && m.note!.isNotEmpty) ...[
+                                      SizedBox(height: 4.h),
+                                      Text(m.note!, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
+                                    ]
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${isAdd ? '+' : ''}${m.quantity}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                  color: isAdd ? Colors.green : Colors.red,
+                                ),
+                              ),
+                            ],
                           ),
-                          isThreeLine: true,
                         );
                       },
                     );

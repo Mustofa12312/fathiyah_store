@@ -10,6 +10,7 @@ import '../../customer/views/customer_list_view.dart';
 import '../../pos/views/pos_view.dart';
 import '../../debt/views/debt_list_view.dart';
 import '../../report/views/report_view.dart';
+import '../../expense/views/expense_list_view.dart';
 
 import '../../settings/views/settings_view.dart';
 import '../../../data/services/auth_service.dart';
@@ -34,25 +35,76 @@ class DashboardView extends GetView<DashboardController> {
           const SettingsView(),
         ],
       )),
-      bottomNavigationBar: Obx(() => BottomNavigationBar(
-        currentIndex: controller.currentIndex.value,
-        onTap: (index) {
-          if (!isAdmin && index == 3) {
-            Get.snackbar('Akses Ditolak', 'Hanya admin yang dapat melihat laporan');
-            return;
-          }
-          controller.changePage(index);
-        },
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          const BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Produk'),
-          const BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Kasir'),
-          if (isAdmin) const BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Laporan'),
-          if (!isAdmin) const BottomNavigationBarItem(icon: Icon(Icons.bar_chart, color: Colors.grey), label: 'Laporan'),
-          const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Pengaturan'),
-        ],
-      )),
+      bottomNavigationBar: Obx(() {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(0, Icons.home_rounded, 'Home', controller.currentIndex.value),
+                  _buildNavItem(1, Icons.inventory_2_rounded, 'Produk', controller.currentIndex.value),
+                  _buildNavItem(2, Icons.point_of_sale_rounded, 'Kasir', controller.currentIndex.value),
+                  _buildNavItem(3, Icons.bar_chart_rounded, 'Laporan', controller.currentIndex.value, disabled: !isAdmin),
+                  _buildNavItem(4, Icons.settings_rounded, 'Pengaturan', controller.currentIndex.value),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label, int currentIndex, {bool disabled = false}) {
+    final isSelected = index == currentIndex;
+    final color = disabled ? Colors.grey.shade300 : (isSelected ? AppTheme.primary : Colors.grey.shade500);
+
+    return InkWell(
+      onTap: disabled ? () {
+        Get.snackbar('Akses Ditolak', 'Hanya admin yang dapat melihat laporan',
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.red.shade900,
+          margin: EdgeInsets.all(16.w),
+          borderRadius: 16.r,
+        );
+      } : () => Get.find<DashboardController>().changePage(index),
+      borderRadius: BorderRadius.circular(16.r),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 24.sp),
+            SizedBox(height: 4.h),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 10.sp,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -301,6 +353,13 @@ class DashboardView extends GetView<DashboardController> {
                             Colors.purple.shade500,
                             () => controller.changePage(3),
                           ),
+                          _buildQuickAction(
+                            context,
+                            'Pengeluaran',
+                            Icons.money_off_rounded,
+                            Colors.red.shade400,
+                            () => Get.to(() => const ExpenseListView()),
+                          ),
                         ] else ...[
                           _buildQuickAction(
                             context,
@@ -315,6 +374,13 @@ class DashboardView extends GetView<DashboardController> {
                             Icons.insert_chart_rounded,
                             Colors.grey,
                             () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Laporan'),
+                          ),
+                          _buildQuickAction(
+                            context,
+                            'Pengeluaran',
+                            Icons.money_off_rounded,
+                            Colors.grey,
+                            () => Get.snackbar('Akses Ditolak', 'Hubungi admin untuk akses Pengeluaran'),
                           ),
                         ]
                       ],

@@ -17,159 +17,229 @@ class ReportView extends StatelessWidget {
     final controller = Get.put(ReportController());
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Laporan & Analitik'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => controller.refreshData(),
-          )
-        ],
-      ),
-      body: GetBuilder<ReportController>(
-        builder: (c) {
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        child: GetBuilder<ReportController>(
+          builder: (c) {
+            return Column(
               children: [
-                // Filter Waktu
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Periode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surface,
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppTheme.divider),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: c.selectedFilter.value,
-                          items: ['Hari Ini', 'Minggu Ini', 'Bulan Ini', 'Semua']
-                              .map((f) => DropdownMenuItem(value: f, child: Text(f, style: TextStyle(fontSize: 14.sp))))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) c.setFilter(val);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-
-                // Cash in Hand Highlight
+                // Header
                 Container(
-                  padding: EdgeInsets.all(24.w),
+                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.primary, AppTheme.secondary],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(32.r),
+                      bottomRight: Radius.circular(32.r),
                     ),
-                    borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
-                      BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5)),
                     ],
                   ),
                   child: Column(
                     children: [
-                      Text('Uang Tunai Masuk (${c.selectedFilter.value})', style: TextStyle(color: Colors.white70, fontSize: 14.sp)),
-                      SizedBox(height: 8.h),
-                      Text(
-                        CurrencyFormatter.formatRupiah(c.filteredCashInHand),
-                        style: TextStyle(color: Colors.white, fontSize: 32.sp, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 16.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Total Omzet', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
-                              Text(CurrencyFormatter.formatRupiah(c.filteredOmzet), style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                            ],
+                          Text(
+                            'Analitik',
+                            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                              fontSize: 26.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text('Total Piutang Baru', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
-                              Text(CurrencyFormatter.formatRupiah(c.filteredOmzet - c.filteredCashInHand), style: TextStyle(color: AppTheme.vipGold, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                            ],
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withValues(alpha: 0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: Icon(Icons.refresh_rounded, color: AppTheme.primary),
+                              onPressed: () => controller.refreshData(),
+                            ),
                           ),
                         ],
-                      )
+                      ),
+                      SizedBox(height: 20.h),
+                      // Filter Waktu
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Periode Laporan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: AppTheme.background,
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: c.selectedFilter.value,
+                                icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary, size: 20.sp),
+                                items: ['Hari Ini', 'Minggu Ini', 'Bulan Ini', 'Semua']
+                                    .map((f) => DropdownMenuItem(value: f, child: Text(f, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: AppTheme.primary))))
+                                    .toList(),
+                                onChanged: (val) {
+                                  if (val != null) c.setFilter(val);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-
-                SizedBox(height: 24.h),
                 
-                // Chart Section
-                Text('Tren 7 Hari Terakhir', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                SizedBox(height: 12.h),
-                Container(
-                  height: 250.h,
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: AppTheme.divider),
+                // Body Scroll
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(24.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Cash in Hand Highlight
+                        Container(
+                          padding: EdgeInsets.all(24.w),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [AppTheme.primary, AppTheme.secondary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(24.r),
+                            boxShadow: [
+                              BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(8.w),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 20.sp),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Text('Uang Tunai Masuk', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14.sp)),
+                                ],
+                              ),
+                              SizedBox(height: 16.h),
+                              Text(
+                                CurrencyFormatter.formatRupiah(c.filteredCashInHand),
+                                style: TextStyle(color: Colors.white, fontSize: 32.sp, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 24.h),
+                              Container(
+                                padding: EdgeInsets.all(16.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Total Omzet', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
+                                        SizedBox(height: 4.h),
+                                        Text(CurrencyFormatter.formatRupiah(c.filteredOmzet), style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                    Container(width: 1, height: 30.h, color: Colors.white24),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text('Piutang Baru', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
+                                        SizedBox(height: 4.h),
+                                        Text(CurrencyFormatter.formatRupiah(c.filteredOmzet - c.filteredCashInHand), style: TextStyle(color: AppTheme.vipGold, fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(height: 32.h),
+                        
+                        // Chart Section
+                        Text('Tren 7 Hari Terakhir', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp, color: AppTheme.textPrimary)),
+                        SizedBox(height: 16.h),
+                        Container(
+                          height: 250.h,
+                          padding: EdgeInsets.all(20.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24.r),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: _buildBarChart(c),
+                        ),
+
+                        SizedBox(height: 32.h),
+                        Text('Analisis Keuangan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp, color: AppTheme.textPrimary)),
+                        SizedBox(height: 16.h),
+
+                        _buildReportCard('Laba Kotor', 'Omzet - Modal', c.filteredGrossProfit, Icons.trending_up_rounded, Colors.green),
+                        _buildReportCard('Pengeluaran', 'Biaya Operasional', c.filteredExpense, Icons.trending_down_rounded, Colors.red, onTap: () => Get.to(() => const ExpenseListView())),
+                        
+                        SizedBox(height: 8.h),
+                        
+                        _buildReportCard('Laba Bersih', 'Profit Akhir', c.filteredNetProfit, Icons.emoji_events_rounded, AppTheme.primary, isHighlight: true),
+                        
+                        SizedBox(height: 32.h),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => Get.to(() => const ExpenseListView()),
+                                icon: Icon(Icons.account_balance_wallet_rounded, size: 20.sp),
+                                label: const Text('Pengeluaran', style: TextStyle(fontWeight: FontWeight.bold)),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  foregroundColor: Colors.red.shade600,
+                                  side: BorderSide(color: Colors.red.shade200, width: 2),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => c.exportCSV(),
+                                icon: Icon(Icons.file_download_rounded, size: 20.sp),
+                                label: const Text('Export Laporan', style: TextStyle(fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  backgroundColor: Colors.green.shade600,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                  elevation: 4,
+                                  shadowColor: Colors.green.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
-                  child: _buildBarChart(c),
                 ),
-
-                SizedBox(height: 24.h),
-                Text('Analisis Laba/Rugi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                SizedBox(height: 12.h),
-
-                _buildReportCard('Laba Kotor (Omzet - Modal)', c.filteredGrossProfit, Icons.trending_up, Colors.green),
-                _buildReportCard('Pengeluaran', c.filteredExpense, Icons.trending_down, Colors.red, onTap: () => Get.to(() => const ExpenseListView())),
-                
-                SizedBox(height: 12.h),
-                Divider(color: AppTheme.divider, thickness: 2),
-                SizedBox(height: 12.h),
-                
-                _buildReportCard('Laba Bersih', c.filteredNetProfit, Icons.account_balance, AppTheme.primary, isHighlight: true),
-                
-                SizedBox(height: 32.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => Get.to(() => const ExpenseListView()),
-                        icon: const Icon(Icons.outbound),
-                        label: const Text('Kelola Pengeluaran'),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          foregroundColor: Colors.red.shade700,
-                          side: BorderSide(color: Colors.red.shade700),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => c.exportCSV(),
-                        icon: const Icon(Icons.download),
-                        label: const Text('Export CSV'),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          backgroundColor: Colors.green.shade600,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
               ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -202,13 +272,13 @@ class ReportView extends StatelessWidget {
             BarChartRodData(
               toY: weeklyOmzet[i],
               color: AppTheme.primary,
-              width: 8.w,
+              width: 10.w,
               borderRadius: BorderRadius.circular(4.r),
             ),
             BarChartRodData(
               toY: weeklyExpense[i],
               color: Colors.red.shade400,
-              width: 8.w,
+              width: 10.w,
               borderRadius: BorderRadius.circular(4.r),
             ),
           ],
@@ -231,13 +301,13 @@ class ReportView extends StatelessWidget {
                 final format = DateFormat('E').format(date); // e.g. Mon, Tue
                 return Padding(
                   padding: EdgeInsets.only(top: 8.h),
-                  child: Text(format, style: TextStyle(color: AppTheme.textSecondary, fontSize: 10.sp)),
+                  child: Text(format, style: TextStyle(color: AppTheme.textSecondary, fontSize: 11.sp, fontWeight: FontWeight.bold)),
                 );
               },
             ),
           ),
           leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Hide left titles to save space
+            sideTitles: SideTitles(showTitles: false),
           ),
           topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -246,7 +316,7 @@ class ReportView extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: maxVal / 4,
-          getDrawingHorizontalLine: (value) => FlLine(color: AppTheme.divider, strokeWidth: 1),
+          getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.shade100, strokeWidth: 1.5, dashArray: [5, 5]),
         ),
         borderData: FlBorderData(show: false),
         barGroups: barGroups,
@@ -254,26 +324,39 @@ class ReportView extends StatelessWidget {
     );
   }
 
-  Widget _buildReportCard(String title, double amount, IconData icon, Color color, {bool isHighlight = false, VoidCallback? onTap}) {
-    final card = Card(
-      color: isHighlight ? AppTheme.surface : Colors.white,
-      margin: EdgeInsets.only(bottom: 12.h),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-        side: isHighlight ? BorderSide(color: color, width: 2) : BorderSide.none,
+  Widget _buildReportCard(String title, String subtitle, double amount, IconData icon, Color color, {bool isHighlight = false, VoidCallback? onTap}) {
+    final card = Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: isHighlight ? color.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        border: isHighlight ? Border.all(color: color.withValues(alpha: 0.3), width: 2) : Border.all(color: Colors.transparent),
+        boxShadow: isHighlight 
+            ? [] 
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 4))],
       ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
-              child: Icon(icon, color: color),
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Icon(icon, color: color, size: 24.sp),
             ),
             SizedBox(width: 16.w),
             Expanded(
-              child: Text(title, style: TextStyle(fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal, fontSize: 14.sp)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp, color: AppTheme.textPrimary)),
+                  SizedBox(height: 4.h),
+                  Text(subtitle, style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary)),
+                ],
+              ),
             ),
             Text(
               CurrencyFormatter.formatRupiah(amount),
@@ -281,7 +364,7 @@ class ReportView extends StatelessWidget {
             ),
             if (onTap != null) ...[
               SizedBox(width: 8.w),
-              Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+              Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary),
             ]
           ],
         ),
@@ -289,10 +372,13 @@ class ReportView extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: card,
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20.r),
+          child: card,
+        ),
       );
     }
     return card;
