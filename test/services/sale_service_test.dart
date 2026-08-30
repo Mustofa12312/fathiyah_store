@@ -10,22 +10,28 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:mockito/mockito.dart';
 class FakeProductService extends GetxService implements ProductService {
   @override
-  Future<void> updateProduct(ProductModel product) async {}
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeAuthService extends GetxService implements AuthService {
   @override
   Rx<UserModel?> get currentUser => Rx<UserModel?>(UserModel(id: '1', username: 'admin', password: '123', name: 'Admin', role: 'admin', status: 'aktif'));
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeShiftService extends GetxService implements ShiftService {
   @override
   Future<void> recordCashSale(double amount) async {}
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeStockMovementService extends GetxService implements StockMovementService {
   @override
   Future<void> recordMovement({required String productId, required String productName, required int quantity, required String type, String? note}) async {}
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

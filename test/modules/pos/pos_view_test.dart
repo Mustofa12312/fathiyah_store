@@ -16,24 +16,38 @@ import 'package:mockito/mockito.dart';
 class FakeAuthService extends GetxService implements AuthService {
   @override
   Rx<UserModel?> get currentUser => Rx<UserModel?>(null);
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeShiftService extends GetxService implements ShiftService {
   @override
   Rx<ShiftModel?> get currentShift => Rx<ShiftModel?>(null);
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeSaleService extends GetxService implements SaleService {
   @override
   RxList<CartItem> get cartItems => <CartItem>[].obs;
-  
   @override
   double get cartTotal => 0.0;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class FakeProductService extends GetxService implements ProductService {}
-class FakeCategoryService extends GetxService implements CategoryService {}
-class FakeCustomerService extends GetxService implements CustomerService {}
+class FakeProductService extends GetxService implements ProductService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+class FakeCategoryService extends GetxService implements CategoryService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+class FakeCustomerService extends GetxService implements CustomerService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   setUp(() {

@@ -311,125 +311,7 @@ class PosView extends GetView<PosController> {
                 // Cart Items List
                 Expanded(
                   flex: 2,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, -5)),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                          child: Row(
-                            children: [
-                              Icon(Icons.shopping_cart_outlined, color: AppTheme.primary, size: 20.sp),
-                              SizedBox(width: 8.w),
-                              Text(
-                                'Keranjang Belanja',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1, color: AppTheme.divider),
-                        Expanded(
-                          child: Obx(() {
-                            final cartItems = controller.saleService.cartItems;
-                            if (cartItems.isEmpty) {
-                              return Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.all(24.w),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade50,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(Icons.shopping_cart_outlined, color: Colors.grey.shade300, size: 48.sp),
-                                    ),
-                                    SizedBox(height: 16.h),
-                                    Text('Keranjang masih kosong', style: TextStyle(color: Colors.grey.shade500, fontSize: 14.sp)),
-                                  ],
-                                ),
-                              );
-                            }
-                            
-                            return ListView.separated(
-                              padding: EdgeInsets.symmetric(vertical: 8.h),
-                              itemCount: cartItems.length,
-                              separatorBuilder: (context, index) => const Divider(height: 1, color: AppTheme.divider),
-                              itemBuilder: (context, index) {
-                                final item = cartItems[index];
-                                return Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              item.product.name,
-                                              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-                                            ),
-                                            SizedBox(height: 4.h),
-                                              Text(
-                                                CurrencyFormatter.formatRupiah(item.product.sellingPrice),
-                                                style: TextStyle(color: AppTheme.primary, fontSize: 14.sp, fontWeight: FontWeight.w700),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.background,
-                                          borderRadius: BorderRadius.circular(20.r),
-                                          border: Border.all(color: AppTheme.divider),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            InkWell(
-                                              onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
-                                              borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                                                child: Icon(Icons.remove, color: Colors.red.shade400, size: 18.sp),
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                              child: Text(
-                                                '${item.quantity}',
-                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity + 1),
-                                              borderRadius: BorderRadius.horizontal(right: Radius.circular(20.r)),
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                                                child: Icon(Icons.add, color: AppTheme.primary, size: 18.sp),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _buildCartList(),
                 ),
                 ];
                 
@@ -496,22 +378,35 @@ class PosView extends GetView<PosController> {
           child: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$cartCount Barang',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
+                child: InkWell(
+                  onTap: () => _showMobileCartSheet(Get.context!),
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '$cartCount Barang',
+                              style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(Icons.keyboard_arrow_up_rounded, size: 16.sp, color: AppTheme.textSecondary),
+                          ],
+                        ),
+                        Text(
+                          CurrencyFormatter.formatRupiah(cartTotal),
+                          style: TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18.sp,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      CurrencyFormatter.formatRupiah(cartTotal),
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.sp,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               ElevatedButton(
@@ -597,6 +492,157 @@ class PosView extends GetView<PosController> {
         ),
       ),
       isScrollControlled: true,
+    );
+  }
+
+  void _showMobileCartSheet(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        height: MediaQuery.of(context).size.height * 0.65,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: 12.h),
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Expanded(child: _buildCartList()),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Widget _buildCartList() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, -5)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            child: Row(
+              children: [
+                Icon(Icons.shopping_cart_outlined, color: AppTheme.primary, size: 20.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  'Keranjang Belanja',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppTheme.divider),
+          Expanded(
+            child: Obx(() {
+              final cartItems = controller.saleService.cartItems;
+              if (cartItems.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(24.w),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.shopping_cart_outlined, color: Colors.grey.shade300, size: 48.sp),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text('Keranjang masih kosong', style: TextStyle(color: Colors.grey.shade500, fontSize: 14.sp)),
+                    ],
+                  ),
+                );
+              }
+              
+              return ListView.separated(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                itemCount: cartItems.length,
+                separatorBuilder: (context, index) => const Divider(height: 1, color: AppTheme.divider),
+                itemBuilder: (context, index) {
+                  final item = cartItems[index];
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.product.name,
+                                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                              ),
+                              SizedBox(height: 4.h),
+                                Text(
+                                  CurrencyFormatter.formatRupiah(item.product.sellingPrice),
+                                  style: TextStyle(color: AppTheme.primary, fontSize: 14.sp, fontWeight: FontWeight.w700),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.background,
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: AppTheme.divider),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              InkWell(
+                                onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
+                                borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                                  child: Icon(Icons.remove, color: Colors.red.shade400, size: 18.sp),
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                child: Text(
+                                  '${item.quantity}',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity + 1),
+                                borderRadius: BorderRadius.horizontal(right: Radius.circular(20.r)),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                                  child: Icon(Icons.add, color: AppTheme.primary, size: 18.sp),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 }
