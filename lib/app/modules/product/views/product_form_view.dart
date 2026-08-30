@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
@@ -268,9 +269,9 @@ class _ProductFormViewState extends State<ProductFormView> {
                                 TextFormField(
                                   controller: _purchasePriceController,
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [ThousandsFormatter()],
+                                  inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: 'Rp ')],
                                   validator: (v) => v!.isEmpty ? 'Wajib' : null,
-                                  decoration: _inputDecoration(prefixText: 'Rp '),
+                                  decoration: _inputDecoration(),
                                 ),
                               ],
                             ),
@@ -284,9 +285,9 @@ class _ProductFormViewState extends State<ProductFormView> {
                                 TextFormField(
                                   controller: _sellingPriceController,
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [ThousandsFormatter()],
+                                  inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: 'Rp ')],
                                   validator: (v) => v!.isEmpty ? 'Wajib' : null,
-                                  decoration: _inputDecoration(prefixText: 'Rp '),
+                                  decoration: _inputDecoration(),
                                 ),
                               ],
                             ),
@@ -307,7 +308,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                                 TextFormField(
                                   controller: _stockController,
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [ThousandsFormatter()],
+                                  inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: '')],
                                   validator: (v) => v!.isEmpty ? 'Wajib' : null,
                                   decoration: _inputDecoration(hintText: '0'),
                                 ),
@@ -323,7 +324,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                                 TextFormField(
                                   controller: _minimumStockController,
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [ThousandsFormatter()],
+                                  inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: '')],
                                   validator: (v) => v!.isEmpty ? 'Wajib' : null,
                                   decoration: _inputDecoration(hintText: '0'),
                                 ),

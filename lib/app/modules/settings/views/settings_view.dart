@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import '../controllers/settings_controller.dart';
 import '../../user_management/views/user_management_view.dart';
 import '../../audit_log/views/audit_log_view.dart';
@@ -309,10 +310,15 @@ class SettingsView extends StatelessWidget {
             TextField(
               controller: endBalanceController,
               keyboardType: TextInputType.number,
-              inputFormatters: [ThousandsFormatter()],
+              inputFormatters: [
+                CurrencyTextInputFormatter.currency(
+                  locale: 'id_ID',
+                  decimalDigits: 0,
+                  symbol: 'Rp ',
+                )
+              ],
               decoration: const InputDecoration(
-                labelText: 'Uang Aktual (Rp)',
-                prefixText: 'Rp ',
+                labelText: 'Uang Aktual',
               ),
             ),
           ],

@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/pos_controller.dart';
-
+import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 
 class CheckoutView extends GetView<PosController> {
   const CheckoutView({super.key});
@@ -156,11 +156,15 @@ class CheckoutView extends GetView<PosController> {
                     TextField(
                       controller: controller.paidAmountController,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [ThousandsFormatter()],
+                      inputFormatters: [
+                        CurrencyTextInputFormatter.currency(
+                          locale: 'id_ID',
+                          decimalDigits: 0,
+                          symbol: 'Rp ',
+                        )
+                      ],
                       style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                       decoration: InputDecoration(
-                        prefixText: 'Rp ',
-                        prefixStyle: TextStyle(color: AppTheme.textPrimary, fontSize: 24.sp, fontWeight: FontWeight.bold),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
@@ -177,6 +181,21 @@ class CheckoutView extends GetView<PosController> {
                           borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                         ),
                       ),
+                    ),
+
+                    SizedBox(height: 16.h),
+                    
+                    // Quick Cash Buttons
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: [
+                        _buildQuickCashButton('Uang Pas', controller.saleService.cartTotal),
+                        _buildQuickCashButton('10.000', 10000),
+                        _buildQuickCashButton('20.000', 20000),
+                        _buildQuickCashButton('50.000', 50000),
+                        _buildQuickCashButton('100.000', 100000),
+                      ],
                     ),
 
                     SizedBox(height: 16.h),
@@ -248,6 +267,20 @@ class CheckoutView extends GetView<PosController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildQuickCashButton(String label, double amount) {
+    return ActionChip(
+      label: Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
+      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.r),
+        side: const BorderSide(color: AppTheme.primary, width: 1),
+      ),
+      onPressed: () {
+        controller.paidAmountController.text = CurrencyFormatter.formatRupiah(amount);
+      },
     );
   }
 

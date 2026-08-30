@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
@@ -27,11 +29,16 @@ import 'app/data/services/connectivity_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load Environment Variables
+  await dotenv.load(fileName: ".env");
+
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  // Setup Crashlytics
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   // Konfigurasi Persistence Offline (Cache tidak terbatas)
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,

@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Since the app currently does not use Firebase Authentication, request.auth is ALWAYS null.
+    // If you want to use the RBAC below, you MUST migrate AuthService to use Firebase Auth.
+    // For now, these rules are just examples of how it WOULD look.
+    // UNCOMMENT the following block and DELETE the global match to enforce security.
+
+    /*
+    function isAdmin() {
+      // Assuming you store roles in a custom claim or read from users collection
+      // return request.auth.token.role == 'admin';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isKasir() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'kasir';
+    }
+
+    // Admin has full access to everything
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // Kasir specific permissions
+    match /products/{product} {
+      allow read: if isKasir();
+    }
+    match /customers/{customer} {
+      allow read: if isKasir();
+      allow create, update: if isKasir(); // Kasir can add customers
+    }
+    match /sales/{sale} {
+      allow read, create, update: if isKasir(); // Kasir handles sales
+    }
+    match /expenses/{expense} {
+      allow read, create: if isKasir(); // Kasir records expenses
+    }
+    match /shifts/{shift} {
+      allow read, create, update: if isKasir(); // Kasir opens/closes shift
+    }
+    */
+
+    // TEMPORARY RULE (Insecure): Allows anyone to read/write since Firebase Auth is not implemented yet
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
