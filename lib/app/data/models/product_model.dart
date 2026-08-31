@@ -1,12 +1,14 @@
 // ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import '../../core/utils/money_engine.dart';
+
 class ProductModel {
   final String id;
   final String name;
   final String categoryId;
   final String? barcode;
   final String unit;
-  final double purchasePrice;
-  final double sellingPrice;
+  final int purchasePrice;
+  final int sellingPrice;
   final int stock;
   final int minimumStock;
   final String? imageUrl;
@@ -37,8 +39,8 @@ class ProductModel {
       categoryId: json['categoryId'] as String,
       barcode: json['barcode'] as String?,
       unit: json['unit'] as String,
-      purchasePrice: (json['purchasePrice'] as num).toDouble(),
-      sellingPrice: (json['sellingPrice'] as num).toDouble(),
+      purchasePrice: MoneyEngine.parse(json['purchasePrice']),
+      sellingPrice: MoneyEngine.parse(json['sellingPrice']),
       stock: json['stock'] as int,
       minimumStock: json['minimumStock'] as int,
       imageUrl: json['imageUrl'] as String?,
@@ -71,8 +73,8 @@ class ProductModel {
     String? categoryId,
     String? barcode,
     String? unit,
-    double? purchasePrice,
-    double? sellingPrice,
+    int? purchasePrice,
+    int? sellingPrice,
     int? stock,
     int? minimumStock,
     String? imageUrl,

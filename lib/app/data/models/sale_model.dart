@@ -1,10 +1,12 @@
 // ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import '../../core/utils/money_engine.dart';
+
 class SaleItemModel {
   final String productId;
   final String productName;
   final int quantity;
-  final double price; // Harga saat transaksi
-  final double subtotal; // quantity * price
+  final int price; // Harga saat transaksi
+  final int subtotal; // quantity * price
 
   SaleItemModel({
     required this.productId,
@@ -19,8 +21,8 @@ class SaleItemModel {
       productId: json['productId'],
       productName: json['productName'],
       quantity: json['quantity'],
-      price: json['price'],
-      subtotal: json['subtotal'],
+      price: MoneyEngine.parse(json['price']),
+      subtotal: MoneyEngine.parse(json['subtotal']),
     );
   }
 
@@ -41,10 +43,10 @@ class SaleModel {
   final String customerType; // 'general' or 'vip'
   final String cashierId;
   final String cashierName;
-  final double subtotal;
-  final double totalAmount;
-  final double paidAmount;
-  final double remainingAmount;
+  final int subtotal;
+  final int totalAmount;
+  final int paidAmount;
+  final int remainingAmount;
   final String paymentStatus; // 'lunas', 'sebagian', 'belum_dibayar'
   final String paymentMethod;
   final List<Map<String, dynamic>>? splitPayments;
@@ -77,10 +79,10 @@ class SaleModel {
       customerType: json['customerType'],
       cashierId: json['cashierId'],
       cashierName: json['cashierName'],
-      subtotal: (json['subtotal'] as num).toDouble(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      paidAmount: (json['paidAmount'] as num).toDouble(),
-      remainingAmount: (json['remainingAmount'] as num).toDouble(),
+      subtotal: MoneyEngine.parse(json['subtotal']),
+      totalAmount: MoneyEngine.parse(json['totalAmount']),
+      paidAmount: MoneyEngine.parse(json['paidAmount']),
+      remainingAmount: MoneyEngine.parse(json['remainingAmount']),
       paymentStatus: json['paymentStatus'] ?? 'belum_dibayar',
       paymentMethod: json['paymentMethod'] ?? 'Cash',
       splitPayments: json['splitPayments'] != null 

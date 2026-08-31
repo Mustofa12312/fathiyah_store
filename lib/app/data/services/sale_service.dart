@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../models/sale_model.dart';
 import '../models/product_model.dart';
 import '../models/customer_model.dart';
+import '../models/stock_movement_model.dart';
 import 'product_service.dart';
 import 'auth_service.dart';
 import 'shift_service.dart';
@@ -170,25 +171,6 @@ class SaleService extends GetxService {
       )).toList(),
     );
 
-    // Save to Firestore
-    await _firestore.collection('sales').doc(saleId).set(sale.toJson());
-
-    // Update Product Stock in Firestore
-    for (var item in cartItems) {
-      final product = item.product;
-      await _productService.updateProduct(
-        product.copyWith(stock: product.stock - item.quantity)
-      );
-      
-      await _stockMovementService.recordMovement(
-        productId: product.id,
-        productName: product.name,
-        quantity: -item.quantity,
-        type: 'SALE',
-        note: 'Penjualan TRX: $saleId',
-      );
-    }
-
     // Calculate actual cash received
     double cashReceived = 0;
     if (splitPayments != null) {
@@ -201,12 +183,85 @@ class SaleService extends GetxService {
       cashReceived = paidAmount;
     }
 
-    if (cashReceived > 0) {
-      await _shiftService.recordCashSale(cashReceived);
-    }
+    final shiftId = _shiftService.currentShift.value?.id;
+    final user = _authService.currentUser.value;
 
-    clearCart();
-    return sale;
+    try {
+      await _firestore.runTransaction((transaction) async {
+        // READ PHASE
+        
+        // 1. Read Products
+        Map<String, DocumentSnapshot> productDocs = {};
+        for(var item in cartItems) {
+          DocumentReference prodRef = _firestore.collection('products').doc(item.product.id);
+          productDocs[item.product.id] = await transaction.get(prodRef);
+        }
+        
+        // 2. Read Shift if there's cash
+        DocumentSnapshot? shiftDoc;
+        if (cashReceived > 0 && shiftId != null) {
+          shiftDoc = await transaction.get(_firestore.collection('shifts').doc(shiftId));
+        }
+        
+        // VALIDATION PHASE
+        for(var item in cartItems) {
+          final doc = productDocs[item.product.id];
+          if (!doc!.exists) throw Exception('Produk ${item.product.name} tidak ditemukan');
+          final currentStock = (doc.data() as Map<String,dynamic>)['stock'] as int;
+          if (currentStock < item.quantity) {
+            throw Exception('Stok ${item.product.name} tidak mencukupi (Tersisa: $currentStock)');
+          }
+        }
+        
+        // WRITE PHASE
+        
+        // 1. Create Sale
+        DocumentReference saleRef = _firestore.collection('sales').doc(saleId);
+        transaction.set(saleRef, sale.toJson());
+        
+        // 2. Update Products & Create Stock Movements
+        for (var item in cartItems) {
+          final doc = productDocs[item.product.id]!;
+          final currentStock = (doc.data() as Map<String,dynamic>)['stock'] as int;
+          transaction.update(doc.reference, {'stock': currentStock - item.quantity});
+          
+          final movementId = const Uuid().v4();
+          final movement = StockMovementModel(
+            id: movementId,
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: -item.quantity,
+            type: 'SALE',
+            userId: user?.id ?? 'unknown',
+            userName: user?.name ?? 'Unknown',
+            note: 'Penjualan TRX: $saleId',
+            createdAt: DateTime.now(),
+          );
+          transaction.set(_firestore.collection('stock_movements').doc(movementId), movement.toJson());
+        }
+        
+        // 3. Update Shift
+        if (shiftDoc != null && shiftDoc.exists) {
+          final currentSalesCash = (shiftDoc.data() as Map<String,dynamic>)['totalSalesCash'] as num? ?? 0;
+          transaction.update(shiftDoc.reference, {
+            'totalSalesCash': currentSalesCash + cashReceived
+          });
+        }
+      });
+      
+      // Update local shift state if needed
+      if (cashReceived > 0 && _shiftService.currentShift.value != null) {
+         _shiftService.currentShift.value = _shiftService.currentShift.value!.copyWith(
+           totalSalesCash: _shiftService.currentShift.value!.totalSalesCash + cashReceived
+         );
+      }
+      
+      clearCart();
+      return sale;
+    } catch (e) {
+      debugPrint("Transaction failed: $e");
+      rethrow;
+    }
   }
   
   Map<String, double> getDebtsByCustomer() {
@@ -227,24 +282,56 @@ class SaleService extends GetxService {
     final sale = sales.firstWhereOrNull((s) => s.id == saleId);
     if (sale == null || sale.remainingAmount <= 0) return;
 
-    final newPaidAmount = sale.paidAmount + amount;
-    final newRemaining = sale.totalAmount - newPaidAmount;
-    
-    String newStatus = sale.paymentStatus;
-    if (newRemaining <= 0) {
-      newStatus = 'lunas';
-    } else {
-      newStatus = 'sebagian';
-    }
+    final shiftId = _shiftService.currentShift.value?.id;
+    final isCash = paymentMethod.toLowerCase() == 'cash';
 
-    await _firestore.collection('sales').doc(saleId).update({
-      'paidAmount': newPaidAmount,
-      'remainingAmount': newRemaining > 0 ? newRemaining : 0,
-      'paymentStatus': newStatus,
-    });
-    
-    if (paymentMethod.toLowerCase() == 'cash' && amount > 0) {
-      await _shiftService.recordCashSale(amount);
+    try {
+      await _firestore.runTransaction((transaction) async {
+        DocumentReference saleRef = _firestore.collection('sales').doc(saleId);
+        DocumentSnapshot saleDoc = await transaction.get(saleRef);
+        
+        if (!saleDoc.exists) throw Exception('Transaksi tidak ditemukan');
+        
+        DocumentSnapshot? shiftDoc;
+        if (isCash && amount > 0 && shiftId != null) {
+          shiftDoc = await transaction.get(_firestore.collection('shifts').doc(shiftId));
+        }
+
+        final currentPaidAmount = (saleDoc.data() as Map<String,dynamic>)['paidAmount'] as num? ?? 0;
+        final totalAmount = (saleDoc.data() as Map<String,dynamic>)['totalAmount'] as num? ?? 0;
+        
+        final newPaidAmount = currentPaidAmount + amount;
+        final newRemaining = totalAmount - newPaidAmount;
+        
+        String newStatus = (saleDoc.data() as Map<String,dynamic>)['paymentStatus'] as String;
+        if (newRemaining <= 0) {
+          newStatus = 'lunas';
+        } else {
+          newStatus = 'sebagian';
+        }
+
+        transaction.update(saleRef, {
+          'paidAmount': newPaidAmount,
+          'remainingAmount': newRemaining > 0 ? newRemaining : 0,
+          'paymentStatus': newStatus,
+        });
+
+        if (shiftDoc != null && shiftDoc.exists) {
+          final currentSalesCash = (shiftDoc.data() as Map<String,dynamic>)['totalSalesCash'] as num? ?? 0;
+          transaction.update(shiftDoc.reference, {
+            'totalSalesCash': currentSalesCash + amount
+          });
+        }
+      });
+      
+      if (isCash && amount > 0 && _shiftService.currentShift.value != null) {
+         _shiftService.currentShift.value = _shiftService.currentShift.value!.copyWith(
+           totalSalesCash: _shiftService.currentShift.value!.totalSalesCash + amount
+         );
+      }
+    } catch (e) {
+      debugPrint("Pay debt transaction failed: $e");
+      rethrow;
     }
   }
 
@@ -252,24 +339,7 @@ class SaleService extends GetxService {
     final sale = sales.firstWhereOrNull((s) => s.id == saleId);
     if (sale == null || sale.transactionStatus == 'voided') return;
 
-    // Restore stock
-    for (var item in sale.items) {
-      final product = _productService.products.firstWhereOrNull((p) => p.id == item.productId);
-      if (product != null) {
-        await _productService.updateProduct(
-          product.copyWith(stock: product.stock + item.quantity)
-        );
-      }
-      await _stockMovementService.recordMovement(
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        type: 'RETURN',
-        note: 'Void TRX: $saleId',
-      );
-    }
-
-    // Deduct from shift cash if paid by cash
+    // Calculate cash to deduct
     double cashToDeduct = 0;
     if (sale.splitPayments != null) {
       for (var sp in sale.splitPayments!) {
@@ -281,15 +351,81 @@ class SaleService extends GetxService {
       cashToDeduct = sale.paidAmount;
     }
 
-    if (cashToDeduct > 0) {
-      await _shiftService.recordCashSale(-cashToDeduct);
-    }
+    final shiftId = _shiftService.currentShift.value?.id;
+    final user = _authService.currentUser.value;
 
-    // Update sale status
-    await _firestore.collection('sales').doc(saleId).update({
-      'transactionStatus': 'voided',
-    });
-    
-    Get.snackbar('Berhasil', 'Transaksi $saleId berhasil dibatalkan', snackPosition: SnackPosition.TOP);
+    try {
+      await _firestore.runTransaction((transaction) async {
+        DocumentReference saleRef = _firestore.collection('sales').doc(saleId);
+        DocumentSnapshot saleDoc = await transaction.get(saleRef);
+        
+        if (!saleDoc.exists) throw Exception('Transaksi tidak ditemukan');
+        if ((saleDoc.data() as Map<String,dynamic>)['transactionStatus'] == 'voided') {
+          throw Exception('Transaksi sudah dibatalkan');
+        }
+
+        // 1. Read Products
+        Map<String, DocumentSnapshot> productDocs = {};
+        for(var item in sale.items) {
+          DocumentReference prodRef = _firestore.collection('products').doc(item.productId);
+          productDocs[item.productId] = await transaction.get(prodRef);
+        }
+        
+        // 2. Read Shift if there's cash
+        DocumentSnapshot? shiftDoc;
+        if (cashToDeduct > 0 && shiftId != null) {
+          shiftDoc = await transaction.get(_firestore.collection('shifts').doc(shiftId));
+        }
+
+        // WRITE PHASE
+        
+        // 1. Void Sale
+        transaction.update(saleRef, {
+          'transactionStatus': 'voided',
+        });
+        
+        // 2. Restore Products & Create Stock Movements
+        for (var item in sale.items) {
+          final doc = productDocs[item.productId];
+          if (doc != null && doc.exists) {
+             final currentStock = (doc.data() as Map<String,dynamic>)['stock'] as int;
+             transaction.update(doc.reference, {'stock': currentStock + item.quantity});
+          }
+          
+          final movementId = const Uuid().v4();
+          final movement = StockMovementModel(
+            id: movementId,
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            type: 'RETURN',
+            userId: user?.id ?? 'unknown',
+            userName: user?.name ?? 'Unknown',
+            note: 'Void TRX: $saleId',
+            createdAt: DateTime.now(),
+          );
+          transaction.set(_firestore.collection('stock_movements').doc(movementId), movement.toJson());
+        }
+        
+        // 3. Update Shift
+        if (shiftDoc != null && shiftDoc.exists) {
+          final currentSalesCash = (shiftDoc.data() as Map<String,dynamic>)['totalSalesCash'] as num? ?? 0;
+          transaction.update(shiftDoc.reference, {
+            'totalSalesCash': currentSalesCash - cashToDeduct
+          });
+        }
+      });
+      
+      if (cashToDeduct > 0 && _shiftService.currentShift.value != null) {
+         _shiftService.currentShift.value = _shiftService.currentShift.value!.copyWith(
+           totalSalesCash: _shiftService.currentShift.value!.totalSalesCash - cashToDeduct
+         );
+      }
+      
+      Get.snackbar('Berhasil', 'Transaksi $saleId berhasil dibatalkan', snackPosition: SnackPosition.TOP);
+    } catch (e) {
+      debugPrint("Void transaction failed: $e");
+      Get.snackbar('Error', 'Gagal membatalkan transaksi: $e', snackPosition: SnackPosition.TOP);
+    }
   }
 }

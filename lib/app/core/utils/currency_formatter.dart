@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 class CurrencyFormatter {
-  static String formatRupiah(double amount) {
+  static String formatRupiah(int amount) {
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp',

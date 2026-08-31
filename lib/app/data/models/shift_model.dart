@@ -1,14 +1,16 @@
 // ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
+import '../../core/utils/money_engine.dart';
+
 class ShiftModel {
   final String id;
   final String cashierId;
   final String cashierName;
   final DateTime startTime;
   final DateTime? endTime;
-  final double startBalance;
-  final double? endBalance;
-  final double totalSalesCash;
-  final double totalExpensesCash;
+  final int startBalance;
+  final int? endBalance;
+  final int totalSalesCash;
+  final int totalExpensesCash;
   final String status; // 'open' or 'closed'
 
   ShiftModel({
@@ -24,8 +26,8 @@ class ShiftModel {
     this.status = 'open',
   });
 
-  double get expectedBalance => startBalance + totalSalesCash - totalExpensesCash;
-  double get difference => (endBalance ?? 0) - expectedBalance;
+  int get expectedBalance => startBalance + totalSalesCash - totalExpensesCash;
+  int get difference => (endBalance ?? 0) - expectedBalance;
 
   factory ShiftModel.fromJson(Map<String, dynamic> json, String documentId) {
     return ShiftModel(
@@ -34,10 +36,10 @@ class ShiftModel {
       cashierName: json['cashierName'] ?? '',
       startTime: DateTime.parse(json['startTime']),
       endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
-      startBalance: (json['startBalance'] ?? 0 as num).toDouble(),
-      endBalance: json['endBalance'] != null ? (json['endBalance'] as num).toDouble() : null,
-      totalSalesCash: (json['totalSalesCash'] ?? 0 as num).toDouble(),
-      totalExpensesCash: (json['totalExpensesCash'] ?? 0 as num).toDouble(),
+      startBalance: MoneyEngine.parse(json['startBalance']),
+      endBalance: json['endBalance'] != null ? MoneyEngine.parse(json['endBalance']) : null,
+      totalSalesCash: MoneyEngine.parse(json['totalSalesCash']),
+      totalExpensesCash: MoneyEngine.parse(json['totalExpensesCash']),
       status: json['status'] ?? 'open',
     );
   }
@@ -62,10 +64,10 @@ class ShiftModel {
     String? cashierName,
     DateTime? startTime,
     DateTime? endTime,
-    double? startBalance,
-    double? endBalance,
-    double? totalSalesCash,
-    double? totalExpensesCash,
+    int? startBalance,
+    int? endBalance,
+    int? totalSalesCash,
+    int? totalExpensesCash,
     String? status,
   }) {
     return ShiftModel(
