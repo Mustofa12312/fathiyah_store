@@ -11,6 +11,7 @@ import '../../audit_log/views/audit_log_view.dart';
 import '../../shop/views/shop_settings_view.dart';
 import '../../../data/services/backup_service.dart';
 import 'change_password_view.dart';
+import 'printer_settings_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -123,6 +124,16 @@ class SettingsView extends StatelessWidget {
                     }),
 
                     SizedBox(height: 32.h),
+                    Text('Pengaturan Transaksi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary)),
+                    SizedBox(height: 16.h),
+                    _buildMenuTile(
+                      icon: Icons.print_rounded,
+                      title: 'Pengaturan Printer',
+                      subtitle: 'Hubungkan printer struk kasir Bluetooth',
+                      onTap: () => Get.to(() => const PrinterSettingsView()),
+                    ),
+
+                    SizedBox(height: 24.h),
                     Text('Manajemen Toko', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary)),
                     SizedBox(height: 16.h),
 
@@ -157,7 +168,7 @@ class SettingsView extends StatelessWidget {
                     ),
 
                     SizedBox(height: 24.h),
-                    Text('Manajemen Data', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary)),
+                    Text('Pengaturan Akun & Data', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary)),
                     SizedBox(height: 16.h),
                     _buildMenuTile(
                       icon: Icons.cloud_download_rounded,

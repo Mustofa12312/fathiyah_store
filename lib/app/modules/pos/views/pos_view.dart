@@ -94,6 +94,18 @@ class PosView extends GetView<PosController> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             InkWell(
+                              onTap: () => _showCloseShiftDialog(context),
+                              child: Container(
+                                padding: EdgeInsets.all(10.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Icon(Icons.exit_to_app_rounded, color: Colors.red, size: 22.sp),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            InkWell(
                               onTap: () {
                                 SimpleBarcodeScanner.streamBarcode(
                                   context,
@@ -490,6 +502,76 @@ class PosView extends GetView<PosController> {
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary, foregroundColor: Colors.white),
                   child: const Text('Mulai Shift'),
+                ),
+              ],
+            ),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showCloseShiftDialog(BuildContext context) {
+    final endBalanceController = TextEditingController();
+    
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.all(24.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tutup Shift', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: Colors.red)),
+            SizedBox(height: 8.h),
+            Text('Masukkan jumlah uang tunai fisik yang ada di laci saat ini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14.sp)),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: endBalanceController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                CurrencyTextInputFormatter.currency(
+                  locale: 'id',
+                  symbol: 'Rp ',
+                  decimalDigits: 0,
+                )
+              ],
+              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                labelText: 'Uang Fisik Akhir di Laci',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text('Batal'),
+                ),
+                SizedBox(width: 12.w),
+                ElevatedButton(
+                  onPressed: () async {
+                    final amountStr = endBalanceController.text.replaceAll(RegExp(r'[^0-9]'), '');
+                    final amount = int.tryParse(amountStr) ?? 0;
+                    
+                    Get.back();
+                    Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+                    
+                    await controller.shiftService.closeShift(amount);
+                    
+                    Get.back(); // close loading
+                    Get.offAllNamed(Routes.DASHBOARD); // Return to dashboard to force state refresh
+                    Get.snackbar('Shift Ditutup', 'Terima kasih atas kerja keras Anda hari ini.', snackPosition: SnackPosition.TOP);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                  child: const Text('Tutup Shift'),
                 ),
               ],
             ),

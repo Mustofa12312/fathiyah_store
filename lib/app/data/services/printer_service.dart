@@ -80,21 +80,22 @@ class PrinterService extends GetxService {
       
       for (var item in sale.items) {
         bluetooth.printCustom(item.productName, 1, 0);
-        bluetooth.printCustom(
-            '${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)}', 1, 0);
-        bluetooth.printCustom(CurrencyFormatter.formatRupiah(item.subtotal), 1, 2);
-        bluetooth.printNewLine();
+        bluetooth.printLeftRight(
+            '${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)}',
+            CurrencyFormatter.formatRupiah(item.subtotal),
+            1,
+            format: "%-15s %15s %n");
       }
       
       bluetooth.printCustom("--------------------------------", 1, 1);
-      bluetooth.printCustom('Total: ${CurrencyFormatter.formatRupiah(sale.totalAmount)}', 2, 2);
-      bluetooth.printCustom('Dibayar: ${CurrencyFormatter.formatRupiah(sale.paidAmount)}', 1, 2);
+      bluetooth.printLeftRight('Total', CurrencyFormatter.formatRupiah(sale.totalAmount), 1, format: "%-15s %15s %n");
+      bluetooth.printLeftRight('Dibayar', CurrencyFormatter.formatRupiah(sale.paidAmount), 1, format: "%-15s %15s %n");
       
       if (sale.remainingAmount > 0) {
-        bluetooth.printCustom('Sisa: ${CurrencyFormatter.formatRupiah(sale.remainingAmount)}', 1, 2);
+        bluetooth.printLeftRight('Sisa', CurrencyFormatter.formatRupiah(sale.remainingAmount), 1, format: "%-15s %15s %n");
         bluetooth.printCustom('Status: BELUM LUNAS', 1, 1);
       } else {
-        bluetooth.printCustom('Kembali: ${CurrencyFormatter.formatRupiah(sale.paidAmount - sale.totalAmount)}', 1, 2);
+        bluetooth.printLeftRight('Kembali', CurrencyFormatter.formatRupiah(sale.paidAmount - sale.totalAmount), 1, format: "%-15s %15s %n");
         bluetooth.printCustom('Status: LUNAS', 1, 1);
       }
       

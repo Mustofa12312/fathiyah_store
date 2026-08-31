@@ -11,7 +11,9 @@ import '../../../data/services/shop_service.dart';
 import '../../../data/services/printer_service.dart';
 import '../../../routes/app_pages.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../data/services/customer_service.dart';
+import '../../settings/views/printer_settings_view.dart';
 
 class ReceiptView extends StatelessWidget {
   final SaleModel sale;
@@ -363,24 +365,31 @@ class ReceiptView extends StatelessWidget {
             }),
             SizedBox(height: 16.h),
             Obx(() {
-              if (printerService.isConnected.value) {
-                return SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
+              return SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (printerService.isConnected.value) {
                       Get.back();
                       printerService.printReceipt(sale);
-                    },
-                    icon: const Icon(Icons.print),
-                    label: const Text('Cetak Struk Sekarang'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                    ),
+                    } else {
+                      Get.back();
+                      Get.to(() => const PrinterSettingsView());
+                      Get.snackbar(
+                        'Info', 
+                        'Silakan hubungkan printer Bluetooth di Pengaturan Printer',
+                        duration: const Duration(seconds: 4),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.print),
+                  label: Text(printerService.isConnected.value ? 'Cetak Struk Sekarang' : 'Hubungkan Printer'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: printerService.isConnected.value ? AppTheme.primary : Colors.orange,
+                    foregroundColor: Colors.white,
                   ),
-                );
-              }
-              return const SizedBox.shrink();
+                ),
+              );
             }),
           ],
         ),
