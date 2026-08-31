@@ -44,7 +44,7 @@ class _ProductFormViewState extends State<ProductFormView> {
     _barcodeController = TextEditingController(text: widget.product?.barcode ?? '');
     String formatNumber(num? value) {
       if (value == null) return '';
-      return NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(value).trim();
+      return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value).trim();
     }
 
     _purchasePriceController = TextEditingController(text: formatNumber(widget.product?.purchasePrice));
@@ -84,10 +84,10 @@ class _ProductFormViewState extends State<ProductFormView> {
         categoryId: _selectedCategoryId!,
         barcode: _barcodeController.text.isEmpty ? null : _barcodeController.text,
         unit: _selectedUnit,
-        purchasePrice: int.tryParse(_purchasePriceController.text.replaceAll('.', '')) ?? 0,
-        sellingPrice: int.tryParse(_sellingPriceController.text.replaceAll('.', '')) ?? 0,
-        stock: int.tryParse(_stockController.text.replaceAll('.', '')) ?? 0,
-        minimumStock: int.tryParse(_minimumStockController.text) ?? 0,
+        purchasePrice: int.tryParse(_purchasePriceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+        sellingPrice: int.tryParse(_sellingPriceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+        stock: int.tryParse(_stockController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+        minimumStock: int.tryParse(_minimumStockController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
         createdAt: isEdit ? widget.product!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );

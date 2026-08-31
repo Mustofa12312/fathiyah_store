@@ -10,7 +10,6 @@ class CategoryListView extends GetView<CategoryController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(CategoryController());
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kategori Produk'),

@@ -21,8 +21,6 @@ class PosView extends GetView<PosController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(PosController()); // Ensure controller is loaded
-    
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Obx(() {
@@ -437,6 +435,8 @@ class PosView extends GetView<PosController> {
                         ),
                         Text(
                           CurrencyFormatter.formatRupiah(cartTotal),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: AppTheme.primary,
                             fontWeight: FontWeight.bold,
@@ -448,12 +448,13 @@ class PosView extends GetView<PosController> {
                   ),
                 ),
               ),
+              SizedBox(width: 12.w),
               ElevatedButton(
                 onPressed: () => Get.to(() => const CheckoutView()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 ),
                 child: const Text('Bayar Sekarang'),
               ),

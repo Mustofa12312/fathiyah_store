@@ -12,13 +12,11 @@ import 'change_password_view.dart';
 import 'printer_settings_view.dart';
 import '../../shift/views/shift_list_view.dart';
 
-class SettingsView extends StatelessWidget {
+class SettingsView extends GetView<SettingsController> {
   const SettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(SettingsController());
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(

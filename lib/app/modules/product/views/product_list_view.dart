@@ -16,9 +16,6 @@ class ProductListView extends GetView<ProductController> {
 
   @override
   Widget build(BuildContext context) {
-    // Ensuring controller is available if not injected via binding yet
-    Get.put(ProductController());
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       floatingActionButton: FloatingActionButton.extended(

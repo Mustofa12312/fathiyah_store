@@ -7,13 +7,11 @@ import '../../../core/utils/currency_formatter.dart';
 import '../controllers/report_controller.dart';
 import '../../expense/views/expense_list_view.dart';
 
-class ReportView extends StatelessWidget {
+class ReportView extends GetView<ReportController> {
   const ReportView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ReportController());
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -141,28 +139,18 @@ class ReportView extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(16.r),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Total Omzet', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
-                                        SizedBox(height: 4.h),
-                                        Text(CurrencyFormatter.formatRupiah(c.filteredOmzet), style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                                      ],
-                                    ),
-                                    Container(width: 1, height: 30.h, color: Colors.white24),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text('Piutang Baru', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
-                                        SizedBox(height: 4.h),
-                                        Text(CurrencyFormatter.formatRupiah(c.filteredOmzet - c.filteredCashInHand), style: TextStyle(color: AppTheme.vipGold, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              )
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Total Omzet', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
+                                      SizedBox(height: 4.h),
+                                      Text(CurrencyFormatter.formatRupiah(c.filteredOmzet), style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            )
                             ],
                           ),
                         ),

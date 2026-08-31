@@ -256,18 +256,15 @@ class ReceiptView extends StatelessWidget {
         phoneParam = 'phone=$phone&';
       }
     }
-    final url = Uri.parse("whatsapp://send?${phoneParam}text=$text");
+    final url = Uri.parse("https://api.whatsapp.com/send?${phoneParam}text=$text");
     
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      // Fallback to generic URL if Whatsapp app is not installed
-      final webUrl = Uri.parse("https://wa.me/?text=$text");
-      if (await canLaunchUrl(webUrl)) {
-        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-      } else {
+    try {
+      final success = await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (!success) {
         Get.snackbar('Error', 'Tidak dapat membuka WhatsApp');
       }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan saat membuka WhatsApp');
     }
   }
 

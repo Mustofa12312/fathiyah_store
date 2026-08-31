@@ -79,7 +79,6 @@ class ReportController extends GetxController {
         ['Kategori', 'Nominal (Rp)'],
         ['Omzet (Total Penjualan)', filteredOmzet],
         ['Uang Tunai Masuk', filteredCashInHand],
-        ['Total Piutang Baru', filteredOmzet - filteredCashInHand],
         ['Modal Terjual (COGS)', filteredCapital],
         ['Laba Kotor', filteredGrossProfit],
         ['Total Pengeluaran', filteredExpense],
