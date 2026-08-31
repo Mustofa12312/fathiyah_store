@@ -1,24 +1,29 @@
-// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-
-import 'product_service.dart';
-import 'customer_service.dart';
-import 'sale_service.dart';
 import 'audit_log_service.dart';
 
 class BackupService extends GetxService {
-  final ProductService _productService = Get.find<ProductService>();
-  final CustomerService _customerService = Get.find<CustomerService>();
-  final SaleService _saleService = Get.find<SaleService>();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuditLogService _auditLogService = Get.find<AuditLogService>();
+
+  final List<String> collectionsToBackup = [
+    'users',
+    'categories',
+    'products',
+    'customers',
+    'sales',
+    'expenses',
+    'shifts',
+    'stock_movements',
+    'audit_logs'
+  ];
 
   Future<void> exportAndShareBackup() async {
     try {
@@ -27,30 +32,38 @@ class BackupService extends GetxService {
         barrierDismissible: false,
       );
 
-      final directory = await getTemporaryDirectory();
       final dateStr = DateFormat('yyyyMMdd_HHmm').format(DateTime.now());
-      
-      final productFile = await _exportProducts(directory.path, dateStr);
-      final customerFile = await _exportCustomers(directory.path, dateStr);
-      final saleFile = await _exportSales(directory.path, dateStr);
+      Map<String, List<Map<String, dynamic>>> backupData = {};
+
+      for (String collection in collectionsToBackup) {
+        final querySnapshot = await _firestore.collection(collection).get();
+        final docs = querySnapshot.docs.map((doc) {
+          var data = doc.data();
+          data['id'] = doc.id; // ensure ID is saved
+          return _convertTimestampsToStrings(data);
+        }).toList();
+        
+        backupData[collection] = docs;
+      }
+
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/backup_fathiyah_store_$dateStr.json');
+      await file.writeAsString(jsonEncode(backupData));
       
       Get.back(); // close loading
       
-      // Share files
+      // Share file
+      // ignore: deprecated_member_use
       await Share.shareXFiles(
-        [
-          XFile(productFile.path),
-          XFile(customerFile.path),
-          XFile(saleFile.path),
-        ],
-        text: 'Backup Database Fathiyah Store - $dateStr',
+        [XFile(file.path)],
+        text: 'Backup Database Fathiyah Store - $dateStr\n(Format JSON)',
       );
       
       await _auditLogService.logAction(
         action: 'BACKUP',
         entity: 'SYSTEM',
         entityId: 'backup_$dateStr',
-        details: 'Melakukan backup database ke CSV',
+        details: 'Melakukan full backup database ke JSON',
       );
       
     } catch (e) {
@@ -59,56 +72,27 @@ class BackupService extends GetxService {
     }
   }
 
-  Future<File> _exportProducts(String dirPath, String dateStr) async {
-    List<List<dynamic>> rows = [
-      ['ID', 'Nama', 'Kategori', 'Barcode', 'Satuan', 'Harga Beli', 'Harga Jual', 'Stok', 'Stok Minimum']
-    ];
-    
-    for (var p in _productService.products) {
-      rows.add([
-        p.id, p.name, p.categoryId, p.barcode, p.unit, p.purchasePrice, p.sellingPrice, p.stock, p.minimumStock
-      ]);
-    }
-    
-    final file = File('$dirPath/backup_products_$dateStr.csv');
-    return await file.writeAsString(Csv().encode(rows));
-  }
-
-  Future<File> _exportCustomers(String dirPath, String dateStr) async {
-    List<List<dynamic>> rows = [
-      ['ID', 'Nama', 'Telepon', 'Alamat', 'Tipe', 'Dibuat Pada']
-    ];
-    
-    for (var c in _customerService.customers) {
-      rows.add([
-        c.id, c.name, c.phone, c.address, c.type, c.createdAt.toIso8601String()
-      ]);
-    }
-    
-    final file = File('$dirPath/backup_customers_$dateStr.csv');
-    return await file.writeAsString(Csv().encode(rows));
-  }
-
-  Future<File> _exportSales(String dirPath, String dateStr) async {
-    List<List<dynamic>> rows = [
-      ['ID', 'Waktu', 'Kasir', 'Pelanggan ID', 'Total', 'Dibayar', 'Sisa', 'Status']
-    ];
-    
-    for (var s in _saleService.sales) {
-      rows.add([
-        s.id, s.createdAt.toIso8601String(), s.cashierName, s.customerId ?? '', s.totalAmount, s.paidAmount, s.remainingAmount, s.paymentStatus
-      ]);
-    }
-    
-    final file = File('$dirPath/backup_sales_$dateStr.csv');
-    return await file.writeAsString(Csv().encode(rows));
+  Map<String, dynamic> _convertTimestampsToStrings(Map<String, dynamic> data) {
+    Map<String, dynamic> result = {};
+    data.forEach((key, value) {
+      if (value is Timestamp) {
+        result[key] = value.toDate().toIso8601String();
+      } else if (value is Map<String, dynamic>) {
+        result[key] = _convertTimestampsToStrings(value);
+      } else if (value is List) {
+        result[key] = value.map((e) => (e is Map<String, dynamic>) ? _convertTimestampsToStrings(e) : e).toList();
+      } else {
+        result[key] = value;
+      }
+    });
+    return result;
   }
 
   Future<void> importData() async {
     try {
       PlatformFile? result = await FilePicker.pickFile(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['json'],
       );
 
       if (result != null && result.path != null) {
@@ -118,101 +102,145 @@ class BackupService extends GetxService {
         );
 
         File file = File(result.path!);
-        final csvString = await file.readAsString();
-        List<List<dynamic>> rowsAsListOfValues = Csv().decode(csvString);
-
-        if (rowsAsListOfValues.isEmpty) {
+        final jsonString = await file.readAsString();
+        
+        Map<String, dynamic> backupData;
+        try {
+          backupData = jsonDecode(jsonString);
+        } catch (e) {
           Get.back();
-          Get.snackbar('Error', 'File CSV kosong.');
-          return;
-        }
-
-        final header = rowsAsListOfValues.first.map((e) => e.toString().trim()).toList();
-        final isProduct = header.contains('Harga Beli');
-        final isCustomer = header.contains('Telepon') && header.contains('Tipe');
-
-        if (isProduct) {
-          await _importProducts(rowsAsListOfValues);
-        } else if (isCustomer) {
-          await _importCustomers(rowsAsListOfValues);
-        } else {
-          Get.back();
-          Get.snackbar('Error', 'Format CSV tidak dikenali. Pastikan Anda memilih file hasil backup dari aplikasi ini.');
+          Get.snackbar('Error', 'File bukan JSON yang valid.');
           return;
         }
 
         Get.back(); // close loading
-        Get.snackbar('Berhasil', 'Data berhasil diimpor!');
-        
-        await _auditLogService.logAction(
-          action: 'RESTORE',
-          entity: 'SYSTEM',
-          entityId: 'restore_${DateTime.now().millisecondsSinceEpoch}',
-          details: 'Melakukan restore data dari CSV',
-        );
+
+        // Show Preview Dialog
+        _showPreviewDialog(backupData);
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      Get.snackbar('Error', 'Gagal mengimpor data: $e');
+      Get.snackbar('Error', 'Gagal membaca file: $e');
     }
   }
 
-  Future<void> _importProducts(List<List<dynamic>> rows) async {
-    final batch = FirebaseFirestore.instance.batch();
-    for (int i = 1; i < rows.length; i++) {
-      final row = rows[i];
-      if (row.length < 9) continue;
-      
-      final id = row[0].toString();
-      final name = row[1].toString();
-      final categoryId = row[2].toString();
-      final barcode = row[3].toString();
-      final unit = row[4].toString();
-      final purchasePrice = int.tryParse(row[5].toString()) ?? 0;
-      final sellingPrice = int.tryParse(row[6].toString()) ?? 0;
-      final stock = int.tryParse(row[7].toString()) ?? 0;
-      final minimumStock = int.tryParse(row[8].toString()) ?? 0;
+  void _showPreviewDialog(Map<String, dynamic> backupData) {
+    int totalDocs = 0;
+    List<Widget> details = [];
 
-      final docRef = FirebaseFirestore.instance.collection('products').doc(id.isNotEmpty ? id : null);
-      batch.set(docRef, {
-        'name': name,
-        'categoryId': categoryId,
-        'barcode': barcode.isEmpty ? null : barcode,
-        'unit': unit,
-        'purchasePrice': purchasePrice,
-        'sellingPrice': sellingPrice,
-        'stock': stock,
-        'minimumStock': minimumStock,
-        'isActive': true,
-        'createdAt': DateTime.now().toIso8601String(),
-        'updatedAt': DateTime.now().toIso8601String(),
-      }, SetOptions(merge: true));
+    for (String collection in collectionsToBackup) {
+      if (backupData.containsKey(collection)) {
+        final list = backupData[collection] as List;
+        totalDocs += list.length;
+        details.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(collection, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('${list.length} data'),
+              ],
+            ),
+          )
+        );
+      }
     }
-    await batch.commit();
+
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Pratinjau Restore', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Anda akan merestore data berikut. Data dengan ID yang sama akan ditimpa (overwrite).'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: details,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Total $totalDocs dokumen akan diproses.', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              _executeRestore(backupData);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Lanjutkan Restore'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
-  Future<void> _importCustomers(List<List<dynamic>> rows) async {
-    final batch = FirebaseFirestore.instance.batch();
-    for (int i = 1; i < rows.length; i++) {
-      final row = rows[i];
-      if (row.length < 6) continue;
+  Future<void> _executeRestore(Map<String, dynamic> backupData) async {
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      var batch = _firestore.batch();
+      int count = 0;
+
+      for (String collection in collectionsToBackup) {
+        if (backupData.containsKey(collection)) {
+          final list = backupData[collection] as List;
+          for (var item in list) {
+            final docData = item as Map<String, dynamic>;
+            final docId = docData['id'];
+            if (docId != null) {
+              final docRef = _firestore.collection(collection).doc(docId);
+              batch.set(docRef, docData, SetOptions(merge: true));
+              count++;
+
+              // Firestore batch limit is 500
+              if (count == 400) {
+                await batch.commit();
+                batch = _firestore.batch();
+                count = 0;
+              }
+            }
+          }
+        }
+      }
+
+      if (count > 0) {
+        await batch.commit();
+      }
+
+      Get.back(); // close loading
+      Get.snackbar('Berhasil', 'Database berhasil di-restore! Silakan muat ulang aplikasi.');
       
-      final id = row[0].toString();
-      final name = row[1].toString();
-      final phone = row[2].toString();
-      final address = row[3].toString();
-      final type = row[4].toString();
-      final createdAtStr = row[5].toString();
-      
-      final docRef = FirebaseFirestore.instance.collection('customers').doc(id.isNotEmpty ? id : null);
-      batch.set(docRef, {
-        'name': name,
-        'phone': phone,
-        'address': address.isEmpty ? null : address,
-        'type': type.isEmpty ? 'general' : type,
-        'createdAt': createdAtStr.isNotEmpty ? createdAtStr : DateTime.now().toIso8601String(),
-      }, SetOptions(merge: true));
+      await _auditLogService.logAction(
+        action: 'RESTORE',
+        entity: 'SYSTEM',
+        entityId: 'restore_${DateTime.now().millisecondsSinceEpoch}',
+        details: 'Melakukan restore data dari JSON',
+      );
+
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      Get.snackbar('Error', 'Gagal melakukan restore: $e');
     }
-    await batch.commit();
   }
 }
