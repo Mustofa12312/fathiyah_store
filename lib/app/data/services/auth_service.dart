@@ -2,12 +2,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
 import '../models/audit_log_model.dart';
 
 class AuthService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
 
   bool get isAdmin => currentUser.value?.isAdmin ?? false;
@@ -16,15 +19,22 @@ class AuthService extends GetxService {
 
   final users = <UserModel>[].obs;
 
+  String _emailFromUsername(String username) => '${username.trim().toLowerCase()}@fathiyah.store';
+
   Future<AuthService> init() async {
     // Auto-create admin if database is empty
     try {
       final query = await _firestore.collection('users').limit(1).get();
       if (query.docs.isEmpty) {
+        String adminEmail = _emailFromUsername('admin');
+        UserCredential userCred = await _auth.createUserWithEmailAndPassword(
+          email: adminEmail,
+          password: 'password123', // Initial secure password for admin
+        );
+        
         final defaultAdmin = UserModel(
-          id: const Uuid().v4(),
+          id: userCred.user!.uid,
           username: 'admin',
-          password: '123',
           name: 'Super Admin',
           role: 'admin',
           status: 'aktif',
@@ -39,25 +49,57 @@ class AuthService extends GetxService {
     // Load users from Firestore
     _firestore.collection('users').snapshots().listen((snapshot) {
       users.value = snapshot.docs.map((doc) => UserModel.fromJson(doc.data(), doc.id)).toList();
+      
+      // Update currentUser if their document changed
+      if (currentUser.value != null) {
+        final updatedUser = users.value.firstWhereOrNull((u) => u.id == currentUser.value!.id);
+        if (updatedUser != null) {
+          currentUser.value = updatedUser;
+        }
+      }
     }, onError: (e) => debugPrint('AuthService Error: $e'));
+
+    // Listen to Auth State Changes
+    _auth.authStateChanges().listen((User? firebaseUser) async {
+      if (firebaseUser != null) {
+        // Fetch user from Firestore
+        final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
+        if (doc.exists) {
+          final userModel = UserModel.fromJson(doc.data()!, doc.id);
+          if (userModel.status == 'aktif') {
+            currentUser.value = userModel;
+          } else {
+            // User is inactive, sign them out
+            await logout();
+          }
+        }
+      } else {
+        currentUser.value = null;
+      }
+    });
+
     return this;
   }
 
   Future<UserModel?> login(String username, String password) async {
     try {
-      final querySnapshot = await _firestore
-          .collection('users')
-          .where('username', isEqualTo: username)
-          .where('password', isEqualTo: password)
-          .limit(1)
-          .get();
+      String email = _emailFromUsername(username);
+      UserCredential userCred = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final user = UserModel.fromJson(doc.data(), doc.id);
-        if (user.status == 'aktif') {
-          currentUser.value = user;
-          return user;
+      if (userCred.user != null) {
+        final doc = await _firestore.collection('users').doc(userCred.user!.uid).get();
+        if (doc.exists) {
+          final userModel = UserModel.fromJson(doc.data()!, doc.id);
+          if (userModel.status == 'aktif') {
+            currentUser.value = userModel;
+            return userModel;
+          } else {
+            await logout();
+            return null;
+          }
         }
       }
       return null;
@@ -67,17 +109,53 @@ class AuthService extends GetxService {
     }
   }
 
-  void logout() {
+  Future<void> logout() async {
+    await _auth.signOut();
     currentUser.value = null;
   }
 
-  Future<void> addUser(UserModel user) async {
-    await _firestore.collection('users').doc(user.id).set(user.toJson());
-    await _logAction('CREATE', 'USER', user.id, 'Menambahkan user: ${user.name}');
+  Future<void> addUser(UserModel user, String password) async {
+    try {
+      // Create user using a secondary Firebase app to prevent logging out the current admin
+      FirebaseApp secondaryApp;
+      try {
+        secondaryApp = Firebase.app('SecondaryApp');
+      } catch (e) {
+        secondaryApp = await Firebase.initializeApp(
+          name: 'SecondaryApp',
+          options: Firebase.app().options,
+        );
+      }
+      
+      FirebaseAuth secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
+      
+      String email = _emailFromUsername(user.username);
+      UserCredential userCred = await secondaryAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      // We got the UID from Firebase Auth, use it for the UserModel
+      final newUser = user.copyWith(id: userCred.user!.uid);
+      
+      await _firestore.collection('users').doc(newUser.id).set(newUser.toJson());
+      await _logAction('CREATE', 'USER', newUser.id, 'Menambahkan user: ${newUser.name}');
+      
+      await secondaryAuth.signOut();
+    } catch (e) {
+      debugPrint("Error adding user: $e");
+      rethrow;
+    }
   }
   
-  Future<void> updateUser(UserModel updatedUser) async {
+  Future<void> updateUser(UserModel updatedUser, {String? newPassword}) async {
     await _firestore.collection('users').doc(updatedUser.id).update(updatedUser.toJson());
+    
+    // Note: To change a user's password via Firebase Auth securely, 
+    // it's typically done via a password reset email or a Cloud Function, 
+    // unless the user is changing their own password.
+    // For now, we update the Firestore document.
+
     await _logAction('UPDATE', 'USER', updatedUser.id, 'Mengubah data user: ${updatedUser.name}');
   }
   

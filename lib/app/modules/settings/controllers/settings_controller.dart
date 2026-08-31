@@ -4,6 +4,7 @@ import '../../../data/services/auth_service.dart';
 import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../data/services/shift_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SettingsController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -36,18 +37,27 @@ class SettingsController extends GetxController {
   }
 
   void changePassword(String oldPass, String newPass) async {
-    final user = currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    if (user.password != oldPass) {
-      Get.snackbar('Error', 'Password lama salah', snackPosition: SnackPosition.BOTTOM);
-      return;
-    }
-
     try {
-      await _authService.updateUser(user.copyWith(password: newPass));
+      // Re-authenticate user before changing password
+      final cred = EmailAuthProvider.credential(
+        email: user.email!, 
+        password: oldPass
+      );
+      await user.reauthenticateWithCredential(cred);
+      
+      // Update password
+      await user.updatePassword(newPass);
       Get.back();
       Get.snackbar('Sukses', 'Password berhasil diubah', snackPosition: SnackPosition.BOTTOM);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        Get.snackbar('Error', 'Password lama salah', snackPosition: SnackPosition.BOTTOM);
+      } else {
+        Get.snackbar('Error', 'Gagal mengubah password: ${e.message}', snackPosition: SnackPosition.BOTTOM);
+      }
     } catch (e) {
       Get.snackbar('Error', 'Gagal mengubah password', snackPosition: SnackPosition.BOTTOM);
     }

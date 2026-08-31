@@ -151,17 +151,16 @@ class UserManagementView extends GetView<SettingsController> {
         }
 
         final newUser = UserModel(
-          id: const Uuid().v4(),
+          id: const Uuid().v4(), // Will be overridden by FirebaseAuth uid
           name: nameController.text,
           username: usernameController.text,
-          password: passwordController.text,
           role: selectedRole.value,
           pin: (selectedRole.value == 'supervisor' || selectedRole.value == 'admin') ? pinController.text : null,
         );
 
         // Add user through auth service
         final authService = Get.find<AuthService>();
-        authService.addUser(newUser);
+        authService.addUser(newUser, passwordController.text);
         
         controller.update(); // refresh list
         Get.back();

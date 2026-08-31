@@ -3,7 +3,6 @@ class UserModel {
   final String id;
   final String name;
   final String username; // used for login
-  final String password; // dummy for local mock
   final String role; // 'admin', 'supervisor', 'cashier'
   final String status; // 'aktif' or 'nonaktif'
   final String? pin; // 6-digit PIN for supervisor/admin
@@ -12,7 +11,6 @@ class UserModel {
     required this.id,
     required this.name,
     required this.username,
-    required this.password,
     required this.role,
     this.status = 'aktif',
     this.pin,
@@ -23,7 +21,6 @@ class UserModel {
       id: documentId,
       name: json['name'] ?? '',
       username: json['username'] ?? '',
-      password: json['password'] ?? '',
       role: json['role'] ?? 'cashier',
       status: json['status'] ?? 'aktif',
       pin: json['pin'],
@@ -34,7 +31,6 @@ class UserModel {
     return {
       'name': name,
       'username': username,
-      'password': password,
       'role': role,
       'status': status,
       if (pin != null) 'pin': pin,
@@ -49,7 +45,6 @@ class UserModel {
     String? id,
     String? name,
     String? username,
-    String? password,
     String? role,
     String? status,
     String? pin,
@@ -58,7 +53,6 @@ class UserModel {
       id: id ?? this.id,
       name: name ?? this.name,
       username: username ?? this.username,
-      password: password ?? this.password,
       role: role ?? this.role,
       status: status ?? this.status,
       pin: pin ?? this.pin,
