@@ -227,7 +227,7 @@ class ReceiptView extends StatelessWidget {
     sb.writeln("──────────────────");
     
     for (var item in sale.items) {
-      sb.writeln("${item.productName}");
+      sb.writeln(item.productName);
       sb.writeln("${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)} = ${CurrencyFormatter.formatRupiah(item.subtotal)}");
     }
     
@@ -289,7 +289,7 @@ class ReceiptView extends StatelessWidget {
     sb.writeln("──────────────────");
     
     for (var item in sale.items) {
-      sb.writeln("${item.productName}");
+      sb.writeln(item.productName);
       sb.writeln("${item.quantity} x ${CurrencyFormatter.formatRupiah(item.price)} = ${CurrencyFormatter.formatRupiah(item.subtotal)}");
     }
     
