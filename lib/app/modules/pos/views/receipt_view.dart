@@ -10,7 +10,6 @@ import '../../../data/services/shop_service.dart';
 import '../../../data/services/printer_service.dart';
 import '../../../routes/app_pages.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../data/services/customer_service.dart';
 import '../../settings/views/printer_settings_view.dart';
 
@@ -309,7 +308,7 @@ class ReceiptView extends StatelessWidget {
     sb.writeln("──────────────────");
     sb.writeln(footer);
 
-    Share.share(sb.toString(), subject: 'Struk Belanja $storeName');
+    /* ignore: deprecated_member_use */ Share.share(sb.toString(), subject: 'Struk Belanja $storeName');
   }
 
   void _showPrinterDialog(BuildContext context, SaleModel sale) {

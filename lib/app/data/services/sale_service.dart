@@ -6,10 +6,8 @@ import '../models/sale_model.dart';
 import '../models/product_model.dart';
 import '../models/customer_model.dart';
 import '../models/stock_movement_model.dart';
-import 'product_service.dart';
 import 'auth_service.dart';
 import 'shift_service.dart';
-import 'stock_movement_service.dart';
 import 'connectivity_service.dart';
 import 'sync_service.dart';
 import '../../core/utils/money_engine.dart';
@@ -41,10 +39,8 @@ class HoldOrderModel {
 
 class SaleService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final ProductService _productService = Get.find<ProductService>();
   final AuthService _authService = Get.find<AuthService>();
   final ShiftService _shiftService = Get.find<ShiftService>();
-  final StockMovementService _stockMovementService = Get.find<StockMovementService>();
 
   final cartItems = <CartItem>[].obs;
   final sales = <SaleModel>[].obs;
@@ -304,7 +300,7 @@ class SaleService extends GetxService {
         }
       }
     } catch (e) {
-      print('Error getting debts: $e');
+      debugPrint('Error getting debts: $e');
     }
     return debts;
   }
@@ -321,7 +317,7 @@ class SaleService extends GetxService {
           .where((s) => s.remainingAmount > 0)
           .toList();
     } catch (e) {
-      print('Error getting unpaid sales: $e');
+      debugPrint('Error getting unpaid sales: $e');
       return [];
     }
   }

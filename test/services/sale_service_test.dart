@@ -6,8 +6,6 @@ import 'package:fathiyah_store/app/data/services/product_service.dart';
 import 'package:fathiyah_store/app/data/services/auth_service.dart';
 import 'package:fathiyah_store/app/data/services/shift_service.dart';
 import 'package:fathiyah_store/app/data/services/stock_movement_service.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:mockito/mockito.dart';
 import 'package:fathiyah_store/app/data/models/user_model.dart';
 
 class FakeProductService extends GetxService implements ProductService {

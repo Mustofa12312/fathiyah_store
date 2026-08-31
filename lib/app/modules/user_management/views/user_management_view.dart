@@ -105,7 +105,7 @@ class UserManagementView extends GetView<SettingsController> {
             TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
             SizedBox(height: 8.h),
             Obx(() => DropdownButtonFormField<String>(
-              value: selectedRole.value,
+              initialValue: selectedRole.value,
               decoration: const InputDecoration(labelText: 'Role (Hak Akses)'),
               items: const [
                 DropdownMenuItem(value: 'cashier', child: Text('Kasir')),

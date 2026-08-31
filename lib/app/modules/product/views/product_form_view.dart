@@ -5,7 +5,6 @@ import 'package:currency_text_input_formatter/currency_text_input_formatter.dart
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/currency_formatter.dart';
 
 import 'package:intl/intl.dart';
 
@@ -43,10 +42,10 @@ class _ProductFormViewState extends State<ProductFormView> {
     super.initState();
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _barcodeController = TextEditingController(text: widget.product?.barcode ?? '');
-    final formatNumber = (num? value) {
+    String formatNumber(num? value) {
       if (value == null) return '';
       return NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(value).trim();
-    };
+    }
 
     _purchasePriceController = TextEditingController(text: formatNumber(widget.product?.purchasePrice));
     _sellingPriceController = TextEditingController(text: formatNumber(widget.product?.sellingPrice));
@@ -197,12 +196,13 @@ class _ProductFormViewState extends State<ProductFormView> {
                         ).copyWith(
                           suffixIcon: IconButton(
                             icon: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
-                            onPressed: () async {
-                              var res = await Get.to(() => const SimpleBarcodeScannerPage());
-                              if (res is String && res != '-1') {
-                                _barcodeController.text = res;
-                              }
-                            },
+                              onPressed: () async {
+                                var res = await Get.to(() => const SimpleBarcodeScannerPage(
+                                ));
+                                if (res is String && res != '-1') {
+                                  _barcodeController.text = res;
+                                }
+                              },
                           ),
                         ),
                       ),
@@ -219,7 +219,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                               children: [
                                 _buildLabel('Kategori'),
                                 DropdownButtonFormField<String>(
-                                  value: _selectedCategoryId,
+                                  initialValue: _selectedCategoryId,
                                   hint: const Text('Pilih'),
                                   validator: (v) => v == null ? 'Pilih kategori' : null,
                                   icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary),
@@ -241,7 +241,7 @@ class _ProductFormViewState extends State<ProductFormView> {
                                 _buildLabel('Satuan'),
                                 DropdownButtonFormField<String>(
                                   isExpanded: true,
-                                  value: _selectedUnit,
+                                  initialValue: _selectedUnit,
                                   icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary),
                                   decoration: _inputDecoration(),
                                   items: _units.map((u) {

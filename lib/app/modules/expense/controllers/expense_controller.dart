@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../../data/services/expense_service.dart';
 import '../../../data/models/expense_model.dart';
+import '../../../core/errors/app_exceptions.dart';
 
 class ExpenseController extends GetxController {
   final ExpenseService _expenseService = Get.find<ExpenseService>();
@@ -24,7 +25,14 @@ class ExpenseController extends GetxController {
     final amount = int.tryParse(amountStr) ?? 0;
     
     if (amount <= 0 || descriptionController.text.trim().isEmpty) {
-      Get.snackbar('Error', 'Harap isi keterangan dan nominal pengeluaran');
+      final ex = ValidationException('Keterangan dan nominal pengeluaran wajib diisi (minimal Rp 1)');
+      Get.snackbar(
+        ex.prefix, 
+        ex.message, 
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        icon: Icon(Icons.error_outline_rounded, color: Colors.red.shade900),
+      );
       return;
     }
 

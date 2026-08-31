@@ -160,7 +160,7 @@ class CheckoutView extends GetView<PosController> {
                         title: Text('Pembayaran Campuran (Split Payment)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
                         subtitle: Text('Bayar dengan Tunai dan Non-Tunai sekaligus', style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary)),
                         value: controller.isSplitPayment.value,
-                        activeColor: AppTheme.primary,
+                        activeThumbColor: AppTheme.primary,
                         onChanged: (val) {
                           controller.isSplitPayment.value = val;
                           if (val) {

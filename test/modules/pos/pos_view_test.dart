@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:fathiyah_store/app/modules/pos/views/pos_view.dart';
-import 'package:fathiyah_store/app/modules/pos/controllers/pos_controller.dart';
 import 'package:fathiyah_store/app/data/services/sale_service.dart';
 import 'package:fathiyah_store/app/data/services/product_service.dart';
 import 'package:fathiyah_store/app/data/services/category_service.dart';
@@ -12,7 +11,6 @@ import 'package:fathiyah_store/app/data/services/auth_service.dart';
 import 'package:fathiyah_store/app/data/models/user_model.dart';
 import 'package:fathiyah_store/app/data/models/shift_model.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mockito/mockito.dart';
 class FakeAuthService extends GetxService implements AuthService {
   @override
   Rx<UserModel?> get currentUser => Rx<UserModel?>(null);

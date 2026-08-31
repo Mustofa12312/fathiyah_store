@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:fathiyah_store/app/data/services/printer_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fathiyah_store/app/core/theme/app_theme.dart';

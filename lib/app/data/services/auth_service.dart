@@ -51,7 +51,7 @@ class AuthService extends GetxService {
       
       // Update currentUser if their document changed
       if (currentUser.value != null) {
-        final updatedUser = users.value.firstWhereOrNull((u) => u.id == currentUser.value!.id);
+        final updatedUser = users.firstWhereOrNull((u) => u.id == currentUser.value!.id);
         if (updatedUser != null) {
           currentUser.value = updatedUser;
         }

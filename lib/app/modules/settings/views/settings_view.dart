@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/currency_formatter.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import '../controllers/settings_controller.dart';
 import '../../user_management/views/user_management_view.dart';
