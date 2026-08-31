@@ -198,7 +198,10 @@ class PosView extends GetView<PosController> {
                         border: Border.all(color: Colors.grey.shade200),
                       ),
                       child: TextField(
+                        controller: controller.searchController,
                         onChanged: (value) => controller.searchQuery.value = value,
+                        onSubmitted: (value) => controller.onSearchSubmitted(value),
+                        textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: 'Cari nama atau barcode...',
                           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14.sp),

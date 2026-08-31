@@ -21,9 +21,13 @@ class DebtDetailView extends GetView<DebtController> {
       appBar: AppBar(
         title: Text('Rincian Piutang: ${customer.name}'),
       ),
-      body: GetBuilder<DebtController>(
-        builder: (controller) {
-          final unpaidSales = controller.getUnpaidSalesFor(customer.id);
+      body: FutureBuilder<List<SaleModel>>(
+        future: controller.getUnpaidSalesFor(customer.id),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final unpaidSales = snapshot.data ?? [];
           
           if (unpaidSales.isEmpty) {
             return Center(
@@ -166,9 +170,10 @@ class DebtDetailView extends GetView<DebtController> {
           return;
         }
 
-        controller.payDebt(sale.id, amount);
-        Get.back(); // close dialog
-        Get.snackbar('Sukses', 'Pembayaran berhasil dicatat', backgroundColor: Colors.green.shade100);
+        controller.payDebt(sale.id, amount).then((_) {
+          Get.back(); // close dialog
+          Get.snackbar('Sukses', 'Pembayaran berhasil dicatat', backgroundColor: Colors.green.shade100);
+        });
       },
     );
   }

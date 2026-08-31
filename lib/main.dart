@@ -11,22 +11,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
-import 'app/data/services/auth_service.dart';
-import 'app/data/services/product_service.dart';
-import 'app/data/services/category_service.dart';
-import 'app/data/services/customer_service.dart';
-import 'app/data/services/sale_service.dart';
-import 'app/data/services/expense_service.dart';
-import 'app/data/services/shift_service.dart';
-import 'app/data/services/audit_log_service.dart';
-import 'app/data/services/stock_movement_service.dart';
-import 'app/data/services/shop_service.dart';
-import 'app/data/services/printer_service.dart';
-import 'app/data/services/backup_service.dart';
-import 'app/data/repositories/product_repository.dart';
-import 'app/data/repositories/customer_repository.dart';
-import 'app/data/services/connectivity_service.dart';
-import 'app/data/services/sync_service.dart';
+import 'app/core/bindings/initial_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,27 +36,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox('offline_sales');
 
-  // Initialize Services - urutan berdasarkan dependency graph
-  // Layer 1: tidak bergantung pada service lain
-  Get.put(ConnectivityService(), permanent: true).init();
-  Get.put(AuthService(), permanent: true).init();
-  Get.put(StockMovementService(), permanent: true);
-  Get.put(AuditLogService(), permanent: true).init();
-  Get.put(ShiftService(), permanent: true).init();
-  // Layer 2: bergantung pada Layer 1
-  Get.put<ProductRepository>(FirebaseProductRepository(), permanent: true);
-  Get.put<CustomerRepository>(FirebaseCustomerRepository(), permanent: true);
-  Get.put(ShopService(), permanent: true).init();
-  Get.put(CategoryService(), permanent: true).init();
-  Get.put(ProductService(), permanent: true).init();
-  Get.put(CustomerService(), permanent: true).init();
-  // Layer 3: bergantung pada Layer 1 & 2
-  Get.put(SaleService(), permanent: true).init();
-  Get.put(ExpenseService(), permanent: true).init();
-  Get.put(PrinterService(), permanent: true).init();
-  // Layer 4: bergantung pada semua layer di atas
-  Get.put(BackupService(), permanent: true);
-  Get.put(SyncService(), permanent: true).init();
+  // Initialize Binding will be handled by GetMaterialApp
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -110,6 +75,7 @@ class MyApp extends StatelessWidget {
               title: 'Fathiyah Store',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
+              initialBinding: InitialBinding(),
               initialRoute: AppPages.INITIAL,
               getPages: AppPages.routes,
             );

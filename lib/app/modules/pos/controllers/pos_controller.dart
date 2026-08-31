@@ -16,6 +16,7 @@ class PosController extends GetxController {
   final ShiftService shiftService = Get.find<ShiftService>();
 
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
   
   // Checkout state
   final paidAmountController = TextEditingController();
@@ -29,10 +30,29 @@ class PosController extends GetxController {
 
   @override
   void onClose() {
+    searchController.dispose();
     paidAmountController.dispose();
     splitCashController.dispose();
     splitTransferController.dispose();
     super.onClose();
+  }
+
+  void onSearchSubmitted(String value) {
+    if (value.trim().isEmpty) return;
+    
+    // Check if it exactly matches a product's barcode
+    final matchedProduct = _productService.products.firstWhereOrNull(
+      (p) => p.barcode == value.trim()
+    );
+
+    if (matchedProduct != null) {
+      // Add to cart directly
+      saleService.addToCart(matchedProduct);
+      
+      // Clear search query & input to prepare for next scan
+      searchController.clear();
+      searchQuery.value = '';
+    }
   }
 
   List<ProductModel> get filteredProducts {

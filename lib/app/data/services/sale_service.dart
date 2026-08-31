@@ -54,7 +54,7 @@ class SaleService extends GetxService {
   final Rx<CustomerModel?> selectedCustomer = Rx<CustomerModel?>(null);
 
   Future<SaleService> init() async {
-    _firestore.collection('sales').orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
+    _firestore.collection('sales').orderBy('createdAt', descending: true).limit(100).snapshots().listen((snapshot) {
       sales.value = snapshot.docs.map((doc) => SaleModel.fromJson(doc.data(), doc.id)).toList();
     }, onError: (e) => debugPrint('SaleService Error: $e'));
     return this;
@@ -288,18 +288,43 @@ class SaleService extends GetxService {
     }
   }
   
-  Map<String, int> getDebtsByCustomer() {
+  Future<Map<String, int>> getDebtsByCustomer() async {
     final Map<String, int> debts = {};
-    for (var sale in sales) {
-      if (sale.remainingAmount > 0 && sale.customerId != null) {
-        debts[sale.customerId!] = (debts[sale.customerId!] ?? 0) + sale.remainingAmount;
+    try {
+      final snapshot = await _firestore.collection('sales')
+          .where('paymentStatus', whereIn: ['PARTIAL', 'UNPAID'])
+          .get();
+      
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final String? customerId = data['customerId'];
+        final int remainingAmount = data['remainingAmount'] ?? 0;
+        
+        if (remainingAmount > 0 && customerId != null) {
+          debts[customerId] = (debts[customerId] ?? 0) + remainingAmount;
+        }
       }
+    } catch (e) {
+      print('Error getting debts: $e');
     }
     return debts;
   }
 
-  List<SaleModel> getUnpaidSalesForCustomer(String customerId) {
-    return sales.where((s) => s.customerId == customerId && s.remainingAmount > 0).toList();
+  Future<List<SaleModel>> getUnpaidSalesForCustomer(String customerId) async {
+    try {
+      final snapshot = await _firestore.collection('sales')
+          .where('customerId', isEqualTo: customerId)
+          .where('paymentStatus', whereIn: ['PARTIAL', 'UNPAID'])
+          .get();
+          
+      return snapshot.docs
+          .map((doc) => SaleModel.fromJson(doc.data(), doc.id))
+          .where((s) => s.remainingAmount > 0)
+          .toList();
+    } catch (e) {
+      print('Error getting unpaid sales: $e');
+      return [];
+    }
   }
 
   Future<void> payDebt(String saleId, int amount, String paymentMethod) async {

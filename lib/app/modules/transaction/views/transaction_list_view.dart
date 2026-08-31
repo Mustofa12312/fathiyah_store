@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/supervisor_auth_dialog.dart';
 import '../controllers/transaction_controller.dart';
 import '../../pos/views/receipt_view.dart';
@@ -27,11 +28,10 @@ class TransactionListView extends StatelessWidget {
         final sales = controller.saleService.sales;
         
         if (sales.isEmpty) {
-          return Center(
-            child: Text(
-              'Belum ada transaksi',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16.sp),
-            ),
+          return const EmptyStateWidget(
+            icon: Icons.receipt_long_rounded,
+            title: 'Belum Ada Transaksi',
+            subtitle: 'Riwayat transaksi akan muncul di sini setelah kasir mulai melayani pelanggan.',
           );
         }
 
