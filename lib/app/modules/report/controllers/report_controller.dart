@@ -60,13 +60,15 @@ class ReportController extends GetxController {
     update();
   }
 
-  // Data for Chart (Last 7 days omzet)
-  List<double> getWeeklyOmzetData() {
-    return _calculator.getWeeklyOmzetData();
-  }
+  ChartDataPayload get chartData => _calculator.getChartData();
   
-  List<double> getWeeklyExpenseData() {
-    return _calculator.getWeeklyExpenseData();
+  String get chartTitle {
+    switch (selectedFilter.value) {
+      case 'Bulan Ini': return 'Tren Bulan Ini';
+      case 'Semua': 
+      case 'Tahun Ini': return 'Tren Tahun Ini';
+      default: return 'Tren 7 Hari Terakhir';
+    }
   }
 
   Future<void> exportCSV() async {

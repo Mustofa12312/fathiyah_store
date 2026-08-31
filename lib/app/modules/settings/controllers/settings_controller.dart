@@ -4,6 +4,7 @@ import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../data/services/shift_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SettingsController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -59,6 +60,25 @@ class SettingsController extends GetxController {
       }
     } catch (e) {
       Get.snackbar('Error', 'Gagal mengubah password', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<void> wipeTransactionData() async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final collections = ['sales', 'expenses', 'shifts', 'stock_movements'];
+      
+      for (var col in collections) {
+        final snapshot = await firestore.collection(col).get();
+        for (var doc in snapshot.docs) {
+          await doc.reference.delete();
+        }
+      }
+      
+      Get.back(); // close dialog
+      Get.snackbar('Sukses', 'Semua data transaksi berhasil dihapus', snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal menghapus data: $e');
     }
   }
 }

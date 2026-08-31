@@ -158,7 +158,7 @@ class ReportView extends GetView<ReportController> {
                         SizedBox(height: 32.h),
                         
                         // Chart Section
-                        Text('Tren 7 Hari Terakhir', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp, color: AppTheme.textPrimary)),
+                        Text(c.chartTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp, color: AppTheme.textPrimary)),
                         SizedBox(height: 16.h),
                         Container(
                           height: 250.h,
@@ -231,8 +231,10 @@ class ReportView extends GetView<ReportController> {
   }
 
   Widget _buildBarChart(ReportController c) {
-    final weeklyOmzet = c.getWeeklyOmzetData();
-    final weeklyExpense = c.getWeeklyExpenseData();
+    final chartData = c.chartData;
+    final weeklyOmzet = chartData.omzet;
+    final weeklyExpense = chartData.expense;
+    final labels = chartData.labels;
     
     // Find max value for Y axis scaling
     double maxVal = 0;
@@ -248,9 +250,8 @@ class ReportView extends GetView<ReportController> {
     
     // Create bar groups
     List<BarChartGroupData> barGroups = [];
-    final now = DateTime.now();
     
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < labels.length; i++) {
       barGroups.add(
         BarChartGroupData(
           x: i,
@@ -282,13 +283,13 @@ class ReportView extends GetView<ReportController> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              reservedSize: 38.h,
               getTitlesWidget: (value, meta) {
-                final date = now.subtract(Duration(days: 6 - value.toInt()));
-                final indoDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-                final format = indoDays[date.weekday - 1];
+                int index = value.toInt();
+                if (index < 0 || index >= labels.length) return const SizedBox.shrink();
                 return Padding(
                   padding: EdgeInsets.only(top: 8.h),
-                  child: Text(format, style: TextStyle(color: AppTheme.textSecondary, fontSize: 11.sp, fontWeight: FontWeight.bold)),
+                  child: Text(labels[index], style: TextStyle(color: AppTheme.textSecondary, fontSize: 10.sp, fontWeight: FontWeight.bold)),
                 );
               },
             ),

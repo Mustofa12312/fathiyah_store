@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
@@ -196,6 +197,34 @@ class SettingsView extends GetView<SettingsController> {
                     Text('Akun & Keamanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary)),
                     SizedBox(height: 16.h),
                     
+                    _buildMenuTile(
+                        icon: Icons.delete_forever_rounded,
+                        title: 'Reset Data Uji Coba',
+                        subtitle: 'Hanya tampil saat pengembangan',
+                        onTap: () {
+                          Get.defaultDialog(
+                            title: 'Hapus Semua Transaksi',
+                            content: Column(
+                              children: [
+                                const Text('Ketik "RESET" untuk menghapus semua penjualan, pengeluaran, shift, dll. (TIDAK BISA DIBATALKAN)', textAlign: TextAlign.center),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  decoration: const InputDecoration(
+                                    hintText: 'Ketik RESET di sini',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (val) {
+                                    if (val == 'RESET') {
+                                      controller.wipeTransactionData();
+                                    }
+                                  },
+                                )
+                              ]
+                            )
+                          );
+                        },
+                      ),
+
                     Obx(() {
                       final shift = controller.shiftService.currentShift.value;
                       if (!controller.isAdmin && shift != null) {

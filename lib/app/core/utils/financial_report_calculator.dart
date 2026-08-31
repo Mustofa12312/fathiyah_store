@@ -70,36 +70,72 @@ class FinancialReportCalculator {
   // 6. Laba Bersih
   int get filteredNetProfit => filteredGrossProfit - filteredExpense;
 
-  // Chart Data (Last 7 days omzet)
-  List<double> getWeeklyOmzetData() {
+  ChartDataPayload getChartData() {
     final now = DateTime.now();
-    List<double> weeklyData = List.filled(7, 0.0);
-    
-    for (int i = 0; i < 7; i++) {
-      final date = now.subtract(Duration(days: i));
-      final omzet = sales.where((s) {
-        return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
-      }).fold(0, (sum, s) => sum + s.totalAmount);
+    List<String> labels = [];
+    List<double> omzetData = [];
+    List<double> expenseData = [];
+
+    if (filter == 'Bulan Ini') {
+      labels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
+      omzetData = List.filled(4, 0.0);
+      expenseData = List.filled(4, 0.0);
       
-      weeklyData[6 - i] = omzet.toDouble();
+      final currentMonthSales = sales.where((s) => s.createdAt.year == now.year && s.createdAt.month == now.month);
+      for (var s in currentMonthSales) {
+        int week = (s.createdAt.day - 1) ~/ 7;
+        if (week > 3) week = 3;
+        omzetData[week] += s.totalAmount;
+      }
+      
+      final currentMonthExpense = expenses.where((s) => s.createdAt.year == now.year && s.createdAt.month == now.month);
+      for (var s in currentMonthExpense) {
+        int week = (s.createdAt.day - 1) ~/ 7;
+        if (week > 3) week = 3;
+        expenseData[week] += s.amount;
+      }
+    } else if (filter == 'Semua' || filter == 'Tahun Ini') {
+      labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      omzetData = List.filled(12, 0.0);
+      expenseData = List.filled(12, 0.0);
+      
+      final currentYearSales = sales.where((s) => s.createdAt.year == now.year);
+      for (var s in currentYearSales) {
+        omzetData[s.createdAt.month - 1] += s.totalAmount;
+      }
+      
+      final currentYearExpense = expenses.where((s) => s.createdAt.year == now.year);
+      for (var s in currentYearExpense) {
+        expenseData[s.createdAt.month - 1] += s.amount;
+      }
+    } else {
+      labels = List.filled(7, '');
+      omzetData = List.filled(7, 0.0);
+      expenseData = List.filled(7, 0.0);
+      
+      final indoDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      for (int i = 0; i < 7; i++) {
+        final date = now.subtract(Duration(days: 6 - i));
+        labels[i] = indoDays[date.weekday - 1];
+        
+        omzetData[i] = sales.where((s) {
+          return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
+        }).fold(0.0, (sum, s) => sum + s.totalAmount);
+        
+        expenseData[i] = expenses.where((s) {
+          return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
+        }).fold(0.0, (sum, s) => sum + s.amount);
+      }
     }
     
-    return weeklyData;
+    return ChartDataPayload(labels, omzetData, expenseData);
   }
-  
-  List<double> getWeeklyExpenseData() {
-    final now = DateTime.now();
-    List<double> weeklyData = List.filled(7, 0.0);
-    
-    for (int i = 0; i < 7; i++) {
-      final date = now.subtract(Duration(days: i));
-      final expense = expenses.where((s) {
-        return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
-      }).fold(0, (sum, s) => sum + s.amount);
-      
-      weeklyData[6 - i] = expense.toDouble();
-    }
-    
-    return weeklyData;
-  }
+}
+
+class ChartDataPayload {
+  final List<String> labels;
+  final List<double> omzet;
+  final List<double> expense;
+
+  ChartDataPayload(this.labels, this.omzet, this.expense);
 }
