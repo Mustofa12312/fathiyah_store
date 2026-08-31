@@ -5,6 +5,7 @@ import '../repositories/product_repository.dart';
 import '../models/product_model.dart';
 import '../models/category_model.dart';
 import 'audit_log_service.dart';
+import '../models/stock_movement_model.dart';
 import 'stock_movement_service.dart';
 import 'category_service.dart';
 
@@ -33,17 +34,9 @@ class ProductService extends GetxService {
   }
 
   Future<void> addProduct(ProductModel product) async {
-    await _repository.addProduct(product);
-
-    await _auditLogService.logAction(
-      action: 'CREATE',
-      entity: 'PRODUCT',
-      entityId: product.id,
-      details: 'Menambahkan produk baru: ${product.name}',
-    );
-
+    StockMovementModel? stockMovement;
     if (product.stock > 0) {
-      await _stockMovementService.recordMovement(
+      stockMovement = _stockMovementService.createMovementObject(
         productId: product.id,
         productName: product.name,
         quantity: product.stock,
@@ -51,22 +44,24 @@ class ProductService extends GetxService {
         note: 'Stok awal penambahan produk',
       );
     }
+
+    await _repository.addProduct(product, stockMovement: stockMovement);
+
+    await _auditLogService.logAction(
+      action: 'CREATE',
+      entity: 'PRODUCT',
+      entityId: product.id,
+      details: 'Menambahkan produk baru: ${product.name}',
+    );
   }
 
   Future<void> updateProduct(ProductModel product) async {
     final oldProduct = products.firstWhereOrNull((p) => p.id == product.id);
-    await _repository.updateProduct(product);
-
-    await _auditLogService.logAction(
-      action: 'UPDATE',
-      entity: 'PRODUCT',
-      entityId: product.id,
-      details: 'Mengubah data produk: ${product.name}',
-    );
-
+    
+    StockMovementModel? stockMovement;
     if (oldProduct != null && oldProduct.stock != product.stock) {
       final diff = product.stock - oldProduct.stock;
-      await _stockMovementService.recordMovement(
+      stockMovement = _stockMovementService.createMovementObject(
         productId: product.id,
         productName: product.name,
         quantity: diff,
@@ -74,6 +69,15 @@ class ProductService extends GetxService {
         note: 'Koreksi stok manual melalui edit produk',
       );
     }
+
+    await _repository.updateProduct(product, stockMovement: stockMovement);
+
+    await _auditLogService.logAction(
+      action: 'UPDATE',
+      entity: 'PRODUCT',
+      entityId: product.id,
+      details: 'Mengubah data produk: ${product.name}',
+    );
   }
 
   Future<void> deleteProduct(String id) async {

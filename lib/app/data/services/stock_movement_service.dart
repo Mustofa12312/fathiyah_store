@@ -16,23 +16,40 @@ class StockMovementService extends GetxService {
     required String type,
     String note = '',
   }) async {
-    final user = _authService.currentUser.value;
-    if (user == null) return;
+    final movement = createMovementObject(
+      productId: productId,
+      productName: productName,
+      quantity: quantity,
+      type: type,
+      note: note,
+    );
 
-    final movement = StockMovementModel(
+    await _firestore.collection('stock_movements').doc(movement.id).set(movement.toJson());
+  }
+
+  StockMovementModel createMovementObject({
+    required String productId,
+    required String productName,
+    required int quantity,
+    required String type,
+    String note = '',
+  }) {
+    final user = _authService.currentUser.value;
+    
+    return StockMovementModel(
       id: const Uuid().v4(),
       productId: productId,
       productName: productName,
       quantity: quantity,
       type: type,
-      userId: user.id,
-      userName: user.name,
+      userId: user?.id ?? 'system',
+      userName: user?.name ?? 'System',
       note: note,
       createdAt: DateTime.now(),
     );
-
-    await _firestore.collection('stock_movements').doc(movement.id).set(movement.toJson());
   }
+
+
   
   Stream<List<StockMovementModel>> getMovementsForProduct(String productId) {
     return _firestore

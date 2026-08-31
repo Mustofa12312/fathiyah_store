@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product_model.dart';
+import '../models/stock_movement_model.dart';
 
 abstract class ProductRepository {
   Stream<List<ProductModel>> streamProducts();
-  Future<void> addProduct(ProductModel product);
-  Future<void> updateProduct(ProductModel product);
+  Future<void> addProduct(ProductModel product, {StockMovementModel? stockMovement});
+  Future<void> updateProduct(ProductModel product, {StockMovementModel? stockMovement});
   Future<void> deleteProduct(String id);
 }
 
@@ -24,19 +25,33 @@ class FirebaseProductRepository implements ProductRepository {
   }
 
   @override
-  Future<void> addProduct(ProductModel product) async {
-    await _firestore
-        .collection('products')
-        .doc(product.id)
-        .set(product.toJson());
+  Future<void> addProduct(ProductModel product, {StockMovementModel? stockMovement}) async {
+    final batch = _firestore.batch();
+    
+    final productRef = _firestore.collection('products').doc(product.id);
+    batch.set(productRef, product.toJson());
+    
+    if (stockMovement != null) {
+      final movementRef = _firestore.collection('stock_movements').doc(stockMovement.id);
+      batch.set(movementRef, stockMovement.toJson());
+    }
+    
+    await batch.commit();
   }
 
   @override
-  Future<void> updateProduct(ProductModel product) async {
-    await _firestore
-        .collection('products')
-        .doc(product.id)
-        .update(product.toJson());
+  Future<void> updateProduct(ProductModel product, {StockMovementModel? stockMovement}) async {
+    final batch = _firestore.batch();
+    
+    final productRef = _firestore.collection('products').doc(product.id);
+    batch.update(productRef, product.toJson());
+    
+    if (stockMovement != null) {
+      final movementRef = _firestore.collection('stock_movements').doc(stockMovement.id);
+      batch.set(movementRef, stockMovement.toJson());
+    }
+    
+    await batch.commit();
   }
 
   @override
