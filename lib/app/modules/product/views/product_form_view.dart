@@ -555,9 +555,9 @@ class _ProductFormViewState extends State<ProductFormView> {
                                         ),
                                       ],
                                     ),
-                                    if (m.note != null && m.note!.isNotEmpty) ...[
+                                    if (m.note.isNotEmpty) ...[
                                       SizedBox(height: 4.h),
-                                      Text(m.note!, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
+                                      Text(m.note, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
                                     ]
                                   ],
                                 ),
