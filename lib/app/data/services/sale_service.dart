@@ -11,6 +11,8 @@ import 'product_service.dart';
 import 'auth_service.dart';
 import 'shift_service.dart';
 import 'stock_movement_service.dart';
+import 'connectivity_service.dart';
+import 'sync_service.dart';
 import '../../core/utils/money_engine.dart';
 
 class CartItem {
@@ -188,6 +190,27 @@ class SaleService extends GetxService {
     final user = _authService.currentUser.value;
 
     try {
+      final connectivityService = Get.find<ConnectivityService>();
+      final isOffline = connectivityService.isOffline.value;
+
+      if (isOffline) {
+        // --- OFFLINE FALLBACK STRATEGY ---
+        final syncService = Get.find<SyncService>();
+        
+        final payload = {
+          'sale': sale.toJson(),
+          'shiftId': shiftId,
+          'cashReceived': cashReceived,
+          'userId': user?.id,
+          'userName': user?.name,
+        };
+        
+        await syncService.saveOfflineSale(payload);
+        clearCart();
+        return sale;
+      }
+
+      // --- ONLINE STRATEGY ---
       await _firestore.runTransaction((transaction) async {
         // READ PHASE
         

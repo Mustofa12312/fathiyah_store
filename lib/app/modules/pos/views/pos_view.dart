@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
+import '../../../data/services/connectivity_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/pos_controller.dart';
@@ -61,6 +62,23 @@ class PosView extends GetView<PosController> {
         return SafeArea(
           child: Column(
             children: [
+              Obx(() {
+                final isOffline = Get.find<ConnectivityService>().isOffline.value;
+                if (isOffline) {
+                  return Container(
+                    width: double.infinity,
+                    color: Colors.red.shade400,
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
+                    child: Center(
+                      child: Text(
+                        'Mode Offline - Data akan disinkronkan saat online',
+                        style: TextStyle(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
               // Header & Search
               Container(
                 padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),

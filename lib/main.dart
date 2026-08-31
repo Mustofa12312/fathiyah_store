@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
@@ -25,6 +26,7 @@ import 'app/data/services/backup_service.dart';
 import 'app/data/repositories/product_repository.dart';
 import 'app/data/repositories/customer_repository.dart';
 import 'app/data/services/connectivity_service.dart';
+import 'app/data/services/sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,10 @@ void main() async {
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
+
+  // Initialize Hive for Offline Sync Queue
+  await Hive.initFlutter();
+  await Hive.openBox('offline_sales');
 
   // Initialize Services - urutan berdasarkan dependency graph
   // Layer 1: tidak bergantung pada service lain
@@ -65,6 +71,7 @@ void main() async {
   Get.put(PrinterService(), permanent: true).init();
   // Layer 4: bergantung pada semua layer di atas
   Get.put(BackupService(), permanent: true);
+  Get.put(SyncService(), permanent: true).init();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
