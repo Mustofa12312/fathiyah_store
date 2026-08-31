@@ -22,7 +22,7 @@ class ExpenseController extends GetxController {
 
   void saveExpense() {
     final amountStr = amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final amount = double.tryParse(amountStr) ?? 0.0;
+    final amount = int.tryParse(amountStr) ?? 0;
     
     if (amount <= 0 || descriptionController.text.trim().isEmpty) {
       Get.snackbar('Error', 'Harap isi keterangan dan nominal pengeluaran');

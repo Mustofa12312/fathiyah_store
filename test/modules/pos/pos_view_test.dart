@@ -31,7 +31,7 @@ class FakeSaleService extends GetxService implements SaleService {
   @override
   RxList<CartItem> get cartItems => <CartItem>[].obs;
   @override
-  double get cartTotal => 0.0;
+  int get cartTotal => 0;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

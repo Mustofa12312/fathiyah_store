@@ -32,7 +32,7 @@ class ExpenseService extends GetxService {
     }).toList();
   }
 
-  double getTotalExpenseByDate(DateTime date) {
+  int getTotalExpenseByDate(DateTime date) {
     return getExpensesByDate(date).fold(0, (total, e) => total + e.amount);
   }
 }

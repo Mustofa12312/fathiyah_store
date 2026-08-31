@@ -349,7 +349,7 @@ class CheckoutView extends GetView<PosController> {
     );
   }
 
-  Widget _buildQuickCashButton(String label, double amount) {
+  Widget _buildQuickCashButton(String label, int amount) {
     return ActionChip(
       label: Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
       backgroundColor: AppTheme.primary.withValues(alpha: 0.1),

@@ -44,7 +44,7 @@ class ShiftService extends GetxService {
     }
   }
 
-  Future<void> openShift(double startBalance) async {
+  Future<void> openShift(int startBalance) async {
     final user = _authService.currentUser.value;
     if (user == null) return;
 
@@ -61,7 +61,7 @@ class ShiftService extends GetxService {
     currentShift.value = shift;
   }
 
-  Future<void> closeShift(double endBalance) async {
+  Future<void> closeShift(int endBalance) async {
     final shift = currentShift.value;
     if (shift == null) return;
 
@@ -76,7 +76,7 @@ class ShiftService extends GetxService {
   }
 
   // To be called by SaleService
-  Future<void> recordCashSale(double amount) async {
+  Future<void> recordCashSale(int amount) async {
     final shift = currentShift.value;
     if (shift != null && shift.status == 'open') {
       final updatedShift = shift.copyWith(
@@ -88,7 +88,7 @@ class ShiftService extends GetxService {
   }
 
   // To be called by ExpenseService
-  Future<void> recordCashExpense(double amount) async {
+  Future<void> recordCashExpense(int amount) async {
     final shift = currentShift.value;
     if (shift != null && shift.status == 'open') {
       final updatedShift = shift.copyWith(

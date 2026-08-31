@@ -154,7 +154,7 @@ class DebtDetailView extends GetView<DebtController> {
       buttonColor: AppTheme.primary,
       onConfirm: () {
         final amountStr = amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-        final amount = double.tryParse(amountStr) ?? 0.0;
+        final amount = int.tryParse(amountStr) ?? 0;
         
         if (amount <= 0) {
           Get.snackbar('Error', 'Masukkan nominal yang valid');

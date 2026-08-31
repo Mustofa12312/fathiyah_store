@@ -52,14 +52,14 @@ class PosController extends GetxController {
   }
 
   Future<void> processPayment() async {
-    double paidAmount = 0.0;
+    int paidAmount = 0;
     List<Map<String, dynamic>>? splitPayments;
 
     if (isSplitPayment.value) {
       final cashStr = splitCashController.text.replaceAll(RegExp(r'[^0-9]'), '');
       final transferStr = splitTransferController.text.replaceAll(RegExp(r'[^0-9]'), '');
-      final cashAmt = double.tryParse(cashStr) ?? 0.0;
-      final transferAmt = double.tryParse(transferStr) ?? 0.0;
+      final cashAmt = int.tryParse(cashStr) ?? 0;
+      final transferAmt = int.tryParse(transferStr) ?? 0;
       
       paidAmount = cashAmt + transferAmt;
       splitPayments = [];
@@ -72,7 +72,7 @@ class PosController extends GetxController {
       paymentMethod.value = 'Split';
     } else {
       final paidAmountStr = paidAmountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-      paidAmount = double.tryParse(paidAmountStr) ?? 0.0;
+      paidAmount = int.tryParse(paidAmountStr) ?? 0;
     }
     
     final total = saleService.cartTotal;

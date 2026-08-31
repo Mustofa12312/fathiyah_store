@@ -190,7 +190,7 @@ class ReceiptView extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalRow(String label, double amount, {bool isHighlight = false}) {
+  Widget _buildTotalRow(String label, int amount, {bool isHighlight = false}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
       child: Row(

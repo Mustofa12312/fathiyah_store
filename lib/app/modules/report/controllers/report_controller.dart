@@ -40,22 +40,22 @@ class ReportController extends GetxController {
 
 
   // 1. Omzet
-  double get filteredOmzet => _calculator.filteredOmzet;
+  int get filteredOmzet => _calculator.filteredOmzet;
 
   // 2. Cash In Hand
-  double get filteredCashInHand => _calculator.filteredCashInHand;
+  int get filteredCashInHand => _calculator.filteredCashInHand;
 
   // 3. Modal Barang Terjual
-  double get filteredCapital => _calculator.filteredCapital;
+  int get filteredCapital => _calculator.filteredCapital;
 
   // 4. Laba Kotor
-  double get filteredGrossProfit => _calculator.filteredGrossProfit;
+  int get filteredGrossProfit => _calculator.filteredGrossProfit;
 
   // 5. Total Pengeluaran
-  double get filteredExpense => _calculator.filteredExpense;
+  int get filteredExpense => _calculator.filteredExpense;
 
   // 6. Laba Bersih
-  double get filteredNetProfit => _calculator.filteredNetProfit;
+  int get filteredNetProfit => _calculator.filteredNetProfit;
 
   void refreshData() {
     update();

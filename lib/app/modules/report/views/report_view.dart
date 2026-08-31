@@ -325,7 +325,7 @@ class ReportView extends StatelessWidget {
     );
   }
 
-  Widget _buildReportCard(String title, String subtitle, double amount, IconData icon, Color color, {bool isHighlight = false, VoidCallback? onTap}) {
+  Widget _buildReportCard(String title, String subtitle, int amount, IconData icon, Color color, {bool isHighlight = false, VoidCallback? onTap}) {
     final card = Container(
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(

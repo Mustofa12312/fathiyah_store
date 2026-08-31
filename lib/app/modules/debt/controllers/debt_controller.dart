@@ -10,7 +10,7 @@ class DebtController extends GetxController {
   final CustomerService _customerService = Get.find<CustomerService>();
 
   // Map of customer ID to total debt
-  Map<String, double> get customerDebts => _saleService.getDebtsByCustomer();
+  Map<String, int> get customerDebts => _saleService.getDebtsByCustomer();
 
   List<CustomerModel> get customersWithDebt {
     final debts = customerDebts;
@@ -23,7 +23,7 @@ class DebtController extends GetxController {
     return _saleService.getUnpaidSalesForCustomer(customerId);
   }
 
-  void payDebt(String saleId, double amount) {
+  void payDebt(String saleId, int amount) {
     _saleService.payDebt(saleId, amount, 'Cash');
     update(); // Force UI to rebuild since sales list items are modified
   }

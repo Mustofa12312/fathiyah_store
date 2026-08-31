@@ -18,27 +18,27 @@ class DashboardController extends GetxController {
     return date.year == now.year && date.month == now.month && date.day == now.day;
   }
 
-  double get todaySales {
+  int get todaySales {
     return _saleService.sales
         .where((s) => _isToday(s.createdAt))
-        .fold(0.0, (sum, item) => sum + item.totalAmount);
+        .fold(0, (sum, item) => sum + item.totalAmount);
   }
 
-  double get todayCashIn {
+  int get todayCashIn {
     return _saleService.sales
         .where((s) => _isToday(s.createdAt))
-        .fold(0.0, (sum, item) => sum + item.paidAmount);
+        .fold(0, (sum, item) => sum + item.paidAmount);
   }
 
-  double get todayDebt {
+  int get todayDebt {
     return _saleService.sales
         .where((s) => _isToday(s.createdAt))
-        .fold(0.0, (sum, item) => sum + item.remainingAmount);
+        .fold(0, (sum, item) => sum + item.remainingAmount);
   }
 
-  double get todayExpenses {
+  int get todayExpenses {
     return _expenseService.expenses
         .where((e) => _isToday(e.createdAt))
-        .fold(0.0, (sum, item) => sum + item.amount);
+        .fold(0, (sum, item) => sum + item.amount);
   }
 }

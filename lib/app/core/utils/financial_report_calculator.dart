@@ -34,18 +34,18 @@ class FinancialReportCalculator {
   }
 
   // 1. Omzet
-  double get filteredOmzet {
+  int get filteredOmzet {
     return sales.where((s) => _isWithinFilter(s.createdAt)).fold(0, (sum, s) => sum + s.totalAmount);
   }
 
   // 2. Cash In Hand
-  double get filteredCashInHand {
+  int get filteredCashInHand {
     return sales.where((s) => _isWithinFilter(s.createdAt)).fold(0, (sum, s) => sum + s.paidAmount);
   }
 
   // 3. Modal Barang Terjual
-  double get filteredCapital {
-    double totalCapital = 0;
+  int get filteredCapital {
+    int totalCapital = 0;
     final filteredSales = sales.where((s) => _isWithinFilter(s.createdAt));
     
     for (var sale in filteredSales) {
@@ -60,15 +60,15 @@ class FinancialReportCalculator {
   }
 
   // 4. Laba Kotor
-  double get filteredGrossProfit => filteredOmzet - filteredCapital;
+  int get filteredGrossProfit => filteredOmzet - filteredCapital;
 
   // 5. Total Pengeluaran
-  double get filteredExpense {
+  int get filteredExpense {
     return expenses.where((e) => _isWithinFilter(e.createdAt)).fold(0, (sum, e) => sum + e.amount);
   }
 
   // 6. Laba Bersih
-  double get filteredNetProfit => filteredGrossProfit - filteredExpense;
+  int get filteredNetProfit => filteredGrossProfit - filteredExpense;
 
   // Chart Data (Last 7 days omzet)
   List<double> getWeeklyOmzetData() {
@@ -79,9 +79,9 @@ class FinancialReportCalculator {
       final date = now.subtract(Duration(days: i));
       final omzet = sales.where((s) {
         return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
-      }).fold(0.0, (sum, s) => sum + s.totalAmount);
+      }).fold(0, (sum, s) => sum + s.totalAmount);
       
-      weeklyData[6 - i] = omzet;
+      weeklyData[6 - i] = omzet.toDouble();
     }
     
     return weeklyData;
@@ -95,9 +95,9 @@ class FinancialReportCalculator {
       final date = now.subtract(Duration(days: i));
       final expense = expenses.where((s) {
         return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
-      }).fold(0.0, (sum, s) => sum + s.amount);
+      }).fold(0, (sum, s) => sum + s.amount);
       
-      weeklyData[6 - i] = expense;
+      weeklyData[6 - i] = expense.toDouble();
     }
     
     return weeklyData;

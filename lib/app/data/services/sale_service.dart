@@ -11,6 +11,7 @@ import 'product_service.dart';
 import 'auth_service.dart';
 import 'shift_service.dart';
 import 'stock_movement_service.dart';
+import '../../core/utils/money_engine.dart';
 
 class CartItem {
   final ProductModel product;
@@ -18,7 +19,7 @@ class CartItem {
 
   CartItem({required this.product, this.quantity = 1});
   
-  double get subtotal => product.sellingPrice * quantity;
+  int get subtotal => product.sellingPrice * quantity;
 }
 
 class HoldOrderModel {
@@ -57,7 +58,7 @@ class SaleService extends GetxService {
     return this;
   }
 
-  double get cartTotal {
+  int get cartTotal {
     return cartItems.fold(0, (total, item) => total + item.subtotal);
   }
 
@@ -132,7 +133,7 @@ class SaleService extends GetxService {
   }
 
   Future<SaleModel> processCheckout({
-    required double paidAmount,
+    required int paidAmount,
     required String paymentMethod,
     List<Map<String, dynamic>>? splitPayments,
   }) async {
@@ -172,11 +173,11 @@ class SaleService extends GetxService {
     );
 
     // Calculate actual cash received
-    double cashReceived = 0;
+    int cashReceived = 0;
     if (splitPayments != null) {
       for (var sp in splitPayments) {
         if (sp['method'].toString().toLowerCase() == 'tunai' || sp['method'].toString().toLowerCase() == 'cash') {
-          cashReceived += (sp['amount'] as num).toDouble();
+          cashReceived += MoneyEngine.parse(sp['amount']);
         }
       }
     } else if (paymentMethod.toLowerCase() == 'cash' || paymentMethod.toLowerCase() == 'tunai') {
@@ -264,8 +265,8 @@ class SaleService extends GetxService {
     }
   }
   
-  Map<String, double> getDebtsByCustomer() {
-    final Map<String, double> debts = {};
+  Map<String, int> getDebtsByCustomer() {
+    final Map<String, int> debts = {};
     for (var sale in sales) {
       if (sale.remainingAmount > 0 && sale.customerId != null) {
         debts[sale.customerId!] = (debts[sale.customerId!] ?? 0) + sale.remainingAmount;
@@ -278,7 +279,7 @@ class SaleService extends GetxService {
     return sales.where((s) => s.customerId == customerId && s.remainingAmount > 0).toList();
   }
 
-  Future<void> payDebt(String saleId, double amount, String paymentMethod) async {
+  Future<void> payDebt(String saleId, int amount, String paymentMethod) async {
     final sale = sales.firstWhereOrNull((s) => s.id == saleId);
     if (sale == null || sale.remainingAmount <= 0) return;
 
@@ -340,11 +341,11 @@ class SaleService extends GetxService {
     if (sale == null || sale.transactionStatus == 'voided') return;
 
     // Calculate cash to deduct
-    double cashToDeduct = 0;
+    int cashToDeduct = 0;
     if (sale.splitPayments != null) {
       for (var sp in sale.splitPayments!) {
         if (sp['method'].toString().toLowerCase() == 'tunai' || sp['method'].toString().toLowerCase() == 'cash') {
-          cashToDeduct += (sp['amount'] as num).toDouble();
+          cashToDeduct += MoneyEngine.parse(sp['amount']);
         }
       }
     } else if (sale.paymentMethod.toLowerCase() == 'cash' || sale.paymentMethod.toLowerCase() == 'tunai') {

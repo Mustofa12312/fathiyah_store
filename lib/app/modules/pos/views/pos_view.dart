@@ -477,7 +477,7 @@ class PosView extends GetView<PosController> {
                 ElevatedButton(
                   onPressed: () async {
                     final amountStr = startBalanceController.text.replaceAll(RegExp(r'[^0-9]'), '');
-                    final amount = double.tryParse(amountStr) ?? 0.0;
+                    final amount = int.tryParse(amountStr) ?? 0;
                     
                     Get.back();
                     // Show loading

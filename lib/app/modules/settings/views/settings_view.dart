@@ -331,7 +331,7 @@ class SettingsView extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               final amountStr = endBalanceController.text.replaceAll(RegExp(r'[^0-9]'), '');
-              final amount = double.tryParse(amountStr) ?? 0.0;
+              final amount = int.tryParse(amountStr) ?? 0;
               
               Get.back(); // close dialog
               

@@ -168,8 +168,8 @@ class BackupService extends GetxService {
       final categoryId = row[2].toString();
       final barcode = row[3].toString();
       final unit = row[4].toString();
-      final purchasePrice = double.tryParse(row[5].toString()) ?? 0.0;
-      final sellingPrice = double.tryParse(row[6].toString()) ?? 0.0;
+      final purchasePrice = int.tryParse(row[5].toString()) ?? 0;
+      final sellingPrice = int.tryParse(row[6].toString()) ?? 0;
       final stock = int.tryParse(row[7].toString()) ?? 0;
       final minimumStock = int.tryParse(row[8].toString()) ?? 0;
 

@@ -8,6 +8,8 @@ import 'package:fathiyah_store/app/data/services/shift_service.dart';
 import 'package:fathiyah_store/app/data/services/stock_movement_service.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:mockito/mockito.dart';
+import 'package:fathiyah_store/app/data/models/user_model.dart';
+
 class FakeProductService extends GetxService implements ProductService {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -15,14 +17,14 @@ class FakeProductService extends GetxService implements ProductService {
 
 class FakeAuthService extends GetxService implements AuthService {
   @override
-  Rx<UserModel?> get currentUser => Rx<UserModel?>(UserModel(id: '1', username: 'admin', password: '123', name: 'Admin', role: 'admin', status: 'aktif'));
+  Rx<UserModel?> get currentUser => Rx<UserModel?>(UserModel(id: '1', username: 'admin', name: 'Admin', role: 'admin', status: 'aktif'));
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeShiftService extends GetxService implements ShiftService {
   @override
-  Future<void> recordCashSale(double amount) async {}
+  Future<void> recordCashSale(int amount) async {}
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
