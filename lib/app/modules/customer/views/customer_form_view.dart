@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -127,7 +126,12 @@ class _CustomerFormViewState extends State<CustomerFormView> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Wajib diisi';
+                  final clean = v.replaceAll(RegExp(r'[^0-9]'), '');
+                  if (clean.length < 9) return 'Nomor HP tidak valid';
+                  return null;
+                },
                 decoration: const InputDecoration(hintText: 'Contoh: 0812...'),
               ),
               SizedBox(height: 16.h),

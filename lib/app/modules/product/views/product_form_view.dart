@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use, avoid_print, avoid_types_as_parameter_names, unnecessary_string_interpolations, prefer_function_declarations_over_variables, unnecessary_underscores, constant_identifier_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -270,7 +269,12 @@ class _ProductFormViewState extends State<ProductFormView> {
                                   controller: _purchasePriceController,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: 'Rp ')],
-                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return 'Wajib';
+                                    final val = int.tryParse(v.replaceAll(RegExp(r'[^0-9]'), ''));
+                                    if (val == null || val < 0) return 'Tidak valid';
+                                    return null;
+                                  },
                                   decoration: _inputDecoration(),
                                 ),
                               ],
@@ -286,7 +290,12 @@ class _ProductFormViewState extends State<ProductFormView> {
                                   controller: _sellingPriceController,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: 'Rp ')],
-                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return 'Wajib';
+                                    final val = int.tryParse(v.replaceAll(RegExp(r'[^0-9]'), ''));
+                                    if (val == null || val < 0) return 'Tidak valid';
+                                    return null;
+                                  },
                                   decoration: _inputDecoration(),
                                 ),
                               ],
@@ -309,7 +318,12 @@ class _ProductFormViewState extends State<ProductFormView> {
                                   controller: _stockController,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: '')],
-                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return 'Wajib';
+                                    final val = int.tryParse(v.replaceAll(RegExp(r'[^0-9]'), ''));
+                                    if (val == null || val < 0) return 'Tidak valid';
+                                    return null;
+                                  },
                                   decoration: _inputDecoration(hintText: '0'),
                                 ),
                               ],
@@ -325,7 +339,12 @@ class _ProductFormViewState extends State<ProductFormView> {
                                   controller: _minimumStockController,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [CurrencyTextInputFormatter.currency(locale: 'id_ID', decimalDigits: 0, symbol: '')],
-                                  validator: (v) => v!.isEmpty ? 'Wajib' : null,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return 'Wajib';
+                                    final val = int.tryParse(v.replaceAll(RegExp(r'[^0-9]'), ''));
+                                    if (val == null || val < 0) return 'Tidak valid';
+                                    return null;
+                                  },
                                   decoration: _inputDecoration(hintText: '0'),
                                 ),
                               ],
