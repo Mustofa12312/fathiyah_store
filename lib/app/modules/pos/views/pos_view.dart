@@ -14,6 +14,7 @@ import '../../../core/widgets/empty_state_widget.dart';
 import '../../../data/services/printer_service.dart';
 import 'package:fathiyah_store/app/data/services/auth_service.dart';
 import '../../../core/widgets/supervisor_auth_dialog.dart';
+import '../../../routes/app_pages.dart';
 
 class PosView extends GetView<PosController> {
   const PosView({super.key});

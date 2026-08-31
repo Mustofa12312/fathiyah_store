@@ -12,6 +12,7 @@ import '../../shop/views/shop_settings_view.dart';
 import '../../../data/services/backup_service.dart';
 import 'change_password_view.dart';
 import 'printer_settings_view.dart';
+import '../../shift/views/shift_list_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -153,6 +154,12 @@ class SettingsView extends StatelessWidget {
                               title: 'Audit Log',
                               subtitle: 'Pantau riwayat aktivitas kasir & admin',
                               onTap: () => Get.to(() => const AuditLogView()),
+                            ),
+                            _buildMenuTile(
+                              icon: Icons.receipt_long_rounded,
+                              title: 'Laporan Shift',
+                              subtitle: 'Lihat selisih uang dan riwayat shift',
+                              onTap: () => Get.to(() => const ShiftListView()),
                             ),
                           ],
                         );
