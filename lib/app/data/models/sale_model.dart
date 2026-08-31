@@ -47,6 +47,8 @@ class SaleModel {
   final double remainingAmount;
   final String paymentStatus; // 'lunas', 'sebagian', 'belum_dibayar'
   final String paymentMethod;
+  final List<Map<String, dynamic>>? splitPayments;
+  final String transactionStatus; // 'active', 'voided', 'refunded'
   final List<SaleItemModel> items;
   final DateTime createdAt;
 
@@ -62,6 +64,8 @@ class SaleModel {
     required this.remainingAmount,
     required this.paymentStatus,
     required this.paymentMethod,
+    this.splitPayments,
+    this.transactionStatus = 'active',
     required this.items,
     required this.createdAt,
   });
@@ -77,8 +81,12 @@ class SaleModel {
       totalAmount: (json['totalAmount'] as num).toDouble(),
       paidAmount: (json['paidAmount'] as num).toDouble(),
       remainingAmount: (json['remainingAmount'] as num).toDouble(),
-      paymentStatus: json['paymentStatus'],
-      paymentMethod: json['paymentMethod'],
+      paymentStatus: json['paymentStatus'] ?? 'belum_dibayar',
+      paymentMethod: json['paymentMethod'] ?? 'Cash',
+      splitPayments: json['splitPayments'] != null 
+          ? List<Map<String, dynamic>>.from(json['splitPayments']) 
+          : null,
+      transactionStatus: json['transactionStatus'] ?? 'active',
       items: (json['items'] as List).map((i) => SaleItemModel.fromJson(i)).toList(),
       createdAt: DateTime.parse(json['createdAt']),
     );
@@ -96,6 +104,8 @@ class SaleModel {
       'remainingAmount': remainingAmount,
       'paymentStatus': paymentStatus,
       'paymentMethod': paymentMethod,
+      'splitPayments': splitPayments,
+      'transactionStatus': transactionStatus,
       'items': items.map((i) => i.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
     };

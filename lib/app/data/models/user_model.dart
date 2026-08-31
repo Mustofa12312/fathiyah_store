@@ -4,8 +4,9 @@ class UserModel {
   final String name;
   final String username; // used for login
   final String password; // dummy for local mock
-  final String role; // 'admin' or 'cashier'
+  final String role; // 'admin', 'supervisor', 'cashier'
   final String status; // 'aktif' or 'nonaktif'
+  final String? pin; // 6-digit PIN for supervisor/admin
 
   UserModel({
     required this.id,
@@ -14,6 +15,7 @@ class UserModel {
     required this.password,
     required this.role,
     this.status = 'aktif',
+    this.pin,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json, String documentId) {
@@ -24,6 +26,7 @@ class UserModel {
       password: json['password'] ?? '',
       role: json['role'] ?? 'cashier',
       status: json['status'] ?? 'aktif',
+      pin: json['pin'],
     );
   }
 
@@ -34,10 +37,13 @@ class UserModel {
       'password': password,
       'role': role,
       'status': status,
+      if (pin != null) 'pin': pin,
     };
   }
   
   bool get isAdmin => role == 'admin';
+  bool get isSupervisor => role == 'supervisor' || role == 'admin';
+  bool get isCashier => role == 'cashier';
 
   UserModel copyWith({
     String? id,
@@ -46,6 +52,7 @@ class UserModel {
     String? password,
     String? role,
     String? status,
+    String? pin,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -54,6 +61,7 @@ class UserModel {
       password: password ?? this.password,
       role: role ?? this.role,
       status: status ?? this.status,
+      pin: pin ?? this.pin,
     );
   }
 }

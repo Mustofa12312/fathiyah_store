@@ -150,53 +150,100 @@ class CheckoutView extends GetView<PosController> {
                     
                     SizedBox(height: 24.h),
                     
-                    // Input Nominal Uang
-                    Text('Nominal Uang Diterima', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
-                    SizedBox(height: 8.h),
-                    TextField(
-                      controller: controller.paidAmountController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        CurrencyTextInputFormatter.currency(
-                          locale: 'id_ID',
-                          decimalDigits: 0,
-                          symbol: 'Rp ',
-                        )
-                      ],
-                      style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                          borderSide: const BorderSide(color: AppTheme.primary, width: 2),
-                        ),
+                    // Metode Pembayaran Toggle
+                    Obx(() => Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
-                    ),
-
-                    SizedBox(height: 16.h),
+                      child: SwitchListTile(
+                        title: Text('Pembayaran Campuran (Split Payment)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                        subtitle: Text('Bayar dengan Tunai dan Non-Tunai sekaligus', style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary)),
+                        value: controller.isSplitPayment.value,
+                        activeColor: AppTheme.primary,
+                        onChanged: (val) {
+                          controller.isSplitPayment.value = val;
+                          if (val) {
+                             controller.splitCashController.text = controller.paidAmountController.text;
+                          } else {
+                             controller.paidAmountController.text = controller.splitCashController.text;
+                          }
+                        },
+                      ),
+                    )),
                     
-                    // Quick Cash Buttons
-                    Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: [
-                        _buildQuickCashButton('Uang Pas', controller.saleService.cartTotal),
-                        _buildQuickCashButton('10.000', 10000),
-                        _buildQuickCashButton('20.000', 20000),
-                        _buildQuickCashButton('50.000', 50000),
-                        _buildQuickCashButton('100.000', 100000),
-                      ],
-                    ),
+                    SizedBox(height: 16.h),
+
+                    // Input Nominal Uang
+                    Obx(() {
+                      if (controller.isSplitPayment.value) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Nominal Tunai', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
+                            SizedBox(height: 8.h),
+                            _buildAmountInput(controller.splitCashController),
+                            SizedBox(height: 16.h),
+                            
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Nominal Non-Tunai', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
+                                DropdownButton<String>(
+                                  value: controller.splitTransferMethod.value,
+                                  items: ['Transfer BCA', 'Transfer Mandiri', 'QRIS', 'Debit/Kredit']
+                                      .map((e) => DropdownMenuItem(value: e, child: Text(e, style: TextStyle(fontSize: 12.sp))))
+                                      .toList(),
+                                  onChanged: (val) {
+                                    if (val != null) controller.splitTransferMethod.value = val;
+                                  },
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8.h),
+                            _buildAmountInput(controller.splitTransferController),
+                          ],
+                        );
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Nominal Uang Diterima', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
+                              DropdownButton<String>(
+                                value: controller.paymentMethod.value,
+                                items: ['Cash', 'Transfer BCA', 'Transfer Mandiri', 'QRIS', 'Debit/Kredit']
+                                    .map((e) => DropdownMenuItem(value: e, child: Text(e, style: TextStyle(fontSize: 12.sp))))
+                                    .toList(),
+                                onChanged: (val) {
+                                  if (val != null) controller.paymentMethod.value = val;
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          _buildAmountInput(controller.paidAmountController),
+                          SizedBox(height: 16.h),
+                          
+                          // Quick Cash Buttons
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: [
+                              _buildQuickCashButton('Uang Pas', controller.saleService.cartTotal),
+                              _buildQuickCashButton('10.000', 10000),
+                              _buildQuickCashButton('20.000', 20000),
+                              _buildQuickCashButton('50.000', 50000),
+                              _buildQuickCashButton('100.000', 100000),
+                            ],
+                          ),
+                        ],
+                      );
+                    }),
 
                     SizedBox(height: 16.h),
                     
@@ -270,6 +317,38 @@ class CheckoutView extends GetView<PosController> {
     );
   }
 
+  Widget _buildAmountInput(TextEditingController textController) {
+    return TextField(
+      controller: textController,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        CurrencyTextInputFormatter.currency(
+          locale: 'id_ID',
+          decimalDigits: 0,
+          symbol: 'Rp ',
+        )
+      ],
+      style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+        ),
+      ),
+    );
+  }
+
   Widget _buildQuickCashButton(String label, double amount) {
     return ActionChip(
       label: Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
@@ -279,7 +358,11 @@ class CheckoutView extends GetView<PosController> {
         side: const BorderSide(color: AppTheme.primary, width: 1),
       ),
       onPressed: () {
-        controller.paidAmountController.text = CurrencyFormatter.formatRupiah(amount);
+        if (controller.isSplitPayment.value) {
+          controller.splitCashController.text = CurrencyFormatter.formatRupiah(amount);
+        } else {
+          controller.paidAmountController.text = CurrencyFormatter.formatRupiah(amount);
+        }
       },
     );
   }

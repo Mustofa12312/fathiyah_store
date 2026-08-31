@@ -20,10 +20,18 @@ class PosController extends GetxController {
   // Checkout state
   final paidAmountController = TextEditingController();
   final paymentMethod = 'Cash'.obs;
+  
+  // Split payment state
+  final isSplitPayment = false.obs;
+  final splitCashController = TextEditingController();
+  final splitTransferController = TextEditingController();
+  final splitTransferMethod = 'Transfer BCA'.obs;
 
   @override
   void onClose() {
     paidAmountController.dispose();
+    splitCashController.dispose();
+    splitTransferController.dispose();
     super.onClose();
   }
 
@@ -44,8 +52,28 @@ class PosController extends GetxController {
   }
 
   Future<void> processPayment() async {
-    final paidAmountStr = paidAmountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final paidAmount = double.tryParse(paidAmountStr) ?? 0.0;
+    double paidAmount = 0.0;
+    List<Map<String, dynamic>>? splitPayments;
+
+    if (isSplitPayment.value) {
+      final cashStr = splitCashController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final transferStr = splitTransferController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final cashAmt = double.tryParse(cashStr) ?? 0.0;
+      final transferAmt = double.tryParse(transferStr) ?? 0.0;
+      
+      paidAmount = cashAmt + transferAmt;
+      splitPayments = [];
+      if (cashAmt > 0) {
+        splitPayments.add({'method': 'Cash', 'amount': cashAmt});
+      }
+      if (transferAmt > 0) {
+        splitPayments.add({'method': splitTransferMethod.value, 'amount': transferAmt});
+      }
+      paymentMethod.value = 'Split';
+    } else {
+      final paidAmountStr = paidAmountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      paidAmount = double.tryParse(paidAmountStr) ?? 0.0;
+    }
     
     final total = saleService.cartTotal;
     final isVip = saleService.selectedCustomer.value?.isVip ?? false;
@@ -65,6 +93,7 @@ class PosController extends GetxController {
     final saleResult = await saleService.processCheckout(
       paidAmount: paidAmount,
       paymentMethod: paymentMethod.value,
+      splitPayments: splitPayments,
     );
 
     Get.back(); // close checkout bottom sheet/view
@@ -72,5 +101,9 @@ class PosController extends GetxController {
     
     // reset form
     paidAmountController.clear();
+    splitCashController.clear();
+    splitTransferController.clear();
+    isSplitPayment.value = false;
+    paymentMethod.value = 'Cash';
   }
 }

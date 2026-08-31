@@ -11,6 +11,7 @@ import '../../../data/services/shop_service.dart';
 import '../../../data/services/printer_service.dart';
 import '../../../routes/app_pages.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../data/services/customer_service.dart';
 
 class ReceiptView extends StatelessWidget {
   final SaleModel sale;
@@ -246,7 +247,16 @@ class ReceiptView extends StatelessWidget {
     sb.writeln(footer);
 
     final text = Uri.encodeComponent(sb.toString());
-    final url = Uri.parse("whatsapp://send?text=$text");
+    String phoneParam = '';
+    if (sale.customerId != null) {
+      final c = Get.find<CustomerService>().customers.firstWhereOrNull((c) => c.id == sale.customerId);
+      if (c != null && c.phone.isNotEmpty) {
+        String phone = c.phone.replaceAll(RegExp(r'[^0-9]'), '');
+        if (phone.startsWith('0')) phone = '62${phone.substring(1)}';
+        phoneParam = 'phone=$phone&';
+      }
+    }
+    final url = Uri.parse("whatsapp://send?${phoneParam}text=$text");
     
     if (await canLaunchUrl(url)) {
       await launchUrl(url);

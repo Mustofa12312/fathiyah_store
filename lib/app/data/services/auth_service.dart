@@ -11,6 +11,8 @@ class AuthService extends GetxService {
   final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
 
   bool get isAdmin => currentUser.value?.isAdmin ?? false;
+  bool get isSupervisor => currentUser.value?.isSupervisor ?? false;
+  bool get isCashier => currentUser.value?.isCashier ?? false;
 
   final users = <UserModel>[].obs;
 
@@ -26,6 +28,7 @@ class AuthService extends GetxService {
           name: 'Super Admin',
           role: 'admin',
           status: 'aktif',
+          pin: '123456', // default admin pin
         );
         await _firestore.collection('users').doc(defaultAdmin.id).set(defaultAdmin.toJson());
       }
@@ -93,5 +96,20 @@ class AuthService extends GetxService {
       createdAt: DateTime.now(),
     );
     await _firestore.collection('audit_logs').doc(log.id).set(log.toJson());
+  }
+
+  Future<bool> verifySupervisorPin(String pin) async {
+    // Check if any active supervisor or admin has this PIN
+    final match = users.firstWhereOrNull((u) => 
+      (u.role == 'supervisor' || u.role == 'admin') && 
+      u.status == 'aktif' && 
+      u.pin == pin
+    );
+    
+    if (match != null) {
+      await _logAction('AUTH', 'PIN', match.id, 'Otorisasi PIN oleh ${match.name}');
+      return true;
+    }
+    return false;
   }
 }

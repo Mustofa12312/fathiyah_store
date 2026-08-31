@@ -87,9 +87,13 @@ class UserManagementView extends GetView<SettingsController> {
     final nameController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
+    final pinController = TextEditingController();
+    
+    // We use Rx variables to rebuild the dialog reactively
+    final selectedRole = 'cashier'.obs;
 
     Get.defaultDialog(
-      title: 'Tambah Kasir Baru',
+      title: 'Tambah Pengguna Baru',
       content: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         child: Column(
@@ -100,6 +104,34 @@ class UserManagementView extends GetView<SettingsController> {
             TextField(controller: usernameController, decoration: const InputDecoration(labelText: 'Username')),
             SizedBox(height: 8.h),
             TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+            SizedBox(height: 8.h),
+            Obx(() => DropdownButtonFormField<String>(
+              value: selectedRole.value,
+              decoration: const InputDecoration(labelText: 'Role (Hak Akses)'),
+              items: const [
+                DropdownMenuItem(value: 'cashier', child: Text('Kasir')),
+                DropdownMenuItem(value: 'supervisor', child: Text('Supervisor')),
+                DropdownMenuItem(value: 'admin', child: Text('Admin / Owner')),
+              ],
+              onChanged: (val) {
+                if (val != null) selectedRole.value = val;
+              },
+            )),
+            Obx(() {
+              if (selectedRole.value == 'supervisor' || selectedRole.value == 'admin') {
+                return Padding(
+                  padding: EdgeInsets.only(top: 8.h),
+                  child: TextField(
+                    controller: pinController, 
+                    decoration: const InputDecoration(labelText: 'PIN Otorisasi (6 Angka)'), 
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    obscureText: true,
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
           ],
         ),
       ),
@@ -113,12 +145,18 @@ class UserManagementView extends GetView<SettingsController> {
           return;
         }
 
+        if ((selectedRole.value == 'supervisor' || selectedRole.value == 'admin') && pinController.text.length != 6) {
+          Get.snackbar('Error', 'PIN wajib 6 angka untuk Supervisor/Admin');
+          return;
+        }
+
         final newUser = UserModel(
           id: const Uuid().v4(),
           name: nameController.text,
           username: usernameController.text,
           password: passwordController.text,
-          role: 'cashier', // Default to cashier for safety
+          role: selectedRole.value,
+          pin: (selectedRole.value == 'supervisor' || selectedRole.value == 'admin') ? pinController.text : null,
         );
 
         // Add user through auth service
@@ -127,7 +165,7 @@ class UserManagementView extends GetView<SettingsController> {
         
         controller.update(); // refresh list
         Get.back();
-        Get.snackbar('Sukses', 'Kasir baru berhasil ditambahkan');
+        Get.snackbar('Sukses', 'Pengguna baru berhasil ditambahkan');
       },
     );
   }

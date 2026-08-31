@@ -11,6 +11,7 @@ import '../../pos/views/pos_view.dart';
 import '../../debt/views/debt_list_view.dart';
 import '../../report/views/report_view.dart';
 import '../../expense/views/expense_list_view.dart';
+import '../../transaction/views/transaction_list_view.dart';
 
 import '../../settings/views/settings_view.dart';
 import '../../../data/services/auth_service.dart';
@@ -23,7 +24,10 @@ class DashboardView extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = Get.find<AuthService>().isAdmin;
+    final authService = Get.find<AuthService>();
+    final isAdmin = authService.isAdmin;
+    final isSupervisor = authService.isSupervisor;
+    final isCashier = authService.isCashier;
 
     return Scaffold(
       body: Obx(() {
@@ -49,11 +53,11 @@ class DashboardView extends GetView<DashboardController> {
               child: IndexedStack(
                 index: controller.currentIndex.value,
                 children: [
-                  _buildHomeTab(context, isAdmin),
-                  const ProductListView(),
+                  _buildHomeTab(context, isAdmin, isSupervisor, isCashier),
+                  if (!isCashier) const ProductListView() else const Center(child: Text('Akses Ditolak')),
                   const PosView(),
-                  if (isAdmin) const ReportView() else const SizedBox.shrink(),
-                  const SettingsView(),
+                  if (isAdmin) const ReportView() else const Center(child: Text('Akses Ditolak')),
+                  if (isAdmin) const SettingsView() else const Center(child: Text('Akses Ditolak')),
                 ],
               ),
             ),
@@ -89,6 +93,8 @@ class DashboardView extends GetView<DashboardController> {
                     Icons.inventory_2_rounded,
                     'Produk',
                     controller.currentIndex.value,
+                    disabled: isCashier,
+                    disabledMsg: 'Kasir tidak dapat mengakses menu Produk',
                   ),
                   _buildNavItem(
                     2,
@@ -102,12 +108,15 @@ class DashboardView extends GetView<DashboardController> {
                     'Laporan',
                     controller.currentIndex.value,
                     disabled: !isAdmin,
+                    disabledMsg: 'Hanya Admin/Owner yang dapat melihat Laporan',
                   ),
                   _buildNavItem(
                     4,
                     Icons.settings_rounded,
                     'Pengaturan',
                     controller.currentIndex.value,
+                    disabled: !isAdmin,
+                    disabledMsg: 'Hanya Admin/Owner yang dapat mengakses Pengaturan',
                   ),
                 ],
               ),
@@ -124,6 +133,7 @@ class DashboardView extends GetView<DashboardController> {
     String label,
     int currentIndex, {
     bool disabled = false,
+    String disabledMsg = 'Akses Ditolak',
   }) {
     final isSelected = index == currentIndex;
     final color = disabled
@@ -135,7 +145,7 @@ class DashboardView extends GetView<DashboardController> {
           ? () {
               Get.snackbar(
                 'Akses Ditolak',
-                'Hanya admin yang dapat melihat laporan',
+                disabledMsg,
                 backgroundColor: Colors.red.shade100,
                 colorText: Colors.red.shade900,
                 margin: EdgeInsets.all(16.w),
@@ -173,7 +183,7 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildHomeTab(BuildContext context, bool isAdmin) {
+  Widget _buildHomeTab(BuildContext context, bool isAdmin, bool isSupervisor, bool isCashier) {
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     return Scaffold(
@@ -416,13 +426,19 @@ class DashboardView extends GetView<DashboardController> {
                     spacing: 24.w,
                     runSpacing: 24.h,
                     children: [
-                      _buildQuickAction(
-                        context,
-                        'Kategori',
-                        Icons.category_rounded,
-                        Colors.orange.shade500,
-                        () => Get.toNamed(Routes.CATEGORY),
-                      ),
+                      // Kategori: Supervisor & Admin
+                      if (!isCashier)
+                        _buildQuickAction(
+                          context,
+                          'Kategori',
+                          Icons.category_rounded,
+                          Colors.orange.shade500,
+                          () => Get.toNamed(Routes.CATEGORY),
+                        )
+                      else
+                        _buildQuickAction(context, 'Kategori', Icons.category_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Kasir tidak dapat mengakses Kategori')),
+                      
+                      // Pelanggan: All
                       _buildQuickAction(
                         context,
                         'Pelanggan',
@@ -430,6 +446,8 @@ class DashboardView extends GetView<DashboardController> {
                         AppTheme.secondary,
                         () => Get.to(() => const CustomerListView()),
                       ),
+
+                      // Kasir: All
                       _buildQuickAction(
                         context,
                         'Kasir',
@@ -437,60 +455,54 @@ class DashboardView extends GetView<DashboardController> {
                         AppTheme.accent,
                         () => Get.to(() => const PosView()),
                       ),
-                      if (isAdmin) ...[
+                      
+                      // Riwayat Transaksi: Supervisor & Admin
+                      if (!isCashier)
+                        _buildQuickAction(
+                          context,
+                          'Riwayat',
+                          Icons.history_rounded,
+                          Colors.blue.shade500,
+                          () => Get.to(() => const TransactionListView()),
+                        )
+                      else
+                        _buildQuickAction(context, 'Riwayat', Icons.history_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Hanya SPV/Admin yang dapat melihat Riwayat')),
+
+                      // Piutang: Supervisor & Admin
+                      if (!isCashier)
                         _buildQuickAction(
                           context,
                           'Piutang',
                           Icons.account_balance_wallet_rounded,
                           AppTheme.vipGold,
                           () => Get.to(() => const DebtListView()),
-                        ),
+                        )
+                      else
+                        _buildQuickAction(context, 'Piutang', Icons.account_balance_wallet_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Hanya SPV/Admin yang dapat mengakses Piutang')),
+                      
+                      // Laporan: Admin
+                      if (isAdmin)
                         _buildQuickAction(
                           context,
                           'Laporan',
                           Icons.insert_chart_rounded,
                           Colors.purple.shade500,
                           () => controller.changePage(3),
-                        ),
+                        )
+                      else
+                        _buildQuickAction(context, 'Laporan', Icons.insert_chart_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Hanya Admin yang dapat melihat Laporan')),
+
+                      // Pengeluaran: Admin
+                      if (isAdmin)
                         _buildQuickAction(
                           context,
                           'Pengeluaran',
                           Icons.money_off_rounded,
                           Colors.red.shade400,
                           () => Get.to(() => const ExpenseListView()),
-                        ),
-                      ] else ...[
-                        _buildQuickAction(
-                          context,
-                          'Piutang',
-                          Icons.account_balance_wallet_rounded,
-                          Colors.grey,
-                          () => Get.snackbar(
-                            'Akses Ditolak',
-                            'Hubungi admin untuk akses Piutang',
-                          ),
-                        ),
-                        _buildQuickAction(
-                          context,
-                          'Laporan',
-                          Icons.insert_chart_rounded,
-                          Colors.grey,
-                          () => Get.snackbar(
-                            'Akses Ditolak',
-                            'Hubungi admin untuk akses Laporan',
-                          ),
-                        ),
-                        _buildQuickAction(
-                          context,
-                          'Pengeluaran',
-                          Icons.money_off_rounded,
-                          Colors.grey,
-                          () => Get.snackbar(
-                            'Akses Ditolak',
-                            'Hubungi admin untuk akses Pengeluaran',
-                          ),
-                        ),
-                      ],
+                        )
+                      else
+                        _buildQuickAction(context, 'Pengeluaran', Icons.money_off_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Hanya Admin yang dapat mengakses Pengeluaran')),
                     ],
                   ),
 

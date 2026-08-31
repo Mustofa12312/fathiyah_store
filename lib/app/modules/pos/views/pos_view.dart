@@ -13,6 +13,7 @@ import 'checkout_view.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../data/services/printer_service.dart';
 import 'package:fathiyah_store/app/data/services/auth_service.dart';
+import '../../../core/widgets/supervisor_auth_dialog.dart';
 
 class PosView extends GetView<PosController> {
   const PosView({super.key});
@@ -89,67 +90,72 @@ class PosView extends GetView<PosController> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        InkWell(
-                          onTap: () {
-                            SimpleBarcodeScanner.streamBarcode(
-                              context,
-                              cancelButtonText: 'Selesai',
-                              isShowFlashIcon: true,
-                            ).listen((res) {
-                              if (res != '-1') {
-                                HapticFeedback.vibrate();
-                                controller.searchQuery.value = res;
-                                final products = controller.filteredProducts;
-                                if (products.length == 1) {
-                                  controller.saleService.addToCart(products.first);
-                                  Get.snackbar('Berhasil', '${products.first.name} ditambahkan ke keranjang', snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
-                                  controller.searchQuery.value = ''; // clear search
-                                } else if (products.isEmpty) {
-                                  Get.snackbar('Tidak Ditemukan', 'Barcode $res tidak cocok dengan barang apapun', snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
-                                }
-                              }
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(50),
-                          child: Container(
-                            padding: EdgeInsets.all(10.w),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.05),
-                              shape: BoxShape.circle,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                SimpleBarcodeScanner.streamBarcode(
+                                  context,
+                                  cancelButtonText: 'Selesai',
+                                  isShowFlashIcon: true,
+                                ).listen((res) {
+                                  if (res != '-1') {
+                                    HapticFeedback.vibrate();
+                                    controller.searchQuery.value = res;
+                                    final products = controller.filteredProducts;
+                                    if (products.length == 1) {
+                                      controller.saleService.addToCart(products.first);
+                                      Get.snackbar('Berhasil', '${products.first.name} ditambahkan ke keranjang', snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
+                                      controller.searchQuery.value = ''; // clear search
+                                    } else if (products.isEmpty) {
+                                      Get.snackbar('Tidak Ditemukan', 'Barcode $res tidak cocok dengan barang apapun', snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
+                                    }
+                                  }
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(50),
+                              child: Container(
+                                padding: EdgeInsets.all(10.w),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withValues(alpha: 0.05),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
+                              ),
                             ),
-                            child: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
-                          ),
+                            SizedBox(width: 12.w),
+                            // Printer Status Indicator
+                            Obx(() {
+                              final isPrinterConnected = Get.find<PrinterService>().isConnected.value;
+                              return Container(
+                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                decoration: BoxDecoration(
+                                  color: isPrinterConnected ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isPrinterConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
+                                      color: isPrinterConnected ? Colors.green : Colors.red,
+                                      size: 16.sp,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      isPrinterConnected ? 'Online' : 'Offline',
+                                      style: TextStyle(
+                                        color: isPrinterConnected ? Colors.green : Colors.red,
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
                         ),
-                        SizedBox(width: 12.w),
-                        // Printer Status Indicator
-                        Obx(() {
-                          final isPrinterConnected = Get.find<PrinterService>().isConnected.value;
-                          return Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                            decoration: BoxDecoration(
-                              color: isPrinterConnected ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isPrinterConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
-                                  color: isPrinterConnected ? Colors.green : Colors.red,
-                                  size: 16.sp,
-                                ),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  isPrinterConnected ? 'Online' : 'Offline',
-                                  style: TextStyle(
-                                    color: isPrinterConnected ? Colors.green : Colors.red,
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
                       ],
                     ),
                     SizedBox(height: 24.h),
@@ -546,6 +552,45 @@ class PosView extends GetView<PosController> {
                   'Keranjang Belanja',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
                 ),
+                const Spacer(),
+                Obx(() {
+                  final holdCount = controller.saleService.holdOrders.length;
+                  return PopupMenuButton<String>(
+                    icon: Stack(
+                      children: [
+                        const Icon(Icons.more_vert),
+                        if (holdCount > 0)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
+                              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                              child: Text('$holdCount', style: const TextStyle(color: Colors.white, fontSize: 8), textAlign: TextAlign.center),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onSelected: (value) {
+                      if (value == 'hold') {
+                        _showHoldOrderDialog(Get.context!);
+                      } else if (value == 'restore') {
+                        _showRestoreOrderDialog(Get.context!);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'hold',
+                        child: Text('Tunda Pesanan (Hold)'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'restore',
+                        child: Text('Daftar Pesanan Tertunda'),
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -609,7 +654,18 @@ class PosView extends GetView<PosController> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               InkWell(
-                                onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
+                                onTap: () {
+                                  if (item.quantity == 1) {
+                                    // If quantity will be 0 (deleted), require PIN
+                                    SupervisorAuthDialog.show(
+                                      actionDescription: 'Penghapusan item ${item.product.name} dari keranjang memerlukan izin Supervisor.',
+                                      onSuccess: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
+                                    );
+                                  } else {
+                                    // Just reducing quantity
+                                    controller.saleService.updateQuantity(item.product.id, item.quantity - 1);
+                                  }
+                                },
                                 borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -643,6 +699,92 @@ class PosView extends GetView<PosController> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showHoldOrderDialog(BuildContext context) {
+    if (controller.saleService.cartItems.isEmpty) {
+      Get.snackbar('Gagal', 'Keranjang belanja masih kosong', backgroundColor: Colors.red.shade100);
+      return;
+    }
+    
+    final noteController = TextEditingController();
+    Get.defaultDialog(
+      title: 'Tunda Pesanan',
+      content: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          controller: noteController,
+          decoration: const InputDecoration(
+            labelText: 'Catatan (mis: Meja 1, Bapak A)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      textConfirm: 'Simpan',
+      textCancel: 'Batal',
+      confirmTextColor: Colors.white,
+      buttonColor: AppTheme.primary,
+      onConfirm: () {
+        controller.saleService.holdOrder(noteController.text.isEmpty ? 'Tanpa Catatan' : noteController.text);
+        Get.back(); // close dialog
+        if (MediaQuery.of(context).size.width <= 600) {
+           Get.back(); // close bottom sheet if mobile
+        }
+      },
+    );
+  }
+
+  void _showRestoreOrderDialog(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        color: Colors.white,
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Daftar Pesanan Tertunda', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+            const Divider(),
+            Obx(() {
+              final holds = controller.saleService.holdOrders;
+              if (holds.isEmpty) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w), 
+                  child: Center(child: Text('Tidak ada pesanan tertunda', style: TextStyle(color: Colors.grey.shade600)))
+                );
+              }
+              
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: holds.length,
+                itemBuilder: (context, index) {
+                  final h = holds[index];
+                  return ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                      child: Icon(Icons.pause_circle_outline, color: AppTheme.primary),
+                    ),
+                    title: Text(h.note, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${h.items.length} Barang - ${h.time.hour.toString().padLeft(2, '0')}:${h.time.minute.toString().padLeft(2, '0')}'),
+                    trailing: ElevatedButton(
+                      onPressed: () {
+                        controller.saleService.restoreOrder(h.id);
+                        Get.back();
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary, foregroundColor: Colors.white),
+                      child: const Text('Lanjutkan'),
+                    ),
+                  );
+                },
+              );
+            }),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16.h),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 }

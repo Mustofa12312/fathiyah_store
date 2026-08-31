@@ -20,6 +20,22 @@ class CartItem {
   double get subtotal => product.sellingPrice * quantity;
 }
 
+class HoldOrderModel {
+  final String id;
+  final String note;
+  final DateTime time;
+  final CustomerModel? customer;
+  final List<CartItem> items;
+
+  HoldOrderModel({
+    required this.id,
+    required this.note,
+    required this.time,
+    this.customer,
+    required this.items,
+  });
+}
+
 class SaleService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ProductService _productService = Get.find<ProductService>();
@@ -29,6 +45,7 @@ class SaleService extends GetxService {
 
   final cartItems = <CartItem>[].obs;
   final sales = <SaleModel>[].obs;
+  final holdOrders = <HoldOrderModel>[].obs;
 
   final Rx<CustomerModel?> selectedCustomer = Rx<CustomerModel?>(null);
 
@@ -85,9 +102,38 @@ class SaleService extends GetxService {
     selectedCustomer.value = null;
   }
 
+  void holdOrder(String note) {
+    if (cartItems.isEmpty) return;
+    
+    holdOrders.add(HoldOrderModel(
+      id: const Uuid().v4(),
+      note: note,
+      time: DateTime.now(),
+      customer: selectedCustomer.value,
+      items: List<CartItem>.from(cartItems),
+    ));
+    
+    clearCart();
+    Get.snackbar('Berhasil', 'Keranjang berhasil ditunda', snackPosition: SnackPosition.TOP);
+  }
+
+  void restoreOrder(String holdId) {
+    final hold = holdOrders.firstWhereOrNull((h) => h.id == holdId);
+    if (hold != null) {
+      if (cartItems.isNotEmpty) {
+        Get.snackbar('Perhatian', 'Keranjang saat ini ditimpa dengan pesanan tertunda', snackPosition: SnackPosition.TOP);
+      }
+      cartItems.clear();
+      cartItems.addAll(hold.items);
+      selectedCustomer.value = hold.customer;
+      holdOrders.removeWhere((h) => h.id == holdId);
+    }
+  }
+
   Future<SaleModel> processCheckout({
     required double paidAmount,
     required String paymentMethod,
+    List<Map<String, dynamic>>? splitPayments,
   }) async {
     final total = cartTotal;
     final remaining = total - paidAmount;
@@ -112,6 +158,8 @@ class SaleService extends GetxService {
       remainingAmount: remaining > 0 ? remaining : 0,
       paymentStatus: status,
       paymentMethod: paymentMethod,
+      splitPayments: splitPayments,
+      transactionStatus: 'active',
       createdAt: DateTime.now(),
       items: cartItems.map((item) => SaleItemModel(
         productId: item.product.id,
@@ -141,8 +189,20 @@ class SaleService extends GetxService {
       );
     }
 
-    if (paymentMethod.toLowerCase() == 'cash' && paidAmount > 0) {
-      await _shiftService.recordCashSale(paidAmount);
+    // Calculate actual cash received
+    double cashReceived = 0;
+    if (splitPayments != null) {
+      for (var sp in splitPayments) {
+        if (sp['method'].toString().toLowerCase() == 'tunai' || sp['method'].toString().toLowerCase() == 'cash') {
+          cashReceived += (sp['amount'] as num).toDouble();
+        }
+      }
+    } else if (paymentMethod.toLowerCase() == 'cash' || paymentMethod.toLowerCase() == 'tunai') {
+      cashReceived = paidAmount;
+    }
+
+    if (cashReceived > 0) {
+      await _shiftService.recordCashSale(cashReceived);
     }
 
     clearCart();
@@ -186,5 +246,50 @@ class SaleService extends GetxService {
     if (paymentMethod.toLowerCase() == 'cash' && amount > 0) {
       await _shiftService.recordCashSale(amount);
     }
+  }
+
+  Future<void> voidTransaction(String saleId) async {
+    final sale = sales.firstWhereOrNull((s) => s.id == saleId);
+    if (sale == null || sale.transactionStatus == 'voided') return;
+
+    // Restore stock
+    for (var item in sale.items) {
+      final product = _productService.products.firstWhereOrNull((p) => p.id == item.productId);
+      if (product != null) {
+        await _productService.updateProduct(
+          product.copyWith(stock: product.stock + item.quantity)
+        );
+      }
+      await _stockMovementService.recordMovement(
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        type: 'RETURN',
+        note: 'Void TRX: $saleId',
+      );
+    }
+
+    // Deduct from shift cash if paid by cash
+    double cashToDeduct = 0;
+    if (sale.splitPayments != null) {
+      for (var sp in sale.splitPayments!) {
+        if (sp['method'].toString().toLowerCase() == 'tunai' || sp['method'].toString().toLowerCase() == 'cash') {
+          cashToDeduct += (sp['amount'] as num).toDouble();
+        }
+      }
+    } else if (sale.paymentMethod.toLowerCase() == 'cash' || sale.paymentMethod.toLowerCase() == 'tunai') {
+      cashToDeduct = sale.paidAmount;
+    }
+
+    if (cashToDeduct > 0) {
+      await _shiftService.recordCashSale(-cashToDeduct);
+    }
+
+    // Update sale status
+    await _firestore.collection('sales').doc(saleId).update({
+      'transactionStatus': 'voided',
+    });
+    
+    Get.snackbar('Berhasil', 'Transaksi $saleId berhasil dibatalkan', snackPosition: SnackPosition.TOP);
   }
 }
