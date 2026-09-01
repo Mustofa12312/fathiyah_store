@@ -40,7 +40,7 @@ class SplashView extends GetView<SplashController> {
             ),
             SizedBox(height: 32.h),
             Text(
-              'Fathiyah',
+              'Le\' iil',
               style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: Colors.white,
                 letterSpacing: 1.5,
