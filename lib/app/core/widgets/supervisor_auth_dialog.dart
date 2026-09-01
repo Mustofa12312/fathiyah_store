@@ -45,8 +45,8 @@ class _SupervisorAuthDialogState extends State<SupervisorAuthDialog> {
 
   Future<void> _verifyPin() async {
     final pin = _pinController.text;
-    if (pin.length != 6) {
-      setState(() => _errorMessage = 'PIN harus 6 angka');
+    if (pin.length < 4) {
+      setState(() => _errorMessage = 'PIN minimal 4 angka');
       return;
     }
 

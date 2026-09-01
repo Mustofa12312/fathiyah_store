@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../routes/app_pages.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import '../controllers/settings_controller.dart';
 import '../../user_management/views/user_management_view.dart';
@@ -246,15 +247,22 @@ class SettingsView extends GetView<SettingsController> {
                       onTap: () => Get.to(() => const ChangePasswordView()),
                     ),
                     _buildMenuTile(
+                      icon: Icons.lock_person_rounded,
+                      title: 'Kunci Layar',
+                      subtitle: 'Kunci aplikasi (Bisa masuk kembali dengan PIN tanpa internet)',
+                      iconColor: AppTheme.primary,
+                      onTap: () => Get.offAllNamed(Routes.LOCK_SCREEN),
+                    ),
+                    _buildMenuTile(
                       icon: Icons.logout_rounded,
-                      title: 'Keluar (Logout)',
-                      subtitle: 'Akhiri sesi dan keluar dari aplikasi',
+                      title: 'Keluar Akun (Logout)',
+                      subtitle: 'Butuh internet untuk masuk kembali',
                       iconColor: Colors.red.shade600,
                       onTap: () {
                         Get.defaultDialog(
-                          title: 'Keluar',
+                          title: 'Keluar Akun',
                           titleStyle: const TextStyle(fontWeight: FontWeight.bold),
-                          middleText: 'Yakin ingin keluar dari akun ini?',
+                          middleText: 'Anda harus terhubung ke internet saat ingin masuk kembali. Lanjutkan?',
                           textConfirm: 'Ya, Keluar',
                           textCancel: 'Batal',
                           confirmTextColor: Colors.white,

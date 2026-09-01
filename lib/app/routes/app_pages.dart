@@ -8,6 +8,8 @@ import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/category/bindings/category_binding.dart';
 import '../modules/category/views/category_list_view.dart';
+import '../modules/lock_screen/bindings/lock_screen_binding.dart';
+import '../modules/lock_screen/views/lock_screen_view.dart';
 
 part 'app_routes.dart';
 
@@ -24,6 +26,11 @@ class AppPages {
       name: Routes.AUTH,
       page: () => LoginView(),
       binding: AuthBinding(),
+    ),
+    GetPage(
+      name: Routes.LOCK_SCREEN,
+      page: () => const LockScreenView(),
+      binding: LockScreenBinding(),
     ),
     GetPage(
       name: Routes.DASHBOARD,
