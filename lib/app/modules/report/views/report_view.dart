@@ -184,6 +184,10 @@ class ReportView extends GetView<ReportController> {
                         
                         _buildReportCard('Laba Bersih', 'Profit Akhir', c.filteredNetProfit, Icons.emoji_events_rounded, AppTheme.primary, isHighlight: true),
                         
+                        SizedBox(height: 16.h),
+                        
+                        _buildReportCard('Total Aset Stok (Modal Mengendap)', 'Nilai Pembelian dari Semua Stok Tersisa', c.totalStockAssetValue, Icons.inventory_2_rounded, Colors.orange.shade600),
+                        
                         SizedBox(height: 32.h),
                         Row(
                           children: [

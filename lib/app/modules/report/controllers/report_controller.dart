@@ -20,6 +20,17 @@ class ReportController extends GetxController {
     super.onInit();
     ever(_saleService.sales, (_) => update());
     ever(_expenseService.expenses, (_) => update());
+    ever(_productService.products, (_) => update());
+  }
+
+  int get totalStockAssetValue {
+    int total = 0;
+    for (var product in _productService.products) {
+      if (product.stock > 0) {
+        total += (product.purchasePrice * product.stock);
+      }
+    }
+    return total;
   }
 
   void setFilter(String filter) {
