@@ -54,7 +54,7 @@ class ReceiptView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Obx(() {
-                      final shopName = Get.find<ShopService>().shop.value?.name ?? 'FATHIYAH STORE';
+                      final shopName = Get.find<ShopService>().shop.value?.name ?? 'LE\' IIL STORE';
                       return Text(shopName, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24.sp));
                     }),
                     SizedBox(height: 16.h),
@@ -211,7 +211,7 @@ class ReceiptView extends StatelessWidget {
 
   void _shareToWhatsApp(SaleModel sale) async {
     final shopService = Get.find<ShopService>();
-    final storeName = shopService.shop.value?.name ?? "FATHIYAH STORE";
+    final storeName = shopService.shop.value?.name ?? "LE' IIL STORE";
     final footer = shopService.shop.value?.receiptFooter ?? "Terima Kasih!";
     
     // Build receipt text
@@ -270,7 +270,7 @@ class ReceiptView extends StatelessWidget {
 
   void _shareReceipt(SaleModel sale) {
     final shopService = Get.find<ShopService>();
-    final storeName = shopService.shop.value?.name ?? "FATHIYAH STORE";
+    final storeName = shopService.shop.value?.name ?? "LE' IIL STORE";
     final footer = shopService.shop.value?.receiptFooter ?? "Terima Kasih!";
     
     // Build receipt text

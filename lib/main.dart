@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
           splitScreenMode: true,
           builder: (context, child) {
             return GetMaterialApp(
-              title: 'Fathiyah Store',
+              title: 'Le\' iil store',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
               initialBinding: InitialBinding(),
