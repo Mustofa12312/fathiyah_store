@@ -4,7 +4,7 @@ class UserModel {
   final String username; // used for login
   final String role; // 'admin', 'supervisor', 'cashier'
   final String status; // 'aktif' or 'nonaktif'
-  final String? pin; // 6-digit PIN for supervisor/admin
+  final String? pin; // 4-6 digit PIN for offline lock screen
 
   UserModel({
     required this.id,
