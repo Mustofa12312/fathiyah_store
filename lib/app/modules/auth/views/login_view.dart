@@ -63,7 +63,7 @@ class LoginView extends GetView<AuthController> {
                     
                     // Welcome Typography
                     Text(
-                      'Fathiyah Store',
+                      'Le\' iil store',
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

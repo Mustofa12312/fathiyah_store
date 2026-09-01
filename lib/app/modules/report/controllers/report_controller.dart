@@ -90,7 +90,7 @@ class ReportController extends GetxController {
       excel.setDefaultSheet('Laporan');
 
       // Add Headers
-      sheetObject.appendRow([TextCellValue('Laporan Keuangan Fathiyah Store')]);
+      sheetObject.appendRow([TextCellValue('Laporan Keuangan Le\' iil store')]);
       sheetObject.appendRow([TextCellValue('Filter: ${selectedFilter.value}')]);
       sheetObject.appendRow([TextCellValue('Tanggal Cetak: ${DateFormat('dd MMM yyyy HH:mm').format(DateTime.now())}')]);
       sheetObject.appendRow([TextCellValue('')]);
@@ -112,12 +112,12 @@ class ReportController extends GetxController {
       var fileBytes = excel.save();
       
       final directory = await getApplicationDocumentsDirectory();
-      final String filePath = '${directory.path}/Laporan_Fathiyah_Store_${DateFormat('ddMMMyyyy').format(DateTime.now())}.xlsx';
+      final String filePath = '${directory.path}/Laporan_Leiil_Store_${DateFormat('ddMMMyyyy').format(DateTime.now())}.xlsx';
       final File file = File(filePath);
       
       if (fileBytes != null) {
         await file.writeAsBytes(fileBytes);
-        await Share.shareXFiles([XFile(filePath)], text: 'Laporan Keuangan Fathiyah Store');
+        await Share.shareXFiles([XFile(filePath)], text: 'Laporan Keuangan Le\' iil store');
       }
 
     } catch (e) {

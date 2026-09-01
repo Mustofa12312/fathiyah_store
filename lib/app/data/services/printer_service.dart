@@ -63,7 +63,7 @@ class PrinterService extends GetxService {
       return;
     }
 
-    final storeName = _shopService.shop.value?.name ?? "FATHIYAH STORE";
+    final storeName = _shopService.shop.value?.name ?? "LE' IIL STORE";
     final footer = _shopService.shop.value?.receiptFooter ?? "Terima Kasih!";
 
     try {

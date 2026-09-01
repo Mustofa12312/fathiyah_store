@@ -237,7 +237,7 @@ class DashboardView extends GetView<DashboardController> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        'Fathiyah Store',
+                        'Le\' iil store',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24.sp,

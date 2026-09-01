@@ -47,7 +47,7 @@ class BackupService extends GetxService {
       }
 
       final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/backup_fathiyah_store_$dateStr.json');
+      final file = File('${directory.path}/backup_leiil_store_$dateStr.json');
       await file.writeAsString(jsonEncode(backupData));
       
       Get.back(); // close loading
@@ -56,7 +56,7 @@ class BackupService extends GetxService {
       // ignore: deprecated_member_use
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'Backup Database Fathiyah Store - $dateStr\n(Format JSON)',
+        text: 'Backup Database Le\' iil store - $dateStr\n(Format JSON)',
       );
       
       await _auditLogService.logAction(
