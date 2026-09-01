@@ -8,6 +8,7 @@ import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/supervisor_auth_dialog.dart';
 import '../controllers/transaction_controller.dart';
 import '../../pos/views/receipt_view.dart';
+import 'refund_view.dart';
 
 class TransactionListView extends StatelessWidget {
   const TransactionListView({super.key});
@@ -94,7 +95,19 @@ class TransactionListView extends StatelessWidget {
                                 Get.to(() => ReceiptView(sale: sale));
                               },
                             ),
-                            if (!isVoided)
+                            if (sale.transactionStatus == 'active')
+                              ListTile(
+                                leading: Icon(Icons.assignment_return, color: Colors.orange.shade800),
+                                title: Text('Retur Barang', style: TextStyle(color: Colors.orange.shade800)),
+                                onTap: () {
+                                  Get.back();
+                                  SupervisorAuthDialog.show(
+                                    actionDescription: 'Retur barang memerlukan otorisasi Supervisor.',
+                                    onSuccess: () => Get.to(() => RefundView(sale: sale)),
+                                  );
+                                },
+                              ),
+                            if (sale.transactionStatus == 'active' || sale.transactionStatus == 'refunded')
                               ListTile(
                                 leading: const Icon(Icons.cancel, color: Colors.red),
                                 title: const Text('Batalkan Transaksi (Void)', style: TextStyle(color: Colors.red)),

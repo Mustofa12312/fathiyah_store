@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:get/get.dart';
-import 'package:csv/csv.dart';
+import 'package:excel/excel.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import '../../../data/services/sale_service.dart';
@@ -82,31 +83,43 @@ class ReportController extends GetxController {
     }
   }
 
-  Future<void> exportCSV() async {
+  Future<void> exportExcel() async {
     try {
-      List<List<dynamic>> rows = [
-        ['Laporan Keuangan Fathiyah Store'],
-        ['Filter', selectedFilter.value],
-        ['Tanggal Cetak', DateFormat('dd MMM yyyy HH:mm').format(DateTime.now())],
-        [],
-        ['Kategori', 'Nominal (Rp)'],
-        ['Omzet (Total Penjualan)', filteredOmzet],
-        ['Uang Tunai Masuk', filteredCashInHand],
-        ['Modal Terjual (COGS)', filteredCapital],
-        ['Laba Kotor', filteredGrossProfit],
-        ['Total Pengeluaran', filteredExpense],
-        ['Laba Bersih', filteredNetProfit],
-      ];
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Laporan'];
+      excel.setDefaultSheet('Laporan');
 
-      String csvData = Csv().encode(rows);
+      // Add Headers
+      sheetObject.appendRow([TextCellValue('Laporan Keuangan Fathiyah Store')]);
+      sheetObject.appendRow([TextCellValue('Filter: ${selectedFilter.value}')]);
+      sheetObject.appendRow([TextCellValue('Tanggal Cetak: ${DateFormat('dd MMM yyyy HH:mm').format(DateTime.now())}')]);
+      sheetObject.appendRow([TextCellValue('')]);
+      
+      // Add Column Headers
+      sheetObject.appendRow([
+        TextCellValue('Kategori'), 
+        TextCellValue('Nominal (Rp)')
+      ]);
 
+      // Add Data Rows
+      sheetObject.appendRow([TextCellValue('Omzet (Total Penjualan)'), IntCellValue(filteredOmzet)]);
+      sheetObject.appendRow([TextCellValue('Uang Tunai Masuk'), IntCellValue(filteredCashInHand)]);
+      sheetObject.appendRow([TextCellValue('Modal Terjual (COGS)'), IntCellValue(filteredCapital)]);
+      sheetObject.appendRow([TextCellValue('Laba Kotor'), IntCellValue(filteredGrossProfit)]);
+      sheetObject.appendRow([TextCellValue('Total Pengeluaran'), IntCellValue(filteredExpense)]);
+      sheetObject.appendRow([TextCellValue('Laba Bersih'), IntCellValue(filteredNetProfit)]);
+
+      var fileBytes = excel.save();
+      
       final directory = await getApplicationDocumentsDirectory();
-      final String filePath = '${directory.path}/laporan_fathiyah_store.csv';
+      final String filePath = '${directory.path}/Laporan_Fathiyah_Store_${DateFormat('ddMMMyyyy').format(DateTime.now())}.xlsx';
       final File file = File(filePath);
+      
+      if (fileBytes != null) {
+        await file.writeAsBytes(fileBytes);
+        await Share.shareXFiles([XFile(filePath)], text: 'Laporan Keuangan Fathiyah Store');
+      }
 
-      await file.writeAsString(csvData);
-
-      Get.snackbar('Sukses', 'Laporan berhasil diekspor ke $filePath');
     } catch (e) {
       Get.snackbar('Error', 'Gagal mengekspor laporan: $e');
     }

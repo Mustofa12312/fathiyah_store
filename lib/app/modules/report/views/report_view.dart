@@ -207,12 +207,12 @@ class ReportView extends GetView<ReportController> {
                             SizedBox(width: 12.w),
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed: () => c.exportCSV(),
-                                icon: Icon(Icons.file_download_rounded, size: 20.sp),
-                                label: const Text('Export Laporan', style: TextStyle(fontWeight: FontWeight.bold)),
+                                onPressed: () => c.exportExcel(),
+                                icon: const Icon(Icons.table_chart_rounded),
+                                label: const Text('Download / Share Excel'),
                                 style: ElevatedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 16.h),
-                                  backgroundColor: Colors.green.shade600,
+                                  backgroundColor: Colors.green.shade700,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                                   elevation: 4,

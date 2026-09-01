@@ -472,4 +472,135 @@ class SaleService extends GetxService {
       Get.snackbar('Error', 'Gagal membatalkan transaksi: $e', snackPosition: SnackPosition.TOP);
     }
   }
+
+  Future<void> refundItems(String saleId, List<Map<String, dynamic>> returnedItems) async {
+    final sale = sales.firstWhereOrNull((s) => s.id == saleId);
+    if (sale == null || sale.transactionStatus == 'voided') return;
+
+    final shiftId = _shiftService.currentShift.value?.id;
+    final user = _authService.currentUser.value;
+
+    int totalRefundAmount = 0;
+    for (var ret in returnedItems) {
+      final price = ret['price'] as int;
+      final quantity = ret['quantity'] as int;
+      totalRefundAmount += (price * quantity);
+    }
+
+    try {
+      await _firestore.runTransaction((transaction) async {
+        DocumentReference saleRef = _firestore.collection('sales').doc(saleId);
+        DocumentSnapshot saleDoc = await transaction.get(saleRef);
+        
+        if (!saleDoc.exists) throw Exception('Transaksi tidak ditemukan');
+        if ((saleDoc.data() as Map<String,dynamic>)['transactionStatus'] == 'voided') {
+          throw Exception('Transaksi sudah dibatalkan');
+        }
+
+        // 1. Read Products
+        Map<String, DocumentSnapshot> productDocs = {};
+        for(var ret in returnedItems) {
+          final productId = ret['productId'] as String;
+          DocumentReference prodRef = _firestore.collection('products').doc(productId);
+          productDocs[productId] = await transaction.get(prodRef);
+        }
+        
+        // 2. Read Shift
+        DocumentSnapshot? shiftDoc;
+        if (totalRefundAmount > 0 && shiftId != null) {
+          shiftDoc = await transaction.get(_firestore.collection('shifts').doc(shiftId));
+        }
+
+        // WRITE PHASE
+        
+        // 1. Update Sale Items and Totals
+        final currentSaleData = saleDoc.data() as Map<String,dynamic>;
+        List<dynamic> currentItemsData = List.from(currentSaleData['items']);
+        
+        int newSubtotal = MoneyEngine.parse(currentSaleData['subtotal']);
+        int newTotalAmount = MoneyEngine.parse(currentSaleData['totalAmount']);
+        int newPaidAmount = MoneyEngine.parse(currentSaleData['paidAmount']);
+        
+        for (var ret in returnedItems) {
+          final productId = ret['productId'] as String;
+          final returnQty = ret['quantity'] as int;
+          
+          final itemIndex = currentItemsData.indexWhere((i) => i['productId'] == productId);
+          if (itemIndex != -1) {
+            int currentQty = currentItemsData[itemIndex]['quantity'];
+            int price = MoneyEngine.parse(currentItemsData[itemIndex]['price']);
+            
+            int updatedQty = currentQty - returnQty;
+            if (updatedQty < 0) updatedQty = 0;
+            
+            currentItemsData[itemIndex]['quantity'] = updatedQty;
+            currentItemsData[itemIndex]['subtotal'] = updatedQty * price;
+            
+            newSubtotal -= (returnQty * price);
+            newTotalAmount -= (returnQty * price);
+            newPaidAmount -= (returnQty * price);
+          }
+        }
+        
+        // Remove items with 0 quantity
+        currentItemsData.removeWhere((i) => i['quantity'] <= 0);
+        
+        String newStatus = currentItemsData.isEmpty ? 'voided' : 'refunded';
+        if (newPaidAmount < 0) newPaidAmount = 0;
+        
+        transaction.update(saleRef, {
+          'items': currentItemsData,
+          'subtotal': newSubtotal,
+          'totalAmount': newTotalAmount,
+          'paidAmount': newPaidAmount,
+          'transactionStatus': newStatus,
+        });
+        
+        // 2. Restore Products & Create Stock Movements
+        for (var ret in returnedItems) {
+          final productId = ret['productId'] as String;
+          final returnQty = ret['quantity'] as int;
+          
+          final doc = productDocs[productId];
+          if (doc != null && doc.exists) {
+             final currentStock = (doc.data() as Map<String,dynamic>)['stock'] as int;
+             transaction.update(doc.reference, {'stock': currentStock + returnQty});
+          }
+          
+          final movementId = const Uuid().v4();
+          final movement = StockMovementModel(
+            id: movementId,
+            productId: productId,
+            productName: ret['productName'],
+            quantity: returnQty,
+            type: 'RETURN',
+            userId: user?.id ?? 'unknown',
+            userName: user?.name ?? 'Unknown',
+            note: 'Retur TRX: $saleId',
+            createdAt: DateTime.now(),
+          );
+          transaction.set(_firestore.collection('stock_movements').doc(movementId), movement.toJson());
+        }
+        
+        // 3. Update Shift
+        if (shiftDoc != null && shiftDoc.exists) {
+          final currentSalesCash = (shiftDoc.data() as Map<String,dynamic>)['totalSalesCash'] as num? ?? 0;
+          transaction.update(shiftDoc.reference, {
+            'totalSalesCash': currentSalesCash - totalRefundAmount
+          });
+        }
+      });
+      
+      if (totalRefundAmount > 0 && _shiftService.currentShift.value != null) {
+         _shiftService.currentShift.value = _shiftService.currentShift.value!.copyWith(
+           totalSalesCash: _shiftService.currentShift.value!.totalSalesCash - totalRefundAmount
+         );
+      }
+      
+      Get.snackbar('Berhasil', 'Retur barang berhasil diproses', snackPosition: SnackPosition.TOP);
+    } catch (e) {
+      debugPrint("Refund transaction failed: $e");
+      Get.snackbar('Error', 'Gagal memproses retur: $e', snackPosition: SnackPosition.TOP);
+    }
+  }
 }
