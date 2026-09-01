@@ -18,7 +18,7 @@ class ShopModel {
   factory ShopModel.fromJson(Map<String, dynamic> json, String documentId) {
     return ShopModel(
       id: documentId,
-      name: json['name'] ?? 'Fathiyah Store',
+      name: json['name'] ?? 'Le\' iil store',
       address: json['address'] ?? '',
       phone: json['phone'] ?? '',
       receiptFooter: json['receiptFooter'] ?? 'Terima kasih atas kunjungan Anda!',

@@ -18,7 +18,7 @@ class AuthService extends GetxService {
 
   final users = <UserModel>[].obs;
 
-  String _emailFromUsername(String username) => '${username.trim().toLowerCase()}@fathiyah.store';
+  String _emailFromUsername(String username) => '${username.trim().toLowerCase()}@leiil.store';
 
   Future<AuthService> init() async {
     // Auto-create admin if database is empty

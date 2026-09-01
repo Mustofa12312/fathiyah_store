@@ -18,7 +18,7 @@ class ShopService extends GetxService {
         // Create default if not exists
         final defaultShop = ShopModel(
           id: _shopDocId,
-          name: 'Fathiyah Store',
+          name: 'Le\' iil store',
         );
         _firestore.collection('shops').doc(_shopDocId).set(defaultShop.toJson());
       }
