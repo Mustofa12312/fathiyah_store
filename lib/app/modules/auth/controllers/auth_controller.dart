@@ -4,8 +4,8 @@ import '../../../routes/app_pages.dart';
 import '../../../data/services/auth_service.dart';
 
 class AuthController extends GetxController {
-  final emailController = TextEditingController(text: 'admin'); // Set default dummy
-  final passwordController = TextEditingController(text: '123'); // Set default dummy
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   final isLoading = false.obs;
   final isPasswordHidden = true.obs;
   
