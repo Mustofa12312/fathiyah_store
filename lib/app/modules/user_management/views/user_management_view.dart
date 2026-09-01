@@ -116,21 +116,16 @@ class UserManagementView extends GetView<SettingsController> {
                 if (val != null) selectedRole.value = val;
               },
             )),
-            Obx(() {
-              if (selectedRole.value == 'supervisor' || selectedRole.value == 'admin') {
-                return Padding(
-                  padding: EdgeInsets.only(top: 8.h),
-                  child: TextField(
-                    controller: pinController, 
-                    decoration: const InputDecoration(labelText: 'PIN Otorisasi (6 Angka)'), 
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    obscureText: true,
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            }),
+            Padding(
+              padding: EdgeInsets.only(top: 8.h),
+              child: TextField(
+                controller: pinController, 
+                decoration: const InputDecoration(labelText: 'PIN Otorisasi / Lock Screen (Min. 4 Angka) *'), 
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+              ),
+            ),
           ],
         ),
       ),
@@ -139,13 +134,13 @@ class UserManagementView extends GetView<SettingsController> {
       confirmTextColor: Colors.white,
       buttonColor: AppTheme.primary,
       onConfirm: () {
-        if (nameController.text.isEmpty || usernameController.text.isEmpty || passwordController.text.isEmpty) {
+        if (nameController.text.isEmpty || usernameController.text.isEmpty || passwordController.text.isEmpty || pinController.text.isEmpty) {
           Get.snackbar('Error', 'Semua kolom wajib diisi');
           return;
         }
 
-        if ((selectedRole.value == 'supervisor' || selectedRole.value == 'admin') && pinController.text.length != 6) {
-          Get.snackbar('Error', 'PIN wajib 6 angka untuk Supervisor/Admin');
+        if (pinController.text.length < 4) {
+          Get.snackbar('Error', 'PIN wajib minimal 4 angka');
           return;
         }
 
@@ -154,7 +149,7 @@ class UserManagementView extends GetView<SettingsController> {
           name: nameController.text,
           username: usernameController.text,
           role: selectedRole.value,
-          pin: (selectedRole.value == 'supervisor' || selectedRole.value == 'admin') ? pinController.text : null,
+          pin: pinController.text,
         );
 
         // Add user through auth service
