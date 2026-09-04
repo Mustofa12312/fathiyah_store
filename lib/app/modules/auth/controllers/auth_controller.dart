@@ -36,23 +36,16 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     
-    // Simulate delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    final user = await _authService.login(emailController.text, passwordController.text);
+    final user = await _authService.login(
+      emailController.text.trim(), 
+      passwordController.text,
+    );
     
     isLoading.value = false;
     
     if (user != null) {
       Get.offAllNamed(Routes.DASHBOARD);
-    } else {
-      Get.snackbar(
-        'Login Gagal',
-        'Username atau Password salah, atau akun nonaktif.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.1),
-        colorText: Colors.red,
-      );
     }
+    // Error snackbar sudah ditampilkan oleh AuthService
   }
 }

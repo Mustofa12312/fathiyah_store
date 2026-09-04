@@ -33,7 +33,10 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isSupervisor());
       // Only Admin or Supervisor can create/update users
       // Users cannot create their own accounts via client app
-      allow write: if isSupervisor();
+      // EXCEPTION: Jika user membuat dokumen mereka sendiri (untuk bootstrap/migrasi admin)
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isSupervisor());
+      allow update: if isSupervisor();
+      allow delete: if isAdmin();
     }
     
     // ============================================
