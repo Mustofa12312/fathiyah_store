@@ -63,6 +63,11 @@ service cloud.firestore {
       allow write: if isSupervisor();
     }
 
+    match /units/{document=**} {
+      allow read: if isCashier();
+      allow write: if isSupervisor();
+    }
+
     match /customers/{document=**} {
       // Cashiers can read and create customers
       allow read, create: if isCashier();
