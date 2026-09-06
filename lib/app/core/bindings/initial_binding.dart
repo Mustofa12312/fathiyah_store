@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/product_service.dart';
 import '../../data/services/category_service.dart';
+import '../../data/services/unit_service.dart';
 import '../../data/services/customer_service.dart';
 import '../../data/services/sale_service.dart';
 import '../../data/services/expense_service.dart';
@@ -34,6 +35,7 @@ class InitialBinding extends Bindings {
     Get.lazyPut(() => ShiftService()..init(), fenix: true);
     Get.lazyPut(() => ShopService()..init(), fenix: true);
     Get.lazyPut(() => CategoryService()..init(), fenix: true);
+    Get.lazyPut(() => UnitService()..init(), fenix: true);
     Get.lazyPut(() => ProductService()..init(), fenix: true);
     Get.lazyPut(() => CustomerService()..init(), fenix: true);
     Get.lazyPut(() => SaleService()..init(), fenix: true);
