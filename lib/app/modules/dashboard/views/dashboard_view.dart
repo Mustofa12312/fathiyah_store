@@ -437,6 +437,19 @@ class DashboardView extends GetView<DashboardController> {
                       else
                         _buildQuickAction(context, 'Kategori', Icons.category_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Kasir tidak dapat mengakses Kategori')),
                       
+                      // Satuan: Supervisor & Admin
+                      if (!isCashier)
+                        _buildQuickAction(
+                          context,
+                          'Satuan',
+                          Icons.straighten_rounded,
+                          Colors.teal.shade500,
+                          () => Get.toNamed(Routes.UNIT),
+                        )
+                      else
+                        _buildQuickAction(context, 'Satuan', Icons.straighten_rounded, Colors.grey, () => Get.snackbar('Akses Ditolak', 'Kasir tidak dapat mengakses Satuan')),
+
+                      
                       // Pelanggan: All
                       _buildQuickAction(
                         context,

@@ -7,4 +7,5 @@ abstract class Routes {
   static const LOCK_SCREEN = '/lock-screen';
   static const DASHBOARD = '/dashboard';
   static const CATEGORY = '/category';
+  static const UNIT = '/unit';
 }

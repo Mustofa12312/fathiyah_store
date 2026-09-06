@@ -8,6 +8,8 @@ import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/category/bindings/category_binding.dart';
 import '../modules/category/views/category_list_view.dart';
+import '../modules/unit/bindings/unit_binding.dart';
+import '../modules/unit/views/unit_list_view.dart';
 import '../modules/lock_screen/bindings/lock_screen_binding.dart';
 import '../modules/lock_screen/views/lock_screen_view.dart';
 
@@ -41,6 +43,11 @@ class AppPages {
       name: Routes.CATEGORY,
       page: () => const CategoryListView(),
       binding: CategoryBinding(),
+    ),
+    GetPage(
+      name: Routes.UNIT,
+      page: () => const UnitListView(),
+      binding: UnitBinding(),
     ),
   ];
 }
