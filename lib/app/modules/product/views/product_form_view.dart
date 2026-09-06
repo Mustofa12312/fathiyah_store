@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/services/product_service.dart';
 import '../../../data/services/stock_movement_service.dart';
+import '../../../data/services/unit_service.dart';
 
 class ProductFormView extends StatefulWidget {
   final ProductModel? product; // If null, it's Add Mode. If provided, it's Edit Mode.
@@ -24,6 +25,7 @@ class ProductFormView extends StatefulWidget {
 class _ProductFormViewState extends State<ProductFormView> {
   final _formKey = GlobalKey<FormState>();
   final _productService = Get.find<ProductService>();
+  final _unitService = Get.find<UnitService>();
   
   late TextEditingController _nameController;
   late TextEditingController _barcodeController;
@@ -33,9 +35,7 @@ class _ProductFormViewState extends State<ProductFormView> {
   late TextEditingController _minimumStockController;
   
   String? _selectedCategoryId;
-  String _selectedUnit = 'Pcs';
-  
-  final List<String> _units = ['Pcs', 'Sachet', 'Dus', 'Pack', 'Sak', 'Liter', 'Pouch', 'Lainnya'];
+  String? _selectedUnit;
 
   @override
   void initState() {
@@ -53,8 +53,10 @@ class _ProductFormViewState extends State<ProductFormView> {
     _minimumStockController = TextEditingController(text: formatNumber(widget.product?.minimumStock));
     
     _selectedCategoryId = widget.product?.categoryId;
-    if (widget.product != null && _units.contains(widget.product!.unit)) {
+    if (widget.product != null) {
       _selectedUnit = widget.product!.unit;
+    } else if (_unitService.units.isNotEmpty) {
+      _selectedUnit = _unitService.units.first.name;
     }
   }
 
@@ -83,7 +85,7 @@ class _ProductFormViewState extends State<ProductFormView> {
         name: _nameController.text,
         categoryId: _selectedCategoryId!,
         barcode: _barcodeController.text.isEmpty ? null : _barcodeController.text,
-        unit: _selectedUnit,
+        unit: _selectedUnit ?? 'Pcs',
         purchasePrice: int.tryParse(_purchasePriceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
         sellingPrice: int.tryParse(_sellingPriceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
         stock: int.tryParse(_stockController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
@@ -239,16 +241,26 @@ class _ProductFormViewState extends State<ProductFormView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildLabel('Satuan'),
-                                DropdownButtonFormField<String>(
-                                  isExpanded: true,
-                                  initialValue: _selectedUnit,
-                                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary),
-                                  decoration: _inputDecoration(),
-                                  items: _units.map((u) {
-                                    return DropdownMenuItem(value: u, child: Text(u));
-                                  }).toList(),
-                                  onChanged: (val) => setState(() => _selectedUnit = val!),
-                                ),
+                                Obx(() {
+                                  final units = _unitService.units;
+                                  // Pastikan _selectedUnit valid, jika tidak, set ke null agar tidak crash
+                                  if (_selectedUnit != null && units.isNotEmpty && !units.any((u) => u.name == _selectedUnit)) {
+                                    _selectedUnit = null;
+                                  }
+                                  
+                                  return DropdownButtonFormField<String>(
+                                    isExpanded: true,
+                                    value: _selectedUnit,
+                                    hint: const Text('Pilih'),
+                                    validator: (v) => v == null ? 'Pilih satuan' : null,
+                                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary),
+                                    decoration: _inputDecoration(),
+                                    items: units.map((u) {
+                                      return DropdownMenuItem(value: u.name, child: Text(u.name));
+                                    }).toList(),
+                                    onChanged: (val) => setState(() => _selectedUnit = val!),
+                                  );
+                                }),
                               ],
                             ),
                           ),
