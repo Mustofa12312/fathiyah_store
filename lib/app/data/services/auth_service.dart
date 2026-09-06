@@ -19,9 +19,9 @@ class AuthService extends GetxService {
 
   final users = <UserModel>[].obs;
 
-  /// Format email standar: username@leiil.store
+  /// Format email standar: username@app.fathiyah.store (diganti agar mendapat akun fresh)
   String _emailFromUsername(String username) {
-    return '${username.trim().toLowerCase()}@leiil.store';
+    return '${username.trim().toLowerCase()}@app.fathiyah.store';
   }
 
   Future<AuthService> init() async {
@@ -91,63 +91,39 @@ class AuthService extends GetxService {
   /// Dijalankan saat init().
   Future<void> _ensureDefaultAdmin() async {
     try {
-      // Coba login sebagai admin untuk cek apakah akunnya sudah ada
       final email = _emailFromUsername('admin');
+      
       try {
-        final userCred = await _auth.signInWithEmailAndPassword(
+        debugPrint("Mencoba membuat akun admin default...");
+        final userCred = await _auth.createUserWithEmailAndPassword(
           email: email,
           password: 'password123',
         );
-        // Admin sudah ada dan bisa login → pastikan ada dokumen Firestore-nya
-        if (userCred.user != null) {
-          final doc = await _firestore
-              .collection('users')
-              .doc(userCred.user!.uid)
-              .get();
-          if (!doc.exists) {
-            // Buat dokumen Firestore untuk admin
-            final defaultAdmin = UserModel(
-              id: userCred.user!.uid,
-              username: 'admin',
-              name: 'Super Admin',
-              role: 'admin',
-              status: 'aktif',
-              pin: '123456',
-            );
-            await _firestore
-                .collection('users')
-                .doc(defaultAdmin.id)
-                .set(defaultAdmin.toJson());
-          }
-          // Sign out agar user harus login manual
-          await _auth.signOut();
-        }
+        
+        // Jika berhasil, buat dokumen Firestore-nya
+        final defaultAdmin = UserModel(
+          id: userCred.user!.uid,
+          username: 'admin',
+          name: 'Super Admin',
+          role: 'admin',
+          status: 'aktif',
+          pin: '123456',
+        );
+        await _firestore
+            .collection('users')
+            .doc(defaultAdmin.id)
+            .set(defaultAdmin.toJson());
+            
+        // Sign out agar user harus login manual
+        await _auth.signOut();
+        debugPrint("Admin default berhasil dibuat: admin / password123");
+        
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          // Admin belum ada → buat baru
-          debugPrint("Admin belum ada, membuat akun admin default...");
-          final userCred = await _auth.createUserWithEmailAndPassword(
-            email: email,
-            password: 'password123',
-          );
-          final defaultAdmin = UserModel(
-            id: userCred.user!.uid,
-            username: 'admin',
-            name: 'Super Admin',
-            role: 'admin',
-            status: 'aktif',
-            pin: '123456',
-          );
-          await _firestore
-              .collection('users')
-              .doc(defaultAdmin.id)
-              .set(defaultAdmin.toJson());
-          // Sign out agar user harus login manual
-          await _auth.signOut();
-          debugPrint("Admin default berhasil dibuat: admin / password123");
+        if (e.code == 'email-already-in-use') {
+          // Akun sudah ada, aman
+          debugPrint("Admin sudah ada (email-already-in-use), skip create.");
         } else {
-          // Error lain (misal wrong-password) → admin ada tapi password berbeda, skip
-          debugPrint("Admin check: ${e.code} - skip create");
+          debugPrint("Gagal membuat admin default: ${e.code} - ${e.message}");
         }
       }
     } catch (e) {

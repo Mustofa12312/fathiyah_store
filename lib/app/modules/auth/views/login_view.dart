@@ -26,7 +26,7 @@ class LoginView extends GetView<AuthController> {
               ),
             ),
           ),
-          
+
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -35,7 +35,7 @@ class LoginView extends GetView<AuthController> {
                 child: Column(
                   children: [
                     SizedBox(height: 40.h),
-                    
+
                     // Hero Logo Section
                     Container(
                       width: 90.w,
@@ -60,16 +60,17 @@ class LoginView extends GetView<AuthController> {
                       ),
                     ),
                     SizedBox(height: 24.h),
-                    
+
                     // Welcome Typography
                     Text(
                       'Le\' iil store',
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        fontSize: 28.sp,
-                      ),
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                            fontSize: 28.sp,
+                          ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
@@ -79,9 +80,9 @@ class LoginView extends GetView<AuthController> {
                         fontSize: 14.sp,
                       ),
                     ),
-                    
+
                     SizedBox(height: 40.h),
-                    
+
                     // Login Card
                     Container(
                       width: double.infinity,
@@ -102,20 +103,20 @@ class LoginView extends GetView<AuthController> {
                         children: [
                           Text(
                             'Selamat Datang!',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primary,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primary,
+                                ),
                           ),
                           SizedBox(height: 8.h),
                           Text(
                             'Silakan masuk ke akun Anda',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppTheme.textSecondary),
                           ),
                           SizedBox(height: 32.h),
-                          
+
                           // Email Field
                           Container(
                             decoration: BoxDecoration(
@@ -127,59 +128,78 @@ class LoginView extends GetView<AuthController> {
                               keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
                                 hintText: 'Username',
-                                prefixIcon: const Icon(Icons.person_outline_rounded, color: AppTheme.secondary),
+                                prefixIcon: const Icon(
+                                  Icons.person_outline_rounded,
+                                  color: AppTheme.secondary,
+                                ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16.r),
-                                  borderSide: const BorderSide(color: AppTheme.secondary, width: 1.5),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.secondary,
+                                    width: 1.5,
+                                  ),
                                 ),
-                                contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 16.h,
+                                ),
                               ),
                             ),
                           ),
                           SizedBox(height: 16.h),
-                          
+
                           // Password Field
                           Container(
                             decoration: BoxDecoration(
                               color: AppTheme.background,
                               borderRadius: BorderRadius.circular(16.r),
                             ),
-                            child: Obx(() => TextField(
-                              controller: controller.passwordController,
-                              obscureText: controller.isPasswordHidden.value,
-                              decoration: InputDecoration(
-                                hintText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppTheme.secondary),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
-                                  borderSide: const BorderSide(color: AppTheme.secondary, width: 1.5),
-                                ),
-                                contentPadding: EdgeInsets.symmetric(vertical: 16.h),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    controller.isPasswordHidden.value 
-                                      ? Icons.visibility_off_outlined 
-                                      : Icons.visibility_outlined, 
-                                    color: AppTheme.textSecondary
+                            child: Obx(
+                              () => TextField(
+                                controller: controller.passwordController,
+                                obscureText: controller.isPasswordHidden.value,
+                                decoration: InputDecoration(
+                                  hintText: 'Password',
+                                  prefixIcon: const Icon(
+                                    Icons.lock_outline_rounded,
+                                    color: AppTheme.secondary,
                                   ),
-                                  onPressed: controller.togglePasswordVisibility,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    borderSide: const BorderSide(
+                                      color: AppTheme.secondary,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 16.h,
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      controller.isPasswordHidden.value
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                    onPressed:
+                                        controller.togglePasswordVisibility,
+                                  ),
                                 ),
                               ),
-                            )),
+                            ),
                           ),
-                          
+
                           SizedBox(height: 12.h),
-                          
+
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
                                 Get.snackbar(
-                                  'Bantuan', 
+                                  'Bantuan',
                                   'Silakan hubungi Super Admin untuk mereset password Anda.',
                                   snackPosition: SnackPosition.TOP,
                                   backgroundColor: Colors.white,
@@ -201,9 +221,9 @@ class LoginView extends GetView<AuthController> {
                               ),
                             ),
                           ),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Login Button
                           Container(
                             width: double.infinity,
@@ -215,40 +235,46 @@ class LoginView extends GetView<AuthController> {
                               borderRadius: BorderRadius.circular(16.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.secondary.withValues(alpha: 0.3),
+                                  color: AppTheme.secondary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
-                            child: Obx(() => ElevatedButton(
-                              onPressed: controller.isLoading.value ? null : controller.login,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
+                            child: Obx(
+                              () => ElevatedButton(
+                                onPressed: controller.isLoading.value
+                                    ? null
+                                    : controller.login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
                                 ),
+                                child: controller.isLoading.value
+                                    ? SizedBox(
+                                        height: 24.h,
+                                        width: 24.h,
+                                        child: const CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Masuk',
+                                        style: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
                               ),
-                              child: controller.isLoading.value
-                                  ? SizedBox(
-                                      height: 24.h,
-                                      width: 24.h,
-                                      child: const CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : Text(
-                                      'Masuk',
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        letterSpacing: 1.1,
-                                      ),
-                                    ),
-                            )),
+                            ),
                           ),
                         ],
                       ),

@@ -38,7 +38,7 @@ void main() async {
 
   // Initialize Hive for Offline Sync Queue
   await Hive.initFlutter();
-  await Hive.openBox('offline_sales');
+  await Hive.openBox<String>('offline_sales');
 
   // Initialize Binding will be handled by GetMaterialApp
 
