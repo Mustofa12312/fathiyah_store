@@ -36,6 +36,27 @@ class SettingsController extends GetxController {
     }
   }
 
+  Future<void> deleteUser(String userId) async {
+    if (!isAdmin) return;
+    
+    final user = allUsers.firstWhereOrNull((u) => u.id == userId);
+    if (user == null) return;
+    
+    if (user.role == 'admin') {
+      Get.snackbar('Error', 'Tidak dapat menghapus Admin Utama');
+      return;
+    }
+
+    try {
+      // Hapus dokumen user dari Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+      update();
+      Get.snackbar('Sukses', 'Pengguna ${user.name} berhasil dihapus', snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal menghapus pengguna: $e', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
   void changePassword(String oldPass, String newPass) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;

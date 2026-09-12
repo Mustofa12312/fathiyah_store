@@ -51,13 +51,18 @@ class DashboardView extends GetView<DashboardController> {
             Expanded(
               child: IndexedStack(
                 index: controller.currentIndex.value,
-                children: [
-                  _buildHomeTab(context, isAdmin, isSupervisor, isCashier),
-                  if (!isCashier) const ProductListView() else const Center(child: Text('Akses Ditolak')),
-                  const PosView(),
-                  if (isAdmin) const ReportView() else const Center(child: Text('Akses Ditolak')),
-                  if (isAdmin) const SettingsView() else const Center(child: Text('Akses Ditolak')),
-                ],
+                children: isCashier
+                    ? [
+                        const ProductListView(),
+                        const PosView(),
+                      ]
+                    : [
+                        _buildHomeTab(context, isAdmin, isSupervisor, isCashier),
+                        const ProductListView(),
+                        const PosView(),
+                        if (isAdmin) const ReportView() else const Center(child: Text('Akses Ditolak')),
+                        if (isAdmin) const SettingsView() else const Center(child: Text('Akses Ditolak')),
+                      ],
               ),
             ),
           ],
@@ -80,44 +85,57 @@ class DashboardView extends GetView<DashboardController> {
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
-                    0,
-                    Icons.home_rounded,
-                    'Home',
-                    controller.currentIndex.value,
-                  ),
-                  _buildNavItem(
-                    1,
-                    Icons.inventory_2_rounded,
-                    'Produk',
-                    controller.currentIndex.value,
-                    disabled: isCashier,
-                    disabledMsg: 'Kasir tidak dapat mengakses menu Produk',
-                  ),
-                  _buildNavItem(
-                    2,
-                    Icons.point_of_sale_rounded,
-                    'Kasir',
-                    controller.currentIndex.value,
-                  ),
-                  _buildNavItem(
-                    3,
-                    Icons.bar_chart_rounded,
-                    'Laporan',
-                    controller.currentIndex.value,
-                    disabled: !isAdmin,
-                    disabledMsg: 'Hanya Admin/Owner yang dapat melihat Laporan',
-                  ),
-                  _buildNavItem(
-                    4,
-                    Icons.settings_rounded,
-                    'Pengaturan',
-                    controller.currentIndex.value,
-                    disabled: !isAdmin,
-                    disabledMsg: 'Hanya Admin/Owner yang dapat mengakses Pengaturan',
-                  ),
-                ],
+                children: isCashier
+                    ? [
+                        _buildNavItem(
+                          0,
+                          Icons.inventory_2_rounded,
+                          'Produk',
+                          controller.currentIndex.value,
+                        ),
+                        _buildNavItem(
+                          1,
+                          Icons.point_of_sale_rounded,
+                          'Kasir',
+                          controller.currentIndex.value,
+                        ),
+                      ]
+                    : [
+                        _buildNavItem(
+                          0,
+                          Icons.home_rounded,
+                          'Home',
+                          controller.currentIndex.value,
+                        ),
+                        _buildNavItem(
+                          1,
+                          Icons.inventory_2_rounded,
+                          'Produk',
+                          controller.currentIndex.value,
+                        ),
+                        _buildNavItem(
+                          2,
+                          Icons.point_of_sale_rounded,
+                          'Kasir',
+                          controller.currentIndex.value,
+                        ),
+                        _buildNavItem(
+                          3,
+                          Icons.bar_chart_rounded,
+                          'Laporan',
+                          controller.currentIndex.value,
+                          disabled: !isAdmin,
+                          disabledMsg: 'Hanya Admin/Owner yang dapat melihat Laporan',
+                        ),
+                        _buildNavItem(
+                          4,
+                          Icons.settings_rounded,
+                          'Pengaturan',
+                          controller.currentIndex.value,
+                          disabled: !isAdmin,
+                          disabledMsg: 'Hanya Admin/Owner yang dapat mengakses Pengaturan',
+                        ),
+                      ],
               ),
             ),
           ),

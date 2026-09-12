@@ -6,6 +6,9 @@ import '../controllers/customer_controller.dart';
 import 'customer_form_view.dart';
 import '../../../data/models/customer_model.dart';
 import '../../../core/widgets/empty_state_widget.dart';
+import '../../../core/utils/money_engine.dart';
+
+import 'package:intl/intl.dart';
 
 class CustomerListView extends GetView<CustomerController> {
   const CustomerListView({super.key});
@@ -122,6 +125,16 @@ class CustomerListView extends GetView<CustomerController> {
                         color: AppTheme.textSecondary,
                       ),
                     ),
+                    if (customer.isVip && (controller.customerDebts[customer.id] ?? 0) > 0) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Hutang: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(controller.customerDebts[customer.id]!)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

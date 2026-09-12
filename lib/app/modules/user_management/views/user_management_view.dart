@@ -50,7 +50,9 @@ class UserManagementView extends GetView<SettingsController> {
                           children: [
                             Row(
                               children: [
-                                Text(user.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                                Flexible(
+                                  child: Text(user.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp), overflow: TextOverflow.ellipsis),
+                                ),
                                 if (isMe) ...[
                                   SizedBox(width: 8.w),
                                   Container(
@@ -66,6 +68,12 @@ class UserManagementView extends GetView<SettingsController> {
                           ],
                         ),
                       ),
+                      // Delete button (not for self or admin)
+                      if (!isMe && !user.isAdmin)
+                        IconButton(
+                          icon: Icon(Icons.delete_outline, color: Colors.red.shade400, size: 22.sp),
+                          onPressed: () => _showDeleteConfirmation(context, user),
+                        ),
                       Switch(
                         value: user.status == 'aktif',
                         onChanged: isMe || user.isAdmin ? null : (v) => c.toggleUserStatus(user.id),
@@ -79,6 +87,21 @@ class UserManagementView extends GetView<SettingsController> {
           );
         },
       ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, UserModel user) {
+    Get.defaultDialog(
+      title: 'Hapus Pengguna',
+      middleText: 'Yakin ingin menghapus "${user.name}" (@${user.username})?\n\nPengguna yang sudah dihapus tidak bisa login lagi.',
+      textConfirm: 'Hapus',
+      textCancel: 'Batal',
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.red,
+      onConfirm: () {
+        Get.back();
+        controller.deleteUser(user.id);
+      },
     );
   }
 
@@ -133,7 +156,7 @@ class UserManagementView extends GetView<SettingsController> {
       textCancel: 'Batal',
       confirmTextColor: Colors.white,
       buttonColor: AppTheme.primary,
-      onConfirm: () {
+      onConfirm: () async {
         if (nameController.text.isEmpty || usernameController.text.isEmpty || passwordController.text.isEmpty || pinController.text.isEmpty) {
           Get.snackbar('Error', 'Semua kolom wajib diisi');
           return;
@@ -141,6 +164,11 @@ class UserManagementView extends GetView<SettingsController> {
 
         if (pinController.text.length < 4) {
           Get.snackbar('Error', 'PIN wajib minimal 4 angka');
+          return;
+        }
+
+        if (passwordController.text.length < 6) {
+          Get.snackbar('Error', 'Password wajib minimal 6 karakter');
           return;
         }
 
@@ -152,13 +180,23 @@ class UserManagementView extends GetView<SettingsController> {
           pin: pinController.text,
         );
 
-        // Add user through auth service
-        final authService = Get.find<AuthService>();
-        authService.addUser(newUser, passwordController.text);
-        
-        controller.update(); // refresh list
-        Get.back();
-        Get.snackbar('Sukses', 'Pengguna baru berhasil ditambahkan');
+        try {
+          // Add user through auth service
+          final authService = Get.find<AuthService>();
+          await authService.addUser(newUser, passwordController.text);
+          
+          controller.update(); // refresh list
+          Get.back();
+          Get.snackbar('Sukses', 'Pengguna baru berhasil ditambahkan.\nUsername: ${usernameController.text}\nPassword: ${passwordController.text}');
+        } catch (e) {
+          String errorMsg = 'Gagal menambahkan pengguna.';
+          if (e.toString().contains('email-already-in-use')) {
+            errorMsg = 'Username "${usernameController.text}" sudah terdaftar. Gunakan username lain.';
+          } else {
+            errorMsg = 'Error: $e';
+          }
+          Get.snackbar('Error', errorMsg, snackPosition: SnackPosition.BOTTOM);
+        }
       },
     );
   }
