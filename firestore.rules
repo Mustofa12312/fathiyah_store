@@ -55,7 +55,8 @@ service cloud.firestore {
     // ============================================
     match /products/{document=**} {
       allow read: if isCashier();
-      allow write: if isSupervisor(); // Only supervisor/admin can edit products
+      allow create, delete: if isSupervisor(); // Only supervisor/admin can add/delete products
+      allow update: if isCashier(); // Cashiers need to update stock during sales
     }
     
     match /categories/{document=**} {

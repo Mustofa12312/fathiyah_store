@@ -108,21 +108,32 @@ class PosController extends GetxController {
       return;
     }
 
-    // Process checkout
-    final saleResult = await saleService.processCheckout(
-      paidAmount: paidAmount,
-      paymentMethod: paymentMethod.value,
-      splitPayments: splitPayments,
-    );
+    try {
+      // Process checkout
+      final saleResult = await saleService.processCheckout(
+        paidAmount: paidAmount,
+        paymentMethod: paymentMethod.value,
+        splitPayments: splitPayments,
+      );
 
-    Get.back(); // close checkout bottom sheet/view
-    Get.to(() => ReceiptView(sale: saleResult)); // show receipt
-    
-    // reset form
-    paidAmountController.clear();
-    splitCashController.clear();
-    splitTransferController.clear();
-    isSplitPayment.value = false;
-    paymentMethod.value = 'Cash';
+      Get.back(); // close checkout bottom sheet/view
+      Get.to(() => ReceiptView(sale: saleResult)); // show receipt
+      
+      // reset form
+      paidAmountController.clear();
+      splitCashController.clear();
+      splitTransferController.clear();
+      isSplitPayment.value = false;
+      paymentMethod.value = 'Cash';
+    } catch (e) {
+      Get.snackbar(
+        'Gagal Proses Transaksi',
+        'Error: $e',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        duration: const Duration(seconds: 5),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 }
