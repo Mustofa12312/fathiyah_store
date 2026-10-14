@@ -6,7 +6,6 @@ import '../controllers/customer_controller.dart';
 import 'customer_form_view.dart';
 import '../../../data/models/customer_model.dart';
 import '../../../core/widgets/empty_state_widget.dart';
-import '../../../core/utils/money_engine.dart';
 
 import 'package:intl/intl.dart';
 

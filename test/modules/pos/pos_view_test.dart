@@ -51,8 +51,6 @@ class FakeSaleService extends GetxService implements SaleService {
   @override
   RxDouble get discountPercent => 0.0.obs;
   @override
-  RxInt get nominalDiscount => 0.obs;
-  @override
   RxInt get discountAmount => 0.obs;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -72,7 +70,6 @@ class FakeProductService extends GetxService implements ProductService {
 class FakeCategoryService extends GetxService implements CategoryService {
   @override
   RxList<CategoryModel> get categories => <CategoryModel>[].obs;
-  @override
   RxString get selectedCategory => 'Semua'.obs;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -81,7 +78,6 @@ class FakeCategoryService extends GetxService implements CategoryService {
 class FakeCustomerService extends GetxService implements CustomerService {
   @override
   RxList<CustomerModel> get customers => <CustomerModel>[].obs;
-  @override
   Rx<CustomerModel?> get selectedCustomer => Rx<CustomerModel?>(null);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

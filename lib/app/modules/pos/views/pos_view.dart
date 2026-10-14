@@ -99,11 +99,15 @@ class PosView extends GetView<PosController> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Kasir',
-                          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                            fontSize: 26.sp,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            'Kasir',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                              fontSize: 26.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Row(
@@ -362,7 +366,7 @@ class PosView extends GetView<PosController> {
                             child: Column(
                               children: [
                                 layoutChildren[1], // Right top: Cart List
-                                _buildCartSummaryBottomBar(), // Right bottom: Summary
+                                _buildCartSummaryBottomBar(isTablet: true), // Right bottom: Summary
                               ],
                             ),
                           ),
@@ -382,7 +386,7 @@ class PosView extends GetView<PosController> {
           LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth > 600) return const SizedBox.shrink(); // Handled in split screen
-              return _buildCartSummaryBottomBar();
+              return _buildCartSummaryBottomBar(isTablet: false);
             },
           ),
         ],
@@ -392,7 +396,7 @@ class PosView extends GetView<PosController> {
 );
 }
 
-  Widget _buildCartSummaryBottomBar() {
+  Widget _buildCartSummaryBottomBar({bool isTablet = false}) {
     return Obx(() {
       final cartCount = controller.saleService.cartItems.length;
       final cartTotal = controller.saleService.cartTotal;
@@ -400,6 +404,133 @@ class PosView extends GetView<PosController> {
       final discount = controller.saleService.calculatedDiscount;
       
       if (cartCount == 0) return const SizedBox.shrink();
+      
+      if (isTablet) {
+        return Container(
+          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: const Border(top: BorderSide(color: AppTheme.divider)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
+              )
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (discount > 0) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Subtotal', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp)),
+                    Text(
+                      CurrencyFormatter.formatRupiah(cartSubtotal),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12.sp,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Diskon', style: TextStyle(color: Colors.purple.shade800, fontSize: 12.sp, fontWeight: FontWeight.w600)),
+                    Text(
+                      '-${CurrencyFormatter.formatRupiah(discount)}',
+                      style: TextStyle(
+                        color: Colors.purple.shade800,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                const Divider(height: 1, thickness: 0.8),
+                SizedBox(height: 8.h),
+              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Pembayaran',
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 11.sp),
+                        ),
+                        SizedBox(height: 2.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            CurrencyFormatter.formatRupiah(cartTotal),
+                            style: TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 19.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      '$cartCount Barang',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              ElevatedButton(
+                onPressed: () => Get.to(() => const CheckoutView()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  elevation: 2,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.payment_rounded, size: 18.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Bayar Sekarang',
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
       
       return Container(
         padding: EdgeInsets.all(16.w),
@@ -424,12 +555,17 @@ class PosView extends GetView<PosController> {
                     padding: EdgeInsets.symmetric(vertical: 4.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
                           children: [
-                            Text(
-                              '$cartCount Barang',
-                              style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
+                            Flexible(
+                              child: Text(
+                                '$cartCount Barang',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
+                              ),
                             ),
                             if (discount > 0) ...[
                               SizedBox(width: 6.w),
@@ -449,26 +585,35 @@ class PosView extends GetView<PosController> {
                             Icon(Icons.keyboard_arrow_up_rounded, size: 16.sp, color: AppTheme.textSecondary),
                           ],
                         ),
+                        SizedBox(height: 2.h),
                         Row(
                           children: [
-                            Text(
-                              CurrencyFormatter.formatRupiah(cartTotal),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.sp,
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  CurrencyFormatter.formatRupiah(cartTotal),
+                                  style: TextStyle(
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18.sp,
+                                  ),
+                                ),
                               ),
                             ),
                             if (discount > 0) ...[
-                              SizedBox(width: 8.w),
-                              Text(
-                                CurrencyFormatter.formatRupiah(cartSubtotal),
-                                style: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 12.sp,
-                                  decoration: TextDecoration.lineThrough,
+                              SizedBox(width: 6.w),
+                              Flexible(
+                                child: Text(
+                                  CurrencyFormatter.formatRupiah(cartSubtotal),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 11.sp,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
                                 ),
                               ),
                             ],
@@ -486,6 +631,9 @@ class PosView extends GetView<PosController> {
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
                 ),
                 child: const Text('Bayar Sekarang'),
               ),
@@ -683,11 +831,14 @@ class PosView extends GetView<PosController> {
               children: [
                 Icon(Icons.shopping_cart_outlined, color: AppTheme.primary, size: 20.sp),
                 SizedBox(width: 8.w),
-                Text(
-                  'Keranjang Belanja',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
+                Expanded(
+                  child: Text(
+                    'Keranjang Belanja',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
+                  ),
                 ),
-                const Spacer(),
                 Obx(() {
                   final holdCount = controller.saleService.holdOrders.length;
                   return PopupMenuButton<String>(
