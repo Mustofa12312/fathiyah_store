@@ -430,7 +430,16 @@ class DashboardView extends GetView<DashboardController> {
                           ),
                           Icons.trending_down_rounded,
                           Colors.red.shade500,
-                          onTap: () => Get.toNamed(Routes.EXPENSE),
+                          onTap: () {
+                            if (isAdmin) {
+                              Get.to(() => const ExpenseListView());
+                            } else {
+                              Get.snackbar(
+                                'Akses Ditolak',
+                                'Hanya Admin yang dapat mengakses Pengeluaran',
+                              );
+                            }
+                          },
                         ),
                         _buildSummaryCard(
                           'Piutang',
@@ -601,81 +610,93 @@ class DashboardView extends GetView<DashboardController> {
     IconData icon,
     Color color, {
     String? subtitle,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(color: color.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 22.sp),
-              ),
-              Icon(
-                Icons.arrow_outward_rounded,
-                color: Colors.grey.shade300,
-                size: 16.sp,
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  amount,
-                  style: TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 17.sp,
-                    fontWeight: FontWeight.bold,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20.r),
+      child: Ink(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(color: color.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
                   ),
+                  child: Icon(icon, color: color, size: 20.sp),
                 ),
-              ),
-              if (subtitle != null) ...[
-                SizedBox(height: 2.h),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.purple.shade700,
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Icon(
+                  Icons.arrow_outward_rounded,
+                  color: Colors.grey.shade300,
+                  size: 16.sp,
                 ),
               ],
-            ],
-          ),
-        ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    amount,
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  SizedBox(height: 2.h),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.purple.shade700,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

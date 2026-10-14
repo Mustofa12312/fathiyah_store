@@ -143,4 +143,153 @@ void main() {
       expect(saleService.cartTotal, 0);
     });
   });
+
+  group('SaleModel Payment Status & Debt Getters', () {
+    test('isPaid, isPartial, isUnpaid and paymentStatusLabel behave correctly', () {
+      final paidSale = SaleModel(
+        id: 's1',
+        invoiceNumber: 'INV001',
+        items: [],
+        subtotal: 100000,
+        discount: 0,
+        total: 100000,
+        cashierId: 'u1',
+        cashierName: 'Admin',
+        createdAt: DateTime.now(),
+        paymentStatus: 'lunas',
+        paidAmount: 100000,
+        remainingAmount: 0,
+      );
+      expect(paidSale.isPaid, true);
+      expect(paidSale.isPartial, false);
+      expect(paidSale.isUnpaid, false);
+      expect(paidSale.paymentStatusLabel, 'Lunas');
+
+      final partialSale = SaleModel(
+        id: 's2',
+        invoiceNumber: 'INV002',
+        items: [],
+        subtotal: 100000,
+        discount: 0,
+        total: 100000,
+        cashierId: 'u1',
+        cashierName: 'Admin',
+        createdAt: DateTime.now(),
+        paymentStatus: 'sebagian',
+        paidAmount: 40000,
+        remainingAmount: 60000,
+      );
+      expect(partialSale.isPaid, false);
+      expect(partialSale.isPartial, true);
+      expect(partialSale.isUnpaid, false);
+      expect(partialSale.paymentStatusLabel, 'Sebagian');
+
+      final unpaidSale = SaleModel(
+        id: 's3',
+        invoiceNumber: 'INV003',
+        items: [],
+        subtotal: 100000,
+        discount: 0,
+        total: 100000,
+        cashierId: 'u1',
+        cashierName: 'Admin',
+        createdAt: DateTime.now(),
+        paymentStatus: 'belum_dibayar',
+        paidAmount: 0,
+        remainingAmount: 100000,
+      );
+      expect(unpaidSale.isPaid, false);
+      expect(unpaidSale.isPartial, false);
+      expect(unpaidSale.isUnpaid, true);
+      expect(unpaidSale.paymentStatusLabel, 'Belum Dibayar');
+
+      // Test remainingAmount fallback when status is empty
+      final unpaidFallbackSale = SaleModel(
+        id: 's4',
+        invoiceNumber: 'INV004',
+        items: [],
+        subtotal: 100000,
+        discount: 0,
+        total: 100000,
+        cashierId: 'u1',
+        cashierName: 'Admin',
+        createdAt: DateTime.now(),
+        paymentStatus: null,
+        paidAmount: 0,
+        remainingAmount: 100000,
+      );
+      expect(unpaidFallbackSale.isUnpaid, true);
+      expect(unpaidFallbackSale.paymentStatusLabel, 'Belum Dibayar');
+    });
+
+    test('SaleService getDebtsByCustomer scans local sales correctly', () async {
+      saleService.sales.addAll([
+        SaleModel(
+          id: 's_cust1_unpaid',
+          invoiceNumber: 'INV-101',
+          customerId: 'cust1',
+          customerName: 'Budi VIP',
+          items: [],
+          subtotal: 50000,
+          discount: 0,
+          total: 50000,
+          cashierId: 'u1',
+          cashierName: 'Admin',
+          createdAt: DateTime.now(),
+          paymentStatus: 'belum_dibayar',
+          paidAmount: 0,
+          remainingAmount: 50000,
+        ),
+        SaleModel(
+          id: 's_cust1_paid',
+          invoiceNumber: 'INV-102',
+          customerId: 'cust1',
+          customerName: 'Budi VIP',
+          items: [],
+          subtotal: 30000,
+          discount: 0,
+          total: 30000,
+          cashierId: 'u1',
+          cashierName: 'Admin',
+          createdAt: DateTime.now(),
+          paymentStatus: 'lunas',
+          paidAmount: 30000,
+          remainingAmount: 0,
+        ),
+        SaleModel(
+          id: 's_cust2_partial',
+          invoiceNumber: 'INV-103',
+          customerId: 'cust2',
+          customerName: 'Siti VIP',
+          items: [],
+          subtotal: 80000,
+          discount: 0,
+          total: 80000,
+          cashierId: 'u1',
+          cashierName: 'Admin',
+          createdAt: DateTime.now(),
+          paymentStatus: 'sebagian',
+          paidAmount: 30000,
+          remainingAmount: 50000,
+        ),
+      ]);
+
+      // Debts for cust1 should only return unpaid/partial
+      final cust1Debts = await saleService.getDebtsByCustomer('cust1');
+      expect(cust1Debts.length, 1);
+      expect(cust1Debts.first.id, 's_cust1_unpaid');
+      expect(cust1Debts.first.remainingAmount, 50000);
+
+      // All sales for cust1 should return both paid and unpaid
+      final cust1All = await saleService.getAllSalesForCustomer('cust1');
+      expect(cust1All.length, 2);
+
+      // Debts for cust2
+      final cust2Debts = await saleService.getDebtsByCustomer('cust2');
+      expect(cust2Debts.length, 1);
+      expect(cust2Debts.first.id, 's_cust2_partial');
+      expect(cust2Debts.first.remainingAmount, 50000);
+    });
+  });
 }
+
