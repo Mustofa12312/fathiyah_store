@@ -13,7 +13,7 @@ import 'checkout_view.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../data/services/printer_service.dart';
 import 'package:fathiyah_store/app/data/services/auth_service.dart';
-import '../../../core/widgets/supervisor_auth_dialog.dart';
+import '../../../core/widgets/discount_dialog.dart';
 import '../../../routes/app_pages.dart';
 
 class PosView extends GetView<PosController> {
@@ -396,6 +396,8 @@ class PosView extends GetView<PosController> {
     return Obx(() {
       final cartCount = controller.saleService.cartItems.length;
       final cartTotal = controller.saleService.cartTotal;
+      final cartSubtotal = controller.saleService.cartSubtotal;
+      final discount = controller.saleService.calculatedDiscount;
       
       if (cartCount == 0) return const SizedBox.shrink();
       
@@ -429,19 +431,48 @@ class PosView extends GetView<PosController> {
                               '$cartCount Barang',
                               style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.sp),
                             ),
+                            if (discount > 0) ...[
+                              SizedBox(width: 6.w),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple.shade50,
+                                  borderRadius: BorderRadius.circular(4.r),
+                                ),
+                                child: Text(
+                                  '-${CurrencyFormatter.formatRupiah(discount)}',
+                                  style: TextStyle(color: Colors.purple.shade800, fontSize: 10.sp, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                             SizedBox(width: 4.w),
                             Icon(Icons.keyboard_arrow_up_rounded, size: 16.sp, color: AppTheme.textSecondary),
                           ],
                         ),
-                        Text(
-                          CurrencyFormatter.formatRupiah(cartTotal),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.sp,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              CurrencyFormatter.formatRupiah(cartTotal),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18.sp,
+                              ),
+                            ),
+                            if (discount > 0) ...[
+                              SizedBox(width: 8.w),
+                              Text(
+                                CurrencyFormatter.formatRupiah(cartSubtotal),
+                                style: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 12.sp,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -758,29 +789,21 @@ class PosView extends GetView<PosController> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               InkWell(
-                                onTap: () {
-                                  if (item.quantity == 1) {
-                                    // If quantity will be 0 (deleted), require PIN
-                                    SupervisorAuthDialog.show(
-                                      actionDescription: 'Penghapusan item ${item.product.name} dari keranjang memerlukan izin Supervisor.',
-                                      onSuccess: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
-                                    );
-                                  } else {
-                                    // Just reducing quantity
-                                    controller.saleService.updateQuantity(item.product.id, item.quantity - 1);
-                                  }
-                                },
+                                onTap: () => controller.saleService.updateQuantity(item.product.id, item.quantity - 1),
                                 borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                                   child: Icon(Icons.remove, color: Colors.red.shade400, size: 18.sp),
                                 ),
                               ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                child: Text(
-                                  '${item.quantity}',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                              InkWell(
+                                onTap: () => _showEditQuantityDialog(context, item),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                  child: Text(
+                                    '${item.quantity}',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                                  ),
                                 ),
                               ),
                               InkWell(
@@ -801,8 +824,149 @@ class PosView extends GetView<PosController> {
               );
             }),
           ),
+          // Diskon Transaksi Section
+          Obx(() {
+            final cartItems = controller.saleService.cartItems;
+            if (cartItems.isEmpty) return const SizedBox.shrink();
+
+            final discount = controller.saleService.calculatedDiscount;
+            final isPercentage = controller.saleService.discountType.value == 'percentage';
+            final percentVal = controller.saleService.discountPercent.value;
+
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: discount > 0 ? Colors.purple.shade50 : Colors.grey.shade50,
+                border: const Border(top: BorderSide(color: AppTheme.divider)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: discount > 0 ? Colors.purple.shade100 : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Icon(
+                      Icons.discount_rounded,
+                      color: discount > 0 ? Colors.purple.shade800 : Colors.grey.shade700,
+                      size: 18.sp,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => DiscountDialog.show(Get.context!, controller.saleService),
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                discount > 0
+                                    ? 'Diskon ${isPercentage ? "(${percentVal.toStringAsFixed(percentVal.truncateToDouble() == percentVal ? 0 : 1)}%)" : ""}'
+                                    : 'Diskon Transaksi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.sp,
+                                  color: discount > 0 ? Colors.purple.shade900 : AppTheme.textPrimary,
+                                ),
+                              ),
+                              if (discount > 0) ...[
+                                SizedBox(width: 6.w),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade200,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    'Aktif',
+                                    style: TextStyle(
+                                      color: Colors.purple.shade900,
+                                      fontSize: 9.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            discount > 0
+                                ? '- ${CurrencyFormatter.formatRupiah(discount)}'
+                                : 'Ketuk untuk tambah potongan harga',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: discount > 0 ? Colors.red.shade700 : AppTheme.textSecondary,
+                              fontWeight: discount > 0 ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (discount > 0) ...[
+                    IconButton(
+                      icon: Icon(Icons.edit_outlined, size: 18.sp, color: Colors.purple.shade800),
+                      tooltip: 'Ubah Diskon',
+                      onPressed: () => DiscountDialog.show(Get.context!, controller.saleService),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close_rounded, size: 20.sp, color: Colors.red.shade600),
+                      tooltip: 'Hapus Diskon',
+                      onPressed: () => controller.saleService.removeDiscount(),
+                    ),
+                  ] else ...[
+                    OutlinedButton.icon(
+                      onPressed: () => DiscountDialog.show(Get.context!, controller.saleService),
+                      icon: Icon(Icons.add, size: 14.sp, color: AppTheme.primary),
+                      label: Text('Diskon', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                        side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.5)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
         ],
       ),
+    );
+  }
+
+  void _showEditQuantityDialog(BuildContext context, dynamic item) {
+    final qtyController = TextEditingController(text: item.quantity.toString());
+    Get.defaultDialog(
+      title: 'Ubah Jumlah',
+      content: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          controller: qtyController,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Jumlah Produk',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      textConfirm: 'Simpan',
+      textCancel: 'Batal',
+      confirmTextColor: Colors.white,
+      buttonColor: AppTheme.primary,
+      onConfirm: () {
+        final newQty = int.tryParse(qtyController.text);
+        if (newQty != null) {
+          controller.saleService.updateQuantity(item.product.id, newQty);
+        }
+        Get.back(); // close dialog
+      },
     );
   }
 

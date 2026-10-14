@@ -98,7 +98,16 @@ class ReceiptView extends StatelessWidget {
                     SizedBox(height: 16.h),
 
                     // Total & Payment
-                    _buildTotalRow('Total Belanja', sale.totalAmount),
+                    if (sale.discount > 0) ...[
+                      _buildTotalRow('Subtotal', sale.subtotal),
+                      _buildTotalRow(
+                        'Diskon',
+                        sale.discount,
+                        isHighlight: true,
+                        customValue: '- ${CurrencyFormatter.formatRupiah(sale.discount)}',
+                      ),
+                    ],
+                    _buildTotalRow('Total Tagihan', sale.totalAmount),
                     _buildTotalRow('Dibayar', sale.paidAmount),
                     
                     if (sale.remainingAmount > 0)
@@ -190,7 +199,7 @@ class ReceiptView extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalRow(String label, int amount, {bool isHighlight = false}) {
+  Widget _buildTotalRow(String label, int amount, {bool isHighlight = false, String? customValue}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
@@ -198,7 +207,7 @@ class ReceiptView extends StatelessWidget {
         children: [
           Text(label, style: TextStyle(fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal)),
           Text(
-            CurrencyFormatter.formatRupiah(amount),
+            customValue ?? CurrencyFormatter.formatRupiah(amount),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isHighlight ? Colors.red.shade700 : Colors.black,
@@ -232,6 +241,10 @@ class ReceiptView extends StatelessWidget {
     }
     
     sb.writeln("──────────────────");
+    if (sale.discount > 0) {
+      sb.writeln("Subtotal: ${CurrencyFormatter.formatRupiah(sale.subtotal)}");
+      sb.writeln("Diskon: -${CurrencyFormatter.formatRupiah(sale.discount)}");
+    }
     sb.writeln("Total: *${CurrencyFormatter.formatRupiah(sale.totalAmount)}*");
     sb.writeln("Dibayar: ${CurrencyFormatter.formatRupiah(sale.paidAmount)}");
     
@@ -291,6 +304,10 @@ class ReceiptView extends StatelessWidget {
     }
     
     sb.writeln("──────────────────");
+    if (sale.discount > 0) {
+      sb.writeln("Subtotal: ${CurrencyFormatter.formatRupiah(sale.subtotal)}");
+      sb.writeln("Diskon: -${CurrencyFormatter.formatRupiah(sale.discount)}");
+    }
     sb.writeln("Total: *${CurrencyFormatter.formatRupiah(sale.totalAmount)}*");
     sb.writeln("Dibayar: ${CurrencyFormatter.formatRupiah(sale.paidAmount)}");
     

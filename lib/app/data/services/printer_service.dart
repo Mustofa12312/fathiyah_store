@@ -87,6 +87,10 @@ class PrinterService extends GetxService {
       }
       
       bluetooth.printCustom("--------------------------------", 1, 1);
+      if (sale.discount > 0) {
+        bluetooth.printLeftRight('Subtotal', CurrencyFormatter.formatRupiah(sale.subtotal), 1, format: "%-15s %15s %n");
+        bluetooth.printLeftRight('Diskon', "-${CurrencyFormatter.formatRupiah(sale.discount)}", 1, format: "%-15s %15s %n");
+      }
       bluetooth.printLeftRight('Total', CurrencyFormatter.formatRupiah(sale.totalAmount), 1, format: "%-15s %15s %n");
       bluetooth.printLeftRight('Dibayar', CurrencyFormatter.formatRupiah(sale.paidAmount), 1, format: "%-15s %15s %n");
       

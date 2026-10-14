@@ -27,6 +27,9 @@ class HoldOrderModel {
   final DateTime time;
   final CustomerModel? customer;
   final List<CartItem> items;
+  final int discountAmount;
+  final String discountType;
+  final double discountPercent;
 
   HoldOrderModel({
     required this.id,
@@ -34,11 +37,14 @@ class HoldOrderModel {
     required this.time,
     this.customer,
     required this.items,
+    this.discountAmount = 0,
+    this.discountType = 'nominal',
+    this.discountPercent = 0.0,
   });
 }
 
 class SaleService extends GetxService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
   final AuthService _authService = Get.find<AuthService>();
   final ShiftService _shiftService = Get.find<ShiftService>();
 
@@ -48,6 +54,11 @@ class SaleService extends GetxService {
 
   final Rx<CustomerModel?> selectedCustomer = Rx<CustomerModel?>(null);
 
+  // Discount state
+  final RxInt discountAmount = 0.obs;
+  final RxString discountType = 'nominal'.obs; // 'nominal' | 'percentage'
+  final RxDouble discountPercent = 0.0.obs;
+
   Future<SaleService> init() async {
     _firestore.collection('sales').orderBy('createdAt', descending: true).limit(100).snapshots().listen((snapshot) {
       sales.value = snapshot.docs.map((doc) => SaleModel.fromJson(doc.data(), doc.id)).toList();
@@ -55,13 +66,52 @@ class SaleService extends GetxService {
     return this;
   }
 
-  int get cartTotal {
+  int get cartSubtotal {
     return cartItems.fold(0, (total, item) => total + item.subtotal);
+  }
+
+  int get calculatedDiscount {
+    final subtotal = cartSubtotal;
+    if (subtotal <= 0) return 0;
+    if (discountType.value == 'percentage') {
+      final pct = discountPercent.value;
+      if (pct <= 0) return 0;
+      final disc = (subtotal * pct / 100).round();
+      return disc > subtotal ? subtotal : disc;
+    } else {
+      final disc = discountAmount.value;
+      return disc > subtotal ? subtotal : disc;
+    }
+  }
+
+  int get cartTotal {
+    final total = cartSubtotal - calculatedDiscount;
+    return total < 0 ? 0 : total;
+  }
+
+  void setNominalDiscount(int amount) {
+    discountType.value = 'nominal';
+    discountAmount.value = amount < 0 ? 0 : amount;
+    discountPercent.value = 0.0;
+  }
+
+  void setPercentageDiscount(double percent) {
+    discountType.value = 'percentage';
+    discountPercent.value = percent < 0 ? 0.0 : (percent > 100 ? 100.0 : percent);
+    discountAmount.value = 0;
+  }
+
+  void removeDiscount() {
+    discountType.value = 'nominal';
+    discountAmount.value = 0;
+    discountPercent.value = 0.0;
   }
 
   void addToCart(ProductModel product) {
     if (product.stock <= 0) {
-      Get.snackbar('Error', 'Stok ${product.name} habis!', snackPosition: SnackPosition.BOTTOM);
+      if (!Get.testMode) {
+        Get.snackbar('Error', 'Stok ${product.name} habis!', snackPosition: SnackPosition.BOTTOM);
+      }
       return;
     }
 
@@ -71,7 +121,9 @@ class SaleService extends GetxService {
         cartItems[existingIndex].quantity++;
         cartItems.refresh();
       } else {
-        Get.snackbar('Peringatan', 'Maksimal stok tercapai', snackPosition: SnackPosition.BOTTOM);
+        if (!Get.testMode) {
+          Get.snackbar('Peringatan', 'Maksimal stok tercapai', snackPosition: SnackPosition.BOTTOM);
+        }
       }
     } else {
       cartItems.add(CartItem(product: product));
@@ -87,7 +139,9 @@ class SaleService extends GetxService {
         cartItems[index].quantity = newQuantity;
         cartItems.refresh();
       } else {
-        Get.snackbar('Peringatan', 'Stok tidak mencukupi', snackPosition: SnackPosition.BOTTOM);
+        if (!Get.testMode) {
+          Get.snackbar('Peringatan', 'Stok tidak mencukupi', snackPosition: SnackPosition.BOTTOM);
+        }
       }
     }
   }
@@ -99,6 +153,7 @@ class SaleService extends GetxService {
   void clearCart() {
     cartItems.clear();
     selectedCustomer.value = null;
+    removeDiscount();
   }
 
   void holdOrder(String note) {
@@ -110,6 +165,9 @@ class SaleService extends GetxService {
       time: DateTime.now(),
       customer: selectedCustomer.value,
       items: List<CartItem>.from(cartItems),
+      discountAmount: discountAmount.value,
+      discountType: discountType.value,
+      discountPercent: discountPercent.value,
     ));
     
     clearCart();
@@ -125,6 +183,9 @@ class SaleService extends GetxService {
       cartItems.clear();
       cartItems.addAll(hold.items);
       selectedCustomer.value = hold.customer;
+      discountAmount.value = hold.discountAmount;
+      discountType.value = hold.discountType;
+      discountPercent.value = hold.discountPercent;
       holdOrders.removeWhere((h) => h.id == holdId);
     }
   }
@@ -134,6 +195,8 @@ class SaleService extends GetxService {
     required String paymentMethod,
     List<Map<String, dynamic>>? splitPayments,
   }) async {
+    final subtotal = cartSubtotal;
+    final discount = calculatedDiscount;
     final total = cartTotal;
     final remaining = total - paidAmount;
     
@@ -151,7 +214,10 @@ class SaleService extends GetxService {
       customerType: selectedCustomer.value?.type ?? 'general',
       cashierId: _authService.currentUser.value?.id ?? 'unknown',
       cashierName: _authService.currentUser.value?.name ?? 'Unknown',
-      subtotal: total,
+      subtotal: subtotal,
+      discount: discount,
+      discountType: discountType.value,
+      discountPercent: discountPercent.value,
       totalAmount: total,
       paidAmount: paidAmount,
       remainingAmount: remaining > 0 ? remaining : 0,

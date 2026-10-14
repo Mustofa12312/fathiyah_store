@@ -50,6 +50,10 @@ class ReportController extends GetxController {
 
 
 
+  // 0. Penjualan Kotor & Diskon
+  int get filteredGrossSales => _calculator.filteredGrossSales;
+  int get filteredDiscount => _calculator.filteredDiscount;
+
   // 1. Omzet
   int get filteredOmzet => _calculator.filteredOmzet;
 
@@ -102,7 +106,9 @@ class ReportController extends GetxController {
       ]);
 
       // Add Data Rows
-      sheetObject.appendRow([TextCellValue('Omzet (Total Penjualan)'), IntCellValue(filteredOmzet)]);
+      sheetObject.appendRow([TextCellValue('Penjualan Kotor (Sebelum Diskon)'), IntCellValue(filteredGrossSales)]);
+      sheetObject.appendRow([TextCellValue('Total Potongan Diskon'), IntCellValue(filteredDiscount)]);
+      sheetObject.appendRow([TextCellValue('Omzet Bersih (Total Penjualan)'), IntCellValue(filteredOmzet)]);
       sheetObject.appendRow([TextCellValue('Uang Tunai Masuk'), IntCellValue(filteredCashInHand)]);
       sheetObject.appendRow([TextCellValue('Modal Terjual (COGS)'), IntCellValue(filteredCapital)]);
       sheetObject.appendRow([TextCellValue('Laba Kotor'), IntCellValue(filteredGrossProfit)]);

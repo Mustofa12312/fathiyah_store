@@ -364,7 +364,34 @@ class DashboardView extends GetView<DashboardController> {
                       fontSize: 18.sp,
                     ),
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 12.h),
+
+                  // Today Discount Banner if any
+                  Obx(() {
+                    final discount = controller.todayDiscounts;
+                    if (discount <= 0) return const SizedBox.shrink();
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade50,
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(color: Colors.purple.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.discount_rounded, color: Colors.purple.shade700, size: 18.sp),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              'Total diskon hari ini: ${CurrencyFormatter.formatRupiah(discount)} (Omzet Bersih: ${CurrencyFormatter.formatRupiah(controller.todaySales)})',
+                              style: TextStyle(color: Colors.purple.shade900, fontSize: 11.5.sp, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
 
                   // Summary Cards Grid
                   Obx(() {
@@ -382,6 +409,9 @@ class DashboardView extends GetView<DashboardController> {
                           CurrencyFormatter.formatRupiah(controller.todaySales),
                           Icons.trending_up_rounded,
                           AppTheme.primary,
+                          subtitle: controller.todayDiscounts > 0 
+                              ? 'Diskon: -${CurrencyFormatter.formatRupiah(controller.todayDiscounts)}' 
+                              : null,
                         ),
                         _buildSummaryCard(
                           'Uang Masuk',
@@ -565,8 +595,9 @@ class DashboardView extends GetView<DashboardController> {
     String title,
     String amount,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    String? subtitle,
+  }) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -627,6 +658,17 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                 ),
               ),
+              if (subtitle != null) ...[
+                SizedBox(height: 2.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.purple.shade700,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ],
           ),
         ],

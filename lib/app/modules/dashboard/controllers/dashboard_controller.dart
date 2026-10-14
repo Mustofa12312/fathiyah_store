@@ -19,19 +19,31 @@ class DashboardController extends GetxController {
 
   int get todaySales {
     return _saleService.sales
-        .where((s) => _isToday(s.createdAt))
+        .where((s) => _isToday(s.createdAt) && s.transactionStatus != 'voided')
         .fold(0, (sum, item) => sum + item.totalAmount);
+  }
+
+  int get todayGrossSales {
+    return _saleService.sales
+        .where((s) => _isToday(s.createdAt) && s.transactionStatus != 'voided')
+        .fold(0, (sum, item) => sum + item.subtotal);
+  }
+
+  int get todayDiscounts {
+    return _saleService.sales
+        .where((s) => _isToday(s.createdAt) && s.transactionStatus != 'voided')
+        .fold(0, (sum, item) => sum + item.discount);
   }
 
   int get todayCashIn {
     return _saleService.sales
-        .where((s) => _isToday(s.createdAt))
+        .where((s) => _isToday(s.createdAt) && s.transactionStatus != 'voided')
         .fold(0, (sum, item) => sum + item.paidAmount);
   }
 
   int get todayDebt {
     return _saleService.sales
-        .where((s) => _isToday(s.createdAt))
+        .where((s) => _isToday(s.createdAt) && s.transactionStatus != 'voided')
         .fold(0, (sum, item) => sum + item.remainingAmount);
   }
 

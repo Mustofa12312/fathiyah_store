@@ -43,6 +43,9 @@ class SaleModel {
   final String cashierId;
   final String cashierName;
   final int subtotal;
+  final int discount; // Nilai potongan harga dalam rupiah
+  final String? discountType; // 'nominal' | 'percentage'
+  final double? discountPercent; // persentase jika tipe percentage
   final int totalAmount;
   final int paidAmount;
   final int remainingAmount;
@@ -60,6 +63,9 @@ class SaleModel {
     required this.cashierId,
     required this.cashierName,
     required this.subtotal,
+    this.discount = 0,
+    this.discountType,
+    this.discountPercent,
     required this.totalAmount,
     required this.paidAmount,
     required this.remainingAmount,
@@ -79,6 +85,9 @@ class SaleModel {
       cashierId: json['cashierId'],
       cashierName: json['cashierName'],
       subtotal: MoneyEngine.parse(json['subtotal']),
+      discount: json['discount'] != null ? MoneyEngine.parse(json['discount']) : 0,
+      discountType: json['discountType'],
+      discountPercent: json['discountPercent'] != null ? (json['discountPercent'] as num).toDouble() : null,
       totalAmount: MoneyEngine.parse(json['totalAmount']),
       paidAmount: MoneyEngine.parse(json['paidAmount']),
       remainingAmount: MoneyEngine.parse(json['remainingAmount']),
@@ -100,6 +109,9 @@ class SaleModel {
       'cashierId': cashierId,
       'cashierName': cashierName,
       'subtotal': subtotal,
+      'discount': discount,
+      'discountType': discountType,
+      'discountPercent': discountPercent,
       'totalAmount': totalAmount,
       'paidAmount': paidAmount,
       'remainingAmount': remainingAmount,

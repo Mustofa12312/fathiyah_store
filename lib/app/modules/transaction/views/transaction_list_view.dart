@@ -72,7 +72,26 @@ class TransactionListView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 8.h),
-                    Text('${DateFormat('dd MMM yyyy HH:mm').format(sale.createdAt)} • Kasir: ${sale.cashierName}'),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8.w,
+                      runSpacing: 4.h,
+                      children: [
+                        Text('${DateFormat('dd MMM yyyy HH:mm').format(sale.createdAt)} • Kasir: ${sale.cashierName}'),
+                        if (sale.discount > 0)
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.shade50,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              'Diskon -${CurrencyFormatter.formatRupiah(sale.discount)}',
+                              style: TextStyle(color: Colors.purple.shade800, fontSize: 10.sp, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                      ],
+                    ),
                     if (isVoided)
                       Padding(
                         padding: EdgeInsets.only(top: 8.h),

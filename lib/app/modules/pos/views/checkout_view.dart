@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../controllers/pos_controller.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
+import '../../../core/widgets/discount_dialog.dart';
 
 class CheckoutView extends GetView<PosController> {
   const CheckoutView({super.key});
@@ -68,18 +69,116 @@ class CheckoutView extends GetView<PosController> {
                           BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
                         ],
                       ),
-                      child: Column(
-                        children: [
-                          Text('Total Tagihan', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14.sp)),
-                          SizedBox(height: 8.h),
-                          Obx(() => Text(
-                            CurrencyFormatter.formatRupiah(controller.saleService.cartTotal),
-                            style: TextStyle(color: Colors.white, fontSize: 36.sp, fontWeight: FontWeight.bold),
-                          )),
-                        ],
-                      ),
+                      child: Obx(() {
+                        final total = controller.saleService.cartTotal;
+                        final subtotal = controller.saleService.cartSubtotal;
+                        final discount = controller.saleService.calculatedDiscount;
+                        return Column(
+                          children: [
+                            Text('Total Tagihan', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14.sp)),
+                            SizedBox(height: 8.h),
+                            Text(
+                              CurrencyFormatter.formatRupiah(total),
+                              style: TextStyle(color: Colors.white, fontSize: 36.sp, fontWeight: FontWeight.bold),
+                            ),
+                            if (discount > 0) ...[
+                              SizedBox(height: 10.h),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Text(
+                                  'Subtotal: ${CurrencyFormatter.formatRupiah(subtotal)} • Hemat: ${CurrencyFormatter.formatRupiah(discount)}',
+                                  style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      }),
                     ),
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 24.h),
+
+                    // Diskon Transaksi Card
+                    Text('Diskon', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),
+                    SizedBox(height: 8.h),
+                    Obx(() {
+                      final discount = controller.saleService.calculatedDiscount;
+                      final isPercentage = controller.saleService.discountType.value == 'percentage';
+                      final percentVal = controller.saleService.discountPercent.value;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 4)),
+                          ],
+                          border: Border.all(color: discount > 0 ? Colors.purple.shade200 : Colors.grey.shade100, width: discount > 0 ? 1.5 : 1),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => DiscountDialog.show(context, controller.saleService),
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: Padding(
+                              padding: EdgeInsets.all(16.w),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(10.w),
+                                    decoration: BoxDecoration(
+                                      color: discount > 0 ? Colors.purple.shade50 : AppTheme.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.discount_rounded,
+                                      color: discount > 0 ? Colors.purple.shade700 : AppTheme.primary,
+                                      size: 24.sp,
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          discount > 0
+                                              ? 'Diskon ${isPercentage ? "(${percentVal.toStringAsFixed(percentVal.truncateToDouble() == percentVal ? 0 : 1)}%)" : ""}'
+                                              : 'Diskon Transaksi (Opsional)',
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: AppTheme.textPrimary),
+                                        ),
+                                        Text(
+                                          discount > 0
+                                              ? '- ${CurrencyFormatter.formatRupiah(discount)}'
+                                              : 'Ketuk untuk memasukkan potongan harga',
+                                          style: TextStyle(
+                                            color: discount > 0 ? Colors.red.shade700 : AppTheme.textSecondary,
+                                            fontSize: 12.sp,
+                                            fontWeight: discount > 0 ? FontWeight.w600 : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (discount > 0)
+                                    IconButton(
+                                      icon: Icon(Icons.close_rounded, color: Colors.red.shade400, size: 20.sp),
+                                      onPressed: () => controller.saleService.removeDiscount(),
+                                      tooltip: 'Hapus Diskon',
+                                    )
+                                  else
+                                    Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    SizedBox(height: 24.h),
 
                     // Pemilihan Pelanggan
                     Text('Pelanggan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppTheme.textSecondary)),

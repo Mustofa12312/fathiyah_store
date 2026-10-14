@@ -140,17 +140,34 @@ class ReportView extends GetView<ReportController> {
                                 ),
                                 child: Row(
                                   children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Total Omzet', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
-                                      SizedBox(height: 4.h),
-                                      Text(CurrencyFormatter.formatRupiah(c.filteredOmzet), style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            )
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Omzet Bersih', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
+                                          SizedBox(height: 4.h),
+                                          Text(CurrencyFormatter.formatRupiah(c.filteredOmzet), style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(width: 1, height: 32.h, color: Colors.white24),
+                                    SizedBox(width: 16.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Total Diskon', style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            c.filteredDiscount > 0 ? '- ${CurrencyFormatter.formatRupiah(c.filteredDiscount)}' : 'Rp 0',
+                                            style: TextStyle(color: Colors.amber.shade200, fontSize: 14.sp, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
                             ],
                           ),
                         ),
@@ -177,12 +194,15 @@ class ReportView extends GetView<ReportController> {
                         Text('Analisis Keuangan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp, color: AppTheme.textPrimary)),
                         SizedBox(height: 16.h),
 
-                        _buildReportCard('Laba Kotor', 'Omzet - Modal', c.filteredGrossProfit, Icons.trending_up_rounded, Colors.green),
+                        _buildReportCard('Penjualan Kotor', 'Sebelum Potongan Diskon', c.filteredGrossSales, Icons.point_of_sale_rounded, Colors.indigo.shade600),
+                        if (c.filteredDiscount > 0)
+                          _buildReportCard('Total Diskon Diberikan', 'Potongan Penjualan', c.filteredDiscount, Icons.discount_rounded, Colors.purple.shade600),
+                        _buildReportCard('Laba Kotor', 'Omzet Bersih - Modal Barang', c.filteredGrossProfit, Icons.trending_up_rounded, Colors.green),
                         _buildReportCard('Pengeluaran', 'Biaya Operasional', c.filteredExpense, Icons.trending_down_rounded, Colors.red, onTap: () => Get.to(() => const ExpenseListView())),
                         
                         SizedBox(height: 8.h),
                         
-                        _buildReportCard('Laba Bersih', 'Profit Akhir', c.filteredNetProfit, Icons.emoji_events_rounded, AppTheme.primary, isHighlight: true),
+                        _buildReportCard('Laba Bersih', 'Profit Akhir Toko', c.filteredNetProfit, Icons.emoji_events_rounded, AppTheme.primary, isHighlight: true),
                         
                         SizedBox(height: 16.h),
                         

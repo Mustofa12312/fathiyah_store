@@ -47,6 +47,7 @@ void main() {
     // NOTE: Because SaleService calls FirebaseFirestore.instance on initialization,
     // we must ensure it doesn't crash. Normally we'd pass the firestore instance in constructor.
     // However, since we just test cart logic, it might work if we don't call init().
+    Get.testMode = true;
     saleService = SaleService();
   });
 
@@ -104,6 +105,42 @@ void main() {
       saleService.updateQuantity('p1', 0);
       
       expect(saleService.cartItems.length, 0);
+    });
+
+    test('Nominal discount reduces cartTotal correctly', () {
+      saleService.addToCart(testProduct); // 15000
+      saleService.addToCart(testProduct); // 30000
+      
+      expect(saleService.cartSubtotal, 30000);
+      saleService.setNominalDiscount(5000);
+
+      expect(saleService.calculatedDiscount, 5000);
+      expect(saleService.cartTotal, 25000);
+    });
+
+    test('Percentage discount calculates discount proportionally', () {
+      saleService.addToCart(testProduct); // 15000
+      saleService.addToCart(testProduct); // 30000
+      
+      saleService.setPercentageDiscount(10.0); // 10% dari 30000 = 3000
+
+      expect(saleService.calculatedDiscount, 3000);
+      expect(saleService.cartTotal, 27000);
+    });
+
+    test('Discount cannot exceed subtotal and resets on clearCart', () {
+      saleService.addToCart(testProduct); // 15000
+      saleService.setNominalDiscount(20000); // Exceeds 15000
+
+      // Clamped to subtotal (15000) so total is 0
+      expect(saleService.calculatedDiscount, 15000);
+      expect(saleService.cartTotal, 0);
+
+      // clearCart should reset discount
+      saleService.clearCart();
+      expect(saleService.cartItems.length, 0);
+      expect(saleService.calculatedDiscount, 0);
+      expect(saleService.cartTotal, 0);
     });
   });
 }

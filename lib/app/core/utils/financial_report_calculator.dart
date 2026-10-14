@@ -33,20 +33,34 @@ class FinancialReportCalculator {
     }
   }
 
-  // 1. Omzet
+  bool _isActiveSale(SaleModel s) {
+    return s.transactionStatus != 'voided' && _isWithinFilter(s.createdAt);
+  }
+
+  // 1. Penjualan Kotor (Sebelum Diskon)
+  int get filteredGrossSales {
+    return sales.where(_isActiveSale).fold(0, (sum, s) => sum + s.subtotal);
+  }
+
+  // 2. Total Potongan Diskon
+  int get filteredDiscount {
+    return sales.where(_isActiveSale).fold(0, (sum, s) => sum + s.discount);
+  }
+
+  // 3. Omzet Bersih (Setelah Diskon)
   int get filteredOmzet {
-    return sales.where((s) => _isWithinFilter(s.createdAt)).fold(0, (sum, s) => sum + s.totalAmount);
+    return sales.where(_isActiveSale).fold(0, (sum, s) => sum + s.totalAmount);
   }
 
-  // 2. Cash In Hand
+  // 4. Cash In Hand
   int get filteredCashInHand {
-    return sales.where((s) => _isWithinFilter(s.createdAt)).fold(0, (sum, s) => sum + s.paidAmount);
+    return sales.where(_isActiveSale).fold(0, (sum, s) => sum + s.paidAmount);
   }
 
-  // 3. Modal Barang Terjual
+  // 5. Modal Barang Terjual
   int get filteredCapital {
     int totalCapital = 0;
-    final filteredSales = sales.where((s) => _isWithinFilter(s.createdAt));
+    final filteredSales = sales.where(_isActiveSale);
     
     for (var sale in filteredSales) {
       for (var item in sale.items) {
@@ -59,15 +73,15 @@ class FinancialReportCalculator {
     return totalCapital;
   }
 
-  // 4. Laba Kotor
+  // 6. Laba Kotor
   int get filteredGrossProfit => filteredOmzet - filteredCapital;
 
-  // 5. Total Pengeluaran
+  // 7. Total Pengeluaran
   int get filteredExpense {
     return expenses.where((e) => _isWithinFilter(e.createdAt)).fold(0, (sum, e) => sum + e.amount);
   }
 
-  // 6. Laba Bersih
+  // 8. Laba Bersih
   int get filteredNetProfit => filteredGrossProfit - filteredExpense;
 
   ChartDataPayload getChartData() {
@@ -81,14 +95,14 @@ class FinancialReportCalculator {
       omzetData = List.filled(4, 0.0);
       expenseData = List.filled(4, 0.0);
       
-      final currentMonthSales = sales.where((s) => s.createdAt.year == now.year && s.createdAt.month == now.month);
+      final currentMonthSales = sales.where((s) => s.transactionStatus != 'voided' && s.createdAt.year == now.year && s.createdAt.month == now.month);
       for (var s in currentMonthSales) {
         int week = (s.createdAt.day - 1) ~/ 7;
         if (week > 3) week = 3;
         omzetData[week] += s.totalAmount;
       }
       
-      final currentMonthExpense = expenses.where((s) => s.createdAt.year == now.year && s.createdAt.month == now.month);
+      final currentMonthExpense = expenses.where((e) => _isWithinFilter(e.createdAt)).where((s) => s.createdAt.year == now.year && s.createdAt.month == now.month);
       for (var s in currentMonthExpense) {
         int week = (s.createdAt.day - 1) ~/ 7;
         if (week > 3) week = 3;
@@ -99,7 +113,7 @@ class FinancialReportCalculator {
       omzetData = List.filled(12, 0.0);
       expenseData = List.filled(12, 0.0);
       
-      final currentYearSales = sales.where((s) => s.createdAt.year == now.year);
+      final currentYearSales = sales.where((s) => s.transactionStatus != 'voided' && s.createdAt.year == now.year);
       for (var s in currentYearSales) {
         omzetData[s.createdAt.month - 1] += s.totalAmount;
       }
@@ -119,7 +133,7 @@ class FinancialReportCalculator {
         labels[i] = indoDays[date.weekday - 1];
         
         omzetData[i] = sales.where((s) {
-          return s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
+          return s.transactionStatus != 'voided' && s.createdAt.year == date.year && s.createdAt.month == date.month && s.createdAt.day == date.day;
         }).fold(0.0, (sum, s) => sum + s.totalAmount);
         
         expenseData[i] = expenses.where((s) {

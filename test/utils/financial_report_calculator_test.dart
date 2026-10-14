@@ -116,6 +116,42 @@ void main() {
       expect(calculator.filteredNetProfit, 20000);
     });
 
+    test('Sale with discount correctly affects Gross Sales, Net Omzet, and Profits', () {
+      final saleWithDiscount = SaleModel(
+        id: 's_discount',
+        customerType: 'general',
+        cashierId: 'cashier1',
+        cashierName: 'Cashier 1',
+        subtotal: 50000,
+        discount: 10000, // Diskon 10.000
+        discountType: 'nominal',
+        totalAmount: 40000, // Net omzet = 50000 - 10000 = 40000
+        paidAmount: 40000,
+        remainingAmount: 0,
+        paymentStatus: 'lunas',
+        paymentMethod: 'cash',
+        items: [
+          SaleItemModel(productId: 'p1', productName: 'Produk A', quantity: 2, price: 15000, subtotal: 30000), // Modal 20000
+          SaleItemModel(productId: 'p2', productName: 'Produk B', quantity: 1, price: 20000, subtotal: 20000), // Modal 20000 (total modal = 40000)
+        ],
+        createdAt: now,
+      );
+
+      final calc = FinancialReportCalculator(
+        sales: [saleWithDiscount],
+        expenses: [],
+        products: dummyProducts,
+        filter: 'Hari Ini',
+      );
+
+      expect(calc.filteredGrossSales, 50000); // Subtotal
+      expect(calc.filteredDiscount, 10000); // Diskon
+      expect(calc.filteredOmzet, 40000); // Net omzet
+      expect(calc.filteredCapital, 40000); // COGS (2*10000 + 1*20000)
+      expect(calc.filteredGrossProfit, 0); // 40000 - 40000 = 0
+      expect(calc.filteredNetProfit, 0);
+    });
+
     test('Filter "Semua" calculates all expenses including past ones', () {
       final calculator = FinancialReportCalculator(
         sales: dummySales,
