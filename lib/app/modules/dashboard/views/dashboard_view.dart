@@ -400,9 +400,9 @@ class DashboardView extends GetView<DashboardController> {
                       crossAxisCount: isTablet ? 4 : 2,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 16.w,
-                      mainAxisSpacing: 16.w,
-                      childAspectRatio: isTablet ? 1.3 : 1.1,
+                      crossAxisSpacing: 14.w,
+                      mainAxisSpacing: 14.w,
+                      childAspectRatio: isTablet ? 1.05 : 1.1,
                       children: [
                         _buildSummaryCard(
                           'Penjualan',
@@ -412,6 +412,7 @@ class DashboardView extends GetView<DashboardController> {
                           subtitle: controller.todayDiscounts > 0 
                               ? 'Diskon: -${CurrencyFormatter.formatRupiah(controller.todayDiscounts)}' 
                               : null,
+                          onTap: () => Get.to(() => const TransactionListView()),
                         ),
                         _buildSummaryCard(
                           'Uang Masuk',
@@ -420,6 +421,7 @@ class DashboardView extends GetView<DashboardController> {
                           ),
                           Icons.account_balance_wallet_rounded,
                           AppTheme.accent,
+                          onTap: () => Get.to(() => const TransactionListView()),
                         ),
                         _buildSummaryCard(
                           'Pengeluaran',
@@ -428,12 +430,14 @@ class DashboardView extends GetView<DashboardController> {
                           ),
                           Icons.trending_down_rounded,
                           Colors.red.shade500,
+                          onTap: () => Get.toNamed(Routes.EXPENSE),
                         ),
                         _buildSummaryCard(
                           'Piutang',
                           CurrencyFormatter.formatRupiah(controller.todayDebt),
                           Icons.receipt_long_rounded,
                           AppTheme.vipGold,
+                          onTap: () => Get.to(() => const DebtListView()),
                         ),
                       ],
                     );
