@@ -351,46 +351,108 @@ class SaleService extends GetxService {
   
   Future<Map<String, int>> getDebtsByCustomer() async {
     final Map<String, int> debts = {};
+
+    // 1. Scan in-memory sales first (fast, works offline, reactive)
+    for (var sale in sales) {
+      if (sale.transactionStatus != 'voided' && sale.remainingAmount > 0) {
+        final cid = sale.customerId ?? 'general';
+        debts[cid] = (debts[cid] ?? 0) + sale.remainingAmount;
+      }
+    }
+
+    // 2. Also query Firestore for any sales not in current memory
     try {
       final snapshot = await _firestore.collection('sales')
-          .where('paymentStatus', whereIn: ['PARTIAL', 'UNPAID'])
+          .where('paymentStatus', whereIn: ['sebagian', 'belum_dibayar', 'PARTIAL', 'UNPAID', 'partial', 'unpaid'])
           .get();
       
+      final Map<String, int> firestoreDebts = {};
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        final String? customerId = data['customerId'];
-        final int remainingAmount = data['remainingAmount'] ?? 0;
+        if (data['transactionStatus'] == 'voided') continue;
+        final String cid = data['customerId'] ?? 'general';
+        final int remainingAmount = MoneyEngine.parse(data['remainingAmount']);
         
-        if (remainingAmount > 0 && customerId != null) {
-          debts[customerId] = (debts[customerId] ?? 0) + remainingAmount;
+        if (remainingAmount > 0) {
+          firestoreDebts[cid] = (firestoreDebts[cid] ?? 0) + remainingAmount;
         }
       }
+      
+      for (var entry in firestoreDebts.entries) {
+        debts[entry.key] = entry.value;
+      }
     } catch (e) {
-      debugPrint('Error getting debts: $e');
+      debugPrint('Error getting debts from firestore: $e');
     }
     return debts;
   }
 
   Future<List<SaleModel>> getUnpaidSalesForCustomer(String customerId) async {
+    final List<SaleModel> results = [];
     try {
       final snapshot = await _firestore.collection('sales')
-          .where('customerId', isEqualTo: customerId)
-          .where('paymentStatus', whereIn: ['PARTIAL', 'UNPAID'])
+          .where('customerId', isEqualTo: customerId == 'general' ? null : customerId)
+          .where('paymentStatus', whereIn: ['sebagian', 'belum_dibayar', 'PARTIAL', 'UNPAID', 'partial', 'unpaid'])
           .get();
           
-      return snapshot.docs
+      final firestoreList = snapshot.docs
           .map((doc) => SaleModel.fromJson(doc.data(), doc.id))
-          .where((s) => s.remainingAmount > 0)
+          .where((s) => s.remainingAmount > 0 && s.transactionStatus != 'voided')
           .toList();
+          
+      results.addAll(firestoreList);
     } catch (e) {
-      debugPrint('Error getting unpaid sales: $e');
-      return [];
+      debugPrint('Error getting unpaid sales from firestore: $e');
     }
+
+    // Include/merge local in-memory sales
+    for (var s in sales) {
+      final matchesCustomer = (customerId == 'general') ? (s.customerId == null || s.customerId == 'general') : (s.customerId == customerId);
+      if (matchesCustomer && s.remainingAmount > 0 && s.transactionStatus != 'voided') {
+        if (!results.any((r) => r.id == s.id)) {
+          results.add(s);
+        }
+      }
+    }
+
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return results;
+  }
+
+  Future<List<SaleModel>> getAllSalesForCustomer(String customerId) async {
+    final List<SaleModel> results = [];
+    try {
+      final snapshot = await _firestore.collection('sales')
+          .where('customerId', isEqualTo: customerId == 'general' ? null : customerId)
+          .get();
+          
+      final firestoreList = snapshot.docs
+          .map((doc) => SaleModel.fromJson(doc.data(), doc.id))
+          .where((s) => s.transactionStatus != 'voided')
+          .toList();
+          
+      results.addAll(firestoreList);
+    } catch (e) {
+      debugPrint('Error getting all sales from firestore: $e');
+    }
+
+    // Include/merge local in-memory sales
+    for (var s in sales) {
+      final matchesCustomer = (customerId == 'general') ? (s.customerId == null || s.customerId == 'general') : (s.customerId == customerId);
+      if (matchesCustomer && s.transactionStatus != 'voided') {
+        if (!results.any((r) => r.id == s.id)) {
+          results.add(s);
+        }
+      }
+    }
+
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return results;
   }
 
   Future<void> payDebt(String saleId, int amount, String paymentMethod) async {
     final sale = sales.firstWhereOrNull((s) => s.id == saleId);
-    if (sale == null || sale.remainingAmount <= 0) return;
+    if (sale != null && sale.remainingAmount <= 0) return;
 
     final shiftId = _shiftService.currentShift.value?.id;
     final isCash = paymentMethod.toLowerCase() == 'cash';
@@ -413,7 +475,7 @@ class SaleService extends GetxService {
         final newPaidAmount = currentPaidAmount + amount;
         final newRemaining = totalAmount - newPaidAmount;
         
-        String newStatus = (saleDoc.data() as Map<String,dynamic>)['paymentStatus'] as String;
+        String newStatus = (saleDoc.data() as Map<String,dynamic>)['paymentStatus'] as String? ?? 'belum_dibayar';
         if (newRemaining <= 0) {
           newStatus = 'lunas';
         } else {
@@ -434,6 +496,35 @@ class SaleService extends GetxService {
         }
       });
       
+      // Update in-memory sales reactively
+      final saleIndex = sales.indexWhere((s) => s.id == saleId);
+      if (saleIndex != -1) {
+        final current = sales[saleIndex];
+        final newPaid = current.paidAmount + amount;
+        final newRemaining = current.totalAmount - newPaid;
+        final newStatus = newRemaining <= 0 ? 'lunas' : 'sebagian';
+        sales[saleIndex] = SaleModel(
+          id: current.id,
+          customerId: current.customerId,
+          customerType: current.customerType,
+          cashierId: current.cashierId,
+          cashierName: current.cashierName,
+          subtotal: current.subtotal,
+          discount: current.discount,
+          discountType: current.discountType,
+          discountPercent: current.discountPercent,
+          totalAmount: current.totalAmount,
+          paidAmount: newPaid,
+          remainingAmount: newRemaining > 0 ? newRemaining : 0,
+          paymentStatus: newStatus,
+          paymentMethod: current.paymentMethod,
+          splitPayments: current.splitPayments,
+          transactionStatus: current.transactionStatus,
+          items: current.items,
+          createdAt: current.createdAt,
+        );
+      }
+
       if (isCash && amount > 0 && _shiftService.currentShift.value != null) {
          _shiftService.currentShift.value = _shiftService.currentShift.value!.copyWith(
            totalSalesCash: _shiftService.currentShift.value!.totalSalesCash + amount

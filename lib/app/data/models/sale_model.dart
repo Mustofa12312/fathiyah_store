@@ -77,6 +77,16 @@ class SaleModel {
     required this.createdAt,
   });
 
+  bool get isPaid => paymentStatus.toLowerCase() == 'lunas' || remainingAmount <= 0;
+  bool get isPartial => !isPaid && (paymentStatus.toLowerCase() == 'sebagian' || paidAmount > 0);
+  bool get isUnpaid => !isPaid && !isPartial;
+
+  String get paymentStatusLabel {
+    if (isPaid) return 'LUNAS';
+    if (isPartial) return 'BELUM LUNAS (SEBAGIAN)';
+    return 'BELUM DIBAYAR';
+  }
+
   factory SaleModel.fromJson(Map<String, dynamic> json, String documentId) {
     return SaleModel(
       id: documentId,
