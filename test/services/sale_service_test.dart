@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:fathiyah_store/app/data/services/sale_service.dart';
 import 'package:fathiyah_store/app/data/models/product_model.dart';
+import 'package:fathiyah_store/app/data/models/sale_model.dart';
 import 'package:fathiyah_store/app/data/services/product_service.dart';
 import 'package:fathiyah_store/app/data/services/auth_service.dart';
 import 'package:fathiyah_store/app/data/services/shift_service.dart';
@@ -148,147 +149,131 @@ void main() {
     test('isPaid, isPartial, isUnpaid and paymentStatusLabel behave correctly', () {
       final paidSale = SaleModel(
         id: 's1',
-        invoiceNumber: 'INV001',
-        items: [],
-        subtotal: 100000,
-        discount: 0,
-        total: 100000,
+        customerType: 'VIP',
         cashierId: 'u1',
         cashierName: 'Admin',
-        createdAt: DateTime.now(),
-        paymentStatus: 'lunas',
+        subtotal: 100000,
+        totalAmount: 100000,
         paidAmount: 100000,
         remainingAmount: 0,
+        paymentStatus: 'lunas',
+        paymentMethod: 'tunai',
+        items: [],
+        createdAt: DateTime.now(),
       );
       expect(paidSale.isPaid, true);
       expect(paidSale.isPartial, false);
       expect(paidSale.isUnpaid, false);
-      expect(paidSale.paymentStatusLabel, 'Lunas');
+      expect(paidSale.paymentStatusLabel, 'LUNAS');
 
       final partialSale = SaleModel(
         id: 's2',
-        invoiceNumber: 'INV002',
-        items: [],
-        subtotal: 100000,
-        discount: 0,
-        total: 100000,
+        customerType: 'VIP',
         cashierId: 'u1',
         cashierName: 'Admin',
-        createdAt: DateTime.now(),
-        paymentStatus: 'sebagian',
+        subtotal: 100000,
+        totalAmount: 100000,
         paidAmount: 40000,
         remainingAmount: 60000,
+        paymentStatus: 'sebagian',
+        paymentMethod: 'tunai',
+        items: [],
+        createdAt: DateTime.now(),
       );
       expect(partialSale.isPaid, false);
       expect(partialSale.isPartial, true);
       expect(partialSale.isUnpaid, false);
-      expect(partialSale.paymentStatusLabel, 'Sebagian');
+      expect(partialSale.paymentStatusLabel, 'BELUM LUNAS (SEBAGIAN)');
 
       final unpaidSale = SaleModel(
         id: 's3',
-        invoiceNumber: 'INV003',
-        items: [],
-        subtotal: 100000,
-        discount: 0,
-        total: 100000,
+        customerType: 'VIP',
         cashierId: 'u1',
         cashierName: 'Admin',
-        createdAt: DateTime.now(),
-        paymentStatus: 'belum_dibayar',
+        subtotal: 100000,
+        totalAmount: 100000,
         paidAmount: 0,
         remainingAmount: 100000,
+        paymentStatus: 'belum_dibayar',
+        paymentMethod: 'hutang',
+        items: [],
+        createdAt: DateTime.now(),
       );
       expect(unpaidSale.isPaid, false);
       expect(unpaidSale.isPartial, false);
       expect(unpaidSale.isUnpaid, true);
-      expect(unpaidSale.paymentStatusLabel, 'Belum Dibayar');
-
-      // Test remainingAmount fallback when status is empty
-      final unpaidFallbackSale = SaleModel(
-        id: 's4',
-        invoiceNumber: 'INV004',
-        items: [],
-        subtotal: 100000,
-        discount: 0,
-        total: 100000,
-        cashierId: 'u1',
-        cashierName: 'Admin',
-        createdAt: DateTime.now(),
-        paymentStatus: null,
-        paidAmount: 0,
-        remainingAmount: 100000,
-      );
-      expect(unpaidFallbackSale.isUnpaid, true);
-      expect(unpaidFallbackSale.paymentStatusLabel, 'Belum Dibayar');
+      expect(unpaidSale.paymentStatusLabel, 'BELUM DIBAYAR');
     });
 
     test('SaleService getDebtsByCustomer scans local sales correctly', () async {
       saleService.sales.addAll([
         SaleModel(
           id: 's_cust1_unpaid',
-          invoiceNumber: 'INV-101',
           customerId: 'cust1',
-          customerName: 'Budi VIP',
-          items: [],
-          subtotal: 50000,
-          discount: 0,
-          total: 50000,
+          customerType: 'VIP',
           cashierId: 'u1',
           cashierName: 'Admin',
-          createdAt: DateTime.now(),
-          paymentStatus: 'belum_dibayar',
+          subtotal: 50000,
+          totalAmount: 50000,
           paidAmount: 0,
           remainingAmount: 50000,
+          paymentStatus: 'belum_dibayar',
+          paymentMethod: 'hutang',
+          items: [],
+          createdAt: DateTime.now(),
         ),
         SaleModel(
           id: 's_cust1_paid',
-          invoiceNumber: 'INV-102',
           customerId: 'cust1',
-          customerName: 'Budi VIP',
-          items: [],
-          subtotal: 30000,
-          discount: 0,
-          total: 30000,
+          customerType: 'VIP',
           cashierId: 'u1',
           cashierName: 'Admin',
-          createdAt: DateTime.now(),
-          paymentStatus: 'lunas',
+          subtotal: 30000,
+          totalAmount: 30000,
           paidAmount: 30000,
           remainingAmount: 0,
+          paymentStatus: 'lunas',
+          paymentMethod: 'tunai',
+          items: [],
+          createdAt: DateTime.now(),
         ),
         SaleModel(
           id: 's_cust2_partial',
-          invoiceNumber: 'INV-103',
           customerId: 'cust2',
-          customerName: 'Siti VIP',
-          items: [],
-          subtotal: 80000,
-          discount: 0,
-          total: 80000,
+          customerType: 'VIP',
           cashierId: 'u1',
           cashierName: 'Admin',
-          createdAt: DateTime.now(),
-          paymentStatus: 'sebagian',
+          subtotal: 80000,
+          totalAmount: 80000,
           paidAmount: 30000,
           remainingAmount: 50000,
+          paymentStatus: 'sebagian',
+          paymentMethod: 'tunai',
+          items: [],
+          createdAt: DateTime.now(),
         ),
       ]);
 
-      // Debts for cust1 should only return unpaid/partial
-      final cust1Debts = await saleService.getDebtsByCustomer('cust1');
-      expect(cust1Debts.length, 1);
-      expect(cust1Debts.first.id, 's_cust1_unpaid');
-      expect(cust1Debts.first.remainingAmount, 50000);
+      // Customer debts mapping
+      final debtsMap = await saleService.getDebtsByCustomer();
+      expect(debtsMap['cust1'], 50000);
+      expect(debtsMap['cust2'], 50000);
+
+      // Unpaid sales for cust1
+      final cust1Unpaid = await saleService.getUnpaidSalesForCustomer('cust1');
+      expect(cust1Unpaid.length, 1);
+      expect(cust1Unpaid.first.id, 's_cust1_unpaid');
+      expect(cust1Unpaid.first.remainingAmount, 50000);
 
       // All sales for cust1 should return both paid and unpaid
       final cust1All = await saleService.getAllSalesForCustomer('cust1');
       expect(cust1All.length, 2);
 
-      // Debts for cust2
-      final cust2Debts = await saleService.getDebtsByCustomer('cust2');
-      expect(cust2Debts.length, 1);
-      expect(cust2Debts.first.id, 's_cust2_partial');
-      expect(cust2Debts.first.remainingAmount, 50000);
+      // Unpaid sales for cust2
+      final cust2Unpaid = await saleService.getUnpaidSalesForCustomer('cust2');
+      expect(cust2Unpaid.length, 1);
+      expect(cust2Unpaid.first.id, 's_cust2_partial');
+      expect(cust2Unpaid.first.remainingAmount, 50000);
     });
   });
 }
